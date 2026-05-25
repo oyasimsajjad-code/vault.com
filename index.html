@@ -541,7 +541,7 @@
 <div class="bg-animated"></div>
 
 <!-- FIREBASE AUTH OVERLAY (replaces old auth-screen) -->
-<div id="firebase-auth-overlay">
+<div id="firebase-auth-overlay" style="display:none;">
     <div class="fb-auth-card">
         <div class="fb-logo">
             <i class="fa-solid fa-cube fb-logo-icon"></i>
@@ -1465,11 +1465,7 @@ document.getElementById('pdf-upload').addEventListener('change', async function(
     const subj = document.getElementById('pdf-subject-filter').value;
 
     // Try Firebase Storage upload first
-    if (window._fbUploadPDF) {
-        await window._fbUploadPDF(file, subj === 'All' ? 'Others' : subj);
-        e.target.value = '';
-        return;
-    }
+    // Storage disabled - use local
 
     // Fallback: save to IndexedDB
     showToast('Uploading...','success');
