@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Vault | Smart PDF Library</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" onload="this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <style>
         :root {
             --bg-base: #050510;
@@ -144,7 +145,7 @@
         body.light-mode .sound-btn { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); color: #fff; }
         body.light-mode .sound-btn.active { background: var(--primary); border-color: var(--primary); }
         body.light-mode .auth-box { background: rgba(255,255,255,0.92); }
-        body, body * { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; }
+        body.theme-transitioning, body.theme-transitioning * { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease !important; }
         .circle-timer, .splash-fill, .pdf-progress-fill, .goal-fill, .task-progress-bar, .subj-fill, .bg-animated, .focus-bg { transition: none !important; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); color: var(--text-main); }
         body { background-color: var(--bg-base); min-height: 100vh; overflow: hidden; position: relative; }
@@ -196,7 +197,7 @@
         }
         .fb-logo { text-align: center; margin-bottom: 36px; }
         .fb-logo-icon { font-size: 2.8rem; color: var(--primary); text-shadow: var(--primary-glow); margin-bottom: 12px; display: block; }
-        .fb-logo h1 { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .fb-logo h1 { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .fb-logo p { color: var(--text-muted); font-size: 0.88rem; margin-top: 6px; letter-spacing: 1px; }
         .fb-tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
         .fb-tab { flex: 1; padding: 10px; text-align: center; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); transition: all 0.25s; }
@@ -228,7 +229,7 @@
         .cloud-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,240,255,0.15); border: 1px solid rgba(0,240,255,0.3); border-radius: 6px; padding: 2px 6px; font-size: 0.65rem; color: var(--primary); }
         /* SPLASH */
         #splash-screen { position: fixed; inset: 0; z-index: 9999; background: var(--bg-base); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease; }
-        .splash-logo { font-family: var(--font-display); font-size: 3.5rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: splashPulse 1.5s ease-in-out infinite alternate; margin-bottom: 10px; }
+        .splash-logo { font-family: var(--font-display); font-size: 3.5rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: splashPulse 1.5s ease-in-out infinite alternate; margin-bottom: 10px; }
         .splash-sub { color: var(--text-muted); font-size: 1rem; margin-bottom: 40px; letter-spacing: 3px; text-transform: uppercase; }
         .splash-bar { width: 200px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
         .splash-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; animation: splashLoad 2s ease forwards; }
@@ -240,7 +241,7 @@
         #auth-screen, #app-lock-screen { position: fixed; inset: 0; z-index: 1000; background: rgba(5,5,16,0.95); backdrop-filter: blur(20px); }
         body.light-mode #auth-screen, body.light-mode #app-lock-screen { background: rgba(220,228,248,0.97); }
         .auth-box { width: 100%; max-width: 400px; padding: 40px; border-radius: var(--radius-lg); text-align: center; }
-        .auth-box h1 { font-family: var(--font-display); font-size: 2.5rem; margin-bottom: 30px; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .auth-box h1 { font-family: var(--font-display); font-size: 2.5rem; margin-bottom: 30px; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .input-group { margin-bottom: 20px; text-align: left; position: relative; }
         .input-group > i { position: absolute; right: 15px; top: 15px; color: var(--text-muted); cursor: pointer; z-index:1; }
         .auth-error { color: var(--accent); font-size: 0.85rem; margin-bottom: 12px; min-height: 18px; text-align: left; }
@@ -640,7 +641,7 @@
             <div class="nav-item" onclick="switchView('achievements',this);closeMobileDrawer()"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this);closeMobileDrawer()"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this);closeMobileDrawer()"><i class="fa-solid fa-calendar-days"></i> Routine</div>
-<div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
+            <div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <div class="drawer-footer">
             <p>Developed by<br><a href="https://oyasimsajjad-code.github.io/myprofile.com/" target="_blank">Oyasim Sajjad</a></p>
@@ -679,7 +680,7 @@
             <div class="nav-item" onclick="switchView('achievements',this)"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i> Routine</div>
-<div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
+            <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <footer>
             <p>Developed by<br><a href="https://oyasimsajjad-code.github.io/myprofile.com/" target="_blank">Oyasim Sajjad</a></p>
@@ -1262,7 +1263,9 @@ function hideSplash() {
 
 /* ---- THEME ---- */
 function applyTheme(isDark) {
+    document.body.classList.add('theme-transitioning');
     document.body.classList.toggle('light-mode', !isDark);
+    setTimeout(() => document.body.classList.remove('theme-transitioning'), 350);
     const icon = document.getElementById('theme-icon');
     if (icon) icon.className = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
     const dmCb = document.getElementById('setting-darkmode');
@@ -1426,7 +1429,7 @@ function updateGreeting() {
 }
 
 /* ---- NAVIGATION ---- */
-const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, profile:10 };
+const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, profile:11 };
 const BNAV_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4 };
 
 function syncNavHighlight(viewId) {
@@ -1462,6 +1465,7 @@ function switchView(viewId, navEl) {
     if (viewId === 'achievements') renderAchievements();
     if (viewId === 'revision') renderRevision();
     if (viewId === 'notes') renderNotes();
+    if (viewId === 'routine') { loadRoutine(); renderRoutine(); }
     if (viewId === 'dashboard') { renderRecentPDFs(); updateGreeting(); }
 }
 
@@ -2376,7 +2380,7 @@ function renderVaultItems(){
     });
 }
 async function editVaultNote(id){const item=vaultItems.find(v=>v.id===id);if(!item) return;const nt=prompt('Edit title:',item.name);if(nt===null) return;const nc=prompt('Edit content:',item.content||'');if(nc===null) return;item.name=nt||item.name;item.content=nc;await dbAdd('vault',item);showToast('Note updated','success');loadVaultItems();}
-async function viewVaultItem(id){const item=vaultItems.find(v=>v.id===id);if(!item||!item.data) return;if(item.type==='pdf'){document.getElementById('viewer-title').innerText=item.name;document.getElementById('pdf-viewer-modal').classList.remove('hidden');document.getElementById('pdf-loading-msg').style.display='block';document.getElementById('pdf-canvas-container').innerHTML='';pdfScale=1.0;document.getElementById('zoom-display').innerText='100%';await renderPDFData(item.data);}else if(item.type==='image'){const w=window.open('','_blank');if(w)w.document.write(`<body style="margin:0;background:#000;"><img src="${item.data}" style="max-width:100%;display:block;"></body>`);}}
+async function viewVaultItem(id){const item=vaultItems.find(v=>v.id===id);if(!item||!item.data) return;if(item.type==='pdf'){document.getElementById('viewer-title').innerText=item.name;document.getElementById('pdf-viewer-modal').classList.remove('hidden');document.getElementById('pdf-loading-msg').style.display='block';document.getElementById('pdf-canvas-container').innerHTML='';pdfScale=1.0;document.getElementById('zoom-display').innerText='100%';await renderPDFData(item.data);}else if(item.type==='image'){const w=window.open('','_blank');if(w)w.document.write('<body style="margin:0;background:#000;"><img src="'+item.data+'" style="max-width:100%;display:block;"><\/body>');}}
 async function deleteVaultItem(id){if(confirm('Destroy this secure file forever?')){await dbDelete('vault',id);showToast('File destroyed','success');loadVaultItems();}}
 
 /* ---- PROFILE / SETTINGS ---- */
@@ -2411,9 +2415,11 @@ function saveProfile() {
     }
     appData.settings.sound=document.getElementById('setting-sound').checked;
     appData.settings.darkMode=document.getElementById('setting-darkmode').checked;
-    saveAppData(); updateProfileUI(); showToast('Profile saved!','success');
+    saveAppData();
+    updateProfileUI();
+    showToast('Profile saved!', 'success');
 }
-document.getElementById('dp-upload').addEventListener('change',function(e){
+document.getElementById('dp-upload').addEventListener('change', function(e) {
     const f=e.target.files[0]; if(!f) return;
     const r=new FileReader(); r.onload=ev=>{appData.profile.dp=ev.target.result;document.getElementById('profile-preview').src=appData.profile.dp;document.getElementById('topbar-dp').src=appData.profile.dp;saveAppData();};r.readAsDataURL(f);
 });
@@ -2607,7 +2613,8 @@ window.onload = async () => {
     applyTheme(true); // default dark until Firebase resolves
     updateClock(); setInterval(updateClock, 1000);
     setInterval(updateGreeting, 60000);
-    setTimeout(() => { hideSplash(); initCharts(); }, 500);
+    initCharts();
+    setTimeout(() => { hideSplash(); }, 500);
 };
 </script>
 
@@ -2624,7 +2631,9 @@ import {
     signOut,
     onAuthStateChanged,
     sendPasswordResetEmail,
-    updateProfile
+    updateProfile,
+    browserLocalPersistence,
+    setPersistence
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import {
     getFirestore,
@@ -2660,6 +2669,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
+await setPersistence(auth, browserLocalPersistence);
 const firestore = getFirestore(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
@@ -2682,6 +2692,13 @@ async function fbSaveAppData(data) {
         // Strip profile dp (too large, stored separately)
         const toSave = JSON.parse(JSON.stringify(data));
         delete toSave.profile.dp;
+        if (toSave.recentPDFs) toSave.recentPDFs = toSave.recentPDFs.slice(0, 10);
+        if (toSave.stats && toSave.stats.heatmap) {
+            const keys = Object.keys(toSave.stats.heatmap).sort();
+            if (keys.length > 365) {
+                keys.slice(0, keys.length - 365).forEach(k => delete toSave.stats.heatmap[k]);
+            }
+        }
         await setDoc(doc(firestore, 'users', auth.currentUser.uid, 'data', 'appData'), toSave);
     } catch(e) { console.warn('Firestore save error:', e); }
     finally { hideSync(); }
@@ -2693,8 +2710,14 @@ async function fbLoadAppData(uid) {
     try {
         const snap = await getDoc(doc(firestore, 'users', uid, 'data', 'appData'));
         if (snap.exists()) return snap.data();
-    } catch(e) { console.warn('Firestore load error:', e); }
-    return null;
+        return null;
+    } catch(e) {
+        if (e.code === 'permission-denied') {
+            showToast('Firebase Rules ঠিক করুন — permission denied', 'error');
+        }
+        console.warn('Firestore load error:', e.code, e.message);
+        return null;
+    }
 }
 
 /* ---- Merge cloud data into appData ---- */
@@ -2871,8 +2894,8 @@ window.handleFirebaseSignup = async function() {
     try {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: name });
-        // Pre-fill profile name
         appData.profile.name = name;
+        await fbSaveAppData(appData);
         logEvent(analytics, 'sign_up', { method: 'email' });
     } catch(e) {
         let msg = 'Signup failed.';
@@ -2890,7 +2913,11 @@ window.handleGoogleLogin = async function() {
         logEvent(analytics, 'login', { method: 'google' });
     } catch(e) {
         if (e.code !== 'auth/popup-closed-by-user') {
-            showFbError('Google sign-in failed. Please try again.');
+            const msg = e.code === 'auth/unauthorized-domain'
+                ? 'এই domain authorized না। Firebase Console → Auth → Settings → Authorized domains-এ আপনার URL যোগ করুন।'
+                : 'Google sign-in failed: ' + (e.message || e.code);
+            showFbError(msg);
+            console.error('Google auth error:', e.code, e.message);
         }
     }
 };
@@ -2924,6 +2951,7 @@ window._fbLogout = async function() {
 /* ---- Auth State Observer ---- */
 onAuthStateChanged(auth, async (user) => {
     if (user) {
+        if (!db) await initDB();
         currentUser = user.uid;
         const emailEl = document.getElementById('cloud-user-email');
         if (emailEl) emailEl.innerText = user.email || user.displayName || 'Unknown';
