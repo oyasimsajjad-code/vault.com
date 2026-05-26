@@ -2400,7 +2400,7 @@ function updateProfileUI() {
     else{pinArea.classList.add('hidden');}
     document.getElementById('setting-sound').checked=appData.settings.sound!==false;
     document.getElementById('setting-darkmode').checked=appData.settings.darkMode!==false;
-    applyTheme(appData.settings.darkMode!==false);
+applyTheme(true);
 }
 function saveProfile() {
     appData.profile.name=document.getElementById('prof-name').value;
