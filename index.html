@@ -2464,7 +2464,25 @@ function saveProfile() {
 }
 document.getElementById('dp-upload').addEventListener('change', function(e) {
     const f=e.target.files[0]; if(!f) return;
-    const r=new FileReader(); r.onload=ev=>{appData.profile.dp=ev.target.result;document.getElementById('profile-preview').src=appData.profile.dp;document.getElementById('topbar-dp').src=appData.profile.dp;saveAppData();};r.readAsDataURL(f);
+    const r=new FileReader(); r.onload=ev=>{
+        // Compress image before saving
+        const img=new Image();
+        img.onload=()=>{
+            const canvas=document.createElement('canvas');
+            const MAX=200;
+            let w=img.width,h=img.height;
+            if(w>h){if(w>MAX){h=h*(MAX/w);w=MAX;}}else{if(h>MAX){w=w*(MAX/h);h=MAX;}}
+            canvas.width=w;canvas.height=h;
+            canvas.getContext('2d').drawImage(img,0,0,w,h);
+            const compressed=canvas.toDataURL('image/jpeg',0.7);
+            appData.profile.dp=compressed;
+            document.getElementById('profile-preview').src=compressed;
+            document.getElementById('topbar-dp').src=compressed;
+            saveAppData();
+            showToast('Profile picture saved!','success');
+        };
+        img.src=ev.target.result;
+    };r.readAsDataURL(f);
 });
 function toggleLockSettings() {
     const on=document.getElementById('setting-applock').checked;
@@ -2810,7 +2828,7 @@ async function fbSaveAppData(data) {
     try {
         // Strip profile dp (too large, stored separately)
         const toSave = JSON.parse(JSON.stringify(data));
-        delete toSave.profile.dp;
+        // dp synced via storage
         if (toSave.recentPDFs) toSave.recentPDFs = toSave.recentPDFs.slice(0, 10);
         if (toSave.stats && toSave.stats.heatmap) {
             const keys = Object.keys(toSave.stats.heatmap).sort();
