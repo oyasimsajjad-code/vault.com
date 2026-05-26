@@ -1157,6 +1157,26 @@
                     </div>
                 </div>
                 <textarea id="prof-bio" rows="3" placeholder="Write a short bio..."></textarea>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                    <div>
+                        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">Class</label>
+                        <select id="prof-class">
+                            <option value="">Select Class</option>
+                            <option value="SSC 2025">SSC 2025</option>
+                            <option value="SSC 2026">SSC 2026</option>
+                            <option value="HSC 2025">HSC 2025</option>
+                            <option value="HSC 2026">HSC 2026</option>
+                            <option value="HSC 2027">HSC 2027</option>
+                            <option value="Medical Admission">Medical Admission</option>
+                            <option value="Varsity Admission">Varsity Admission</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">Institution</label>
+                        <input type="text" id="prof-institution" placeholder="School/College name...">
+                    </div>
+                </div>
             </div>
             <div class="settings-grid">
                 <div class="glass" style="padding:22px;">
@@ -2452,6 +2472,8 @@ function updateProfileUI() {
     document.getElementById('prof-name').value=appData.profile.name||'';
     document.getElementById('prof-goal').value=appData.profile.goal||'';
     document.getElementById('prof-bio').value=appData.profile.bio||'';
+    if(document.getElementById('prof-class')) document.getElementById('prof-class').value=appData.profile.class||'';
+    if(document.getElementById('prof-institution')) document.getElementById('prof-institution').value=appData.profile.institution||'';
     const dp=appData.profile.dp||(appData.profile.name?`https://ui-avatars.com/api/?name=${encodeURIComponent(appData.profile.name)}&background=0D8ABC&color=fff`:'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff');
     document.getElementById('profile-preview').src=dp;
     document.getElementById('topbar-dp').src=dp;
@@ -2470,6 +2492,8 @@ function saveProfile() {
     appData.profile.name=document.getElementById('prof-name').value;
     appData.profile.goal=document.getElementById('prof-goal').value;
     appData.profile.bio=document.getElementById('prof-bio').value;
+    appData.profile.class=document.getElementById('prof-class').value;
+    appData.profile.institution=document.getElementById('prof-institution').value;
     const lockEnabled=document.getElementById('setting-applock').checked;
     appData.settings.appLock=lockEnabled;
     if(lockEnabled){
@@ -2607,6 +2631,44 @@ document.addEventListener('keydown',e=>{
     }
 });
 
+/* ---- USER PROFILE MODAL ---- */
+function showUserProfile(entry) {
+    const existing = document.getElementById('user-profile-modal');
+    if (existing) existing.remove();
+    const isMe = entry.uid === currentUser;
+    const dp = entry.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(entry.name || 'U') + '&background=0D8ABC&color=fff');
+    const modal = document.createElement('div');
+    modal.id = 'user-profile-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);padding:20px;';
+    modal.innerHTML = `
+        <div class="glass" style="max-width:400px;width:100%;padding:32px;border-radius:24px;position:relative;animation:fadeIn 0.3s ease;">
+            <button onclick="document.getElementById('user-profile-modal').remove()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:var(--text-main);font-size:1rem;">✕</button>
+            <div style="text-align:center;margin-bottom:20px;">
+                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:90px;height:90px;border-radius:50%;border:3px solid var(--primary);object-fit:cover;margin-bottom:12px;">
+                <h2 style="font-family:var(--font-display);color:var(--text-main);margin-bottom:4px;">${entry.name || 'Anonymous'}${isMe ? ' <span style="font-size:0.7rem;color:var(--primary);">(আপনি)</span>' : ''}</h2>
+                ${entry.class ? `<div style="display:inline-block;background:rgba(0,240,255,0.15);color:var(--primary);padding:3px 12px;border-radius:20px;font-size:0.82rem;margin-bottom:6px;">${entry.class}</div>` : ''}
+                ${entry.institution ? `<div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;"><i class="fa-solid fa-school" style="margin-right:6px;"></i>${entry.institution}</div>` : ''}
+                ${entry.bio ? `<p style="font-size:0.85rem;color:var(--text-secondary);font-style:italic;border-top:1px solid var(--glass-border);padding-top:12px;margin-top:8px;">"${entry.bio}"</p>` : ''}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;">
+                <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;">
+                    <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--warning);">${entry.streak || 0}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">🔥 Streak</div>
+                </div>
+                <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;">
+                    <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--primary);">${parseFloat((entry.hours||0).toFixed(1))}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">⏱ Hours</div>
+                </div>
+                <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;">
+                    <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--success);">${entry.tasks || 0}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">✅ Tasks</div>
+                </div>
+            </div>
+        </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+}
+
 /* ---- LEADERBOARD ---- */
 let currentLbTab = 'streak';
 
@@ -2663,6 +2725,8 @@ function renderLeaderboard(entries, tab) {
         const dp = entry.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(entry.name || 'U') + '&background=0D8ABC&color=fff');
         const row = document.createElement('div');
         row.className = 'lb-row ' + rankClass + ' ' + meClass;
+        row.style.cursor = 'pointer';
+        row.onclick = () => showUserProfile(entry);
         row.innerHTML = '<div class="lb-rank-num" style="color:' + rankColor + ';">' + rank + '</div>' +
             '<img class="lb-avatar" src="' + dp + '" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff\'">' +
             '<div style="flex:1;min-width:0;">' +
@@ -3160,6 +3224,9 @@ async function fbPushLeaderboardStats() {
             uid,
             name,
             dp,
+            bio: appData.profile.bio || '',
+            class: appData.profile.class || '',
+            institution: appData.profile.institution || '',
             streak: appData.streak.current || 0,
             hours: parseFloat(((appData.stats.studyMinutes || 0) / 60).toFixed(2)),
             tasks: appData.stats.completedTasks || 0,
