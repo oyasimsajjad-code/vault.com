@@ -486,6 +486,18 @@
         #bottom-nav { display: none; }
         .swipe-hint { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.5); font-size: 0.7rem; padding: 4px 12px; border-radius: 20px; z-index: 99; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         .swipe-hint.show { opacity: 1; }
+        .lb-row { padding: 14px 20px; display: flex; align-items: center; gap: 16px; border-radius: var(--radius-md); background: var(--glass-bg); border: 1px solid var(--glass-border); transition: transform 0.2s ease, border-color 0.2s ease; margin-bottom: 10px; }
+        .lb-row:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .lb-row.me { border-color: var(--primary); background: rgba(0,240,255,0.06); }
+        .lb-row.rank-1 { border-color: #FFD700; background: rgba(255,215,0,0.08); }
+        .lb-row.rank-2 { border-color: #C0C0C0; background: rgba(192,192,192,0.06); }
+        .lb-row.rank-3 { border-color: #CD7F32; background: rgba(205,127,50,0.08); }
+        .lb-rank-num { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; min-width: 36px; text-align: center; }
+        .lb-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--glass-border); flex-shrink: 0; }
+        .lb-name { font-weight: 600; color: var(--text-main); font-size: 0.95rem; }
+        .lb-score { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+        .lb-badge { font-size: 1.4rem; margin-left: auto; }
+        .lb-tab-active { background: linear-gradient(45deg, var(--secondary), var(--primary)) !important; color: #fff !important; border: none !important; }
         /* Upload progress overlay */
         .upload-progress-overlay { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .upload-progress-box { background: var(--glass-bg); border: 1px solid var(--primary); border-radius: var(--radius-lg); padding: 40px 48px; text-align: center; min-width: 300px; }
@@ -643,6 +655,7 @@
             <div class="nav-item" onclick="switchView('achievements',this);closeMobileDrawer()"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this);closeMobileDrawer()"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this);closeMobileDrawer()"><i class="fa-solid fa-calendar-days"></i> Routine</div>
+            <div class="nav-item" onclick="switchView('leaderboard',this);closeMobileDrawer()"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div>
             <div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <div class="drawer-footer">
@@ -682,6 +695,7 @@
             <div class="nav-item" onclick="switchView('achievements',this)"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i> Routine</div>
+            <div class="nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div>
             <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <footer>
@@ -1015,6 +1029,31 @@
             </div>
         </section>
 
+<!-- Leaderboard -->
+<section id="view-leaderboard" class="view-section">
+    <div class="section-header">
+        <h2 class="section-title">🏆 Leaderboard</h2>
+        <button class="btn btn-primary" onclick="loadLeaderboard()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="btn" id="lb-btn-streak" onclick="switchLeaderboardTab('streak')" style="border-color:var(--warning);color:var(--warning);">🔥 Streak</button>
+        <button class="btn" id="lb-btn-hours" onclick="switchLeaderboardTab('hours')" style="border-color:var(--primary);color:var(--primary);">⏱ Study Hours</button>
+        <button class="btn" id="lb-btn-tasks" onclick="switchLeaderboardTab('tasks')" style="border-color:var(--success);color:var(--success);">✅ Tasks</button>
+    </div>
+    <div id="leaderboard-my-rank" class="glass" style="padding:16px 22px;margin-bottom:20px;border-left:4px solid var(--primary);display:none;">
+        <span style="color:var(--text-muted);font-size:0.82rem;">আপনার rank</span>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:6px;">
+            <div id="lb-my-rank-num" style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--primary);">#-</div>
+            <div>
+                <div id="lb-my-rank-name" style="font-weight:600;color:var(--text-main);"></div>
+                <div id="lb-my-rank-score" style="font-size:0.82rem;color:var(--text-muted);"></div>
+            </div>
+        </div>
+    </div>
+    <div id="leaderboard-loading" style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> লোড হচ্ছে...</div>
+    <div id="leaderboard-list"></div>
+</section>
+
 <!-- Routine -->
 <section id="view-routine" class="view-section">
   <div class="section-header">
@@ -1232,7 +1271,7 @@ let appData = {
 };
 let db, charts = {};
 let navHistory = ['dashboard'], currentView = 'dashboard';
-let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','profile'];
+let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','leaderboard','profile'];
 
 const screens = {
     lock: document.getElementById('app-lock-screen'),
@@ -1380,6 +1419,7 @@ function saveAppData() {
     clearTimeout(_saveTimeout);
     _saveTimeout = setTimeout(() => {
         if (window._fbSaveAppData) window._fbSaveAppData(appData);
+        if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
     }, 1200);
     updateDashboardStats();
 }
@@ -1431,7 +1471,7 @@ function updateGreeting() {
 }
 
 /* ---- NAVIGATION ---- */
-const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, profile:11 };
+const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, profile:12 };
 const BNAV_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4 };
 
 function syncNavHighlight(viewId) {
@@ -1469,6 +1509,7 @@ function switchView(viewId, navEl) {
     if (viewId === 'notes') renderNotes();
     if (viewId === 'routine') { loadRoutine(); renderRoutine(); }
     if (viewId === 'dashboard') { renderRecentPDFs(); updateGreeting(); }
+    if (viewId === 'leaderboard') { switchLeaderboardTab('streak'); }
 }
 
 window.addEventListener('popstate', e => {
@@ -2527,6 +2568,82 @@ document.addEventListener('keydown',e=>{
     }
 });
 
+/* ---- LEADERBOARD ---- */
+let currentLbTab = 'streak';
+
+function switchLeaderboardTab(tab) {
+    currentLbTab = tab;
+    ['streak','hours','tasks'].forEach(t => {
+        const btn = document.getElementById('lb-btn-' + t);
+        if (btn) btn.classList.toggle('lb-tab-active', t === tab);
+    });
+    loadLeaderboard();
+}
+
+async function loadLeaderboard() {
+    const loadingEl = document.getElementById('leaderboard-loading');
+    const listEl = document.getElementById('leaderboard-list');
+    const rankEl = document.getElementById('leaderboard-my-rank');
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (listEl) listEl.innerHTML = '';
+    if (rankEl) rankEl.style.display = 'none';
+    try {
+        if (window._fbLoadLeaderboard) {
+            await window._fbLoadLeaderboard(currentLbTab);
+        } else {
+            if (loadingEl) loadingEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Firebase লোড হয়নি।';
+        }
+    } catch(e) {
+        if (loadingEl) loadingEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> লোড করা যায়নি।';
+    }
+}
+
+function renderLeaderboard(entries, tab) {
+    const loadingEl = document.getElementById('leaderboard-loading');
+    const list = document.getElementById('leaderboard-list');
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!list) return;
+    list.innerHTML = '';
+    if (!entries || !entries.length) {
+        list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px;">কোনো data নেই এখনো। Study করুন — leaderboard-এ নাম উঠবে!</p>';
+        return;
+    }
+    const medals = ['🥇','🥈','🥉'];
+    const rankColors = ['#FFD700','#C0C0C0','#CD7F32'];
+    const labels = { streak: 'দিন streak', hours: 'ঘণ্টা', tasks: 'tasks' };
+    entries.forEach((entry, i) => {
+        const rank = i + 1;
+        const isMe = entry.uid === currentUser;
+        const rankClass = rank <= 3 ? 'rank-' + rank : '';
+        const meClass = isMe ? 'me' : '';
+        const rankColor = rank <= 3 ? rankColors[i] : 'var(--text-muted)';
+        const medal = medals[i] || '';
+        const scoreVal = tab === 'streak' ? (entry.streak || 0) :
+                         tab === 'hours' ? parseFloat((entry.hours || 0).toFixed(1)) :
+                         (entry.tasks || 0);
+        const dp = entry.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(entry.name || 'U') + '&background=0D8ABC&color=fff');
+        const row = document.createElement('div');
+        row.className = 'lb-row ' + rankClass + ' ' + meClass;
+        row.innerHTML = '<div class="lb-rank-num" style="color:' + rankColor + ';">' + rank + '</div>' +
+            '<img class="lb-avatar" src="' + dp + '" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff\'">' +
+            '<div style="flex:1;min-width:0;">' +
+            '<div class="lb-name">' + (entry.name || 'Anonymous') + (isMe ? ' <span style="font-size:0.7rem;color:var(--primary);">(আপনি)</span>' : '') + '</div>' +
+            '<div class="lb-score">' + scoreVal + ' ' + labels[tab] + '</div>' +
+            '</div>' +
+            '<div class="lb-badge">' + medal + '</div>';
+        list.appendChild(row);
+        if (isMe) {
+            const myRankEl = document.getElementById('leaderboard-my-rank');
+            if (myRankEl) {
+                myRankEl.style.display = 'block';
+                document.getElementById('lb-my-rank-num').innerText = '#' + rank;
+                document.getElementById('lb-my-rank-name').innerText = entry.name || 'আপনি';
+                document.getElementById('lb-my-rank-score').innerText = scoreVal + ' ' + labels[tab];
+            }
+        }
+    });
+}
+
 /* ---- ROUTINE ---- */
 let routineData = { ssc:[], hsc:[] };
 let curRoutineSeg = 'hsc';
@@ -2992,6 +3109,44 @@ onAuthStateChanged(auth, async (user) => {
         }, 500);
     }
 });
+
+/* ---- LEADERBOARD: Push current user stats to Firestore ---- */
+async function fbPushLeaderboardStats() {
+    if (!auth.currentUser) return;
+    const uid = auth.currentUser.uid;
+    try {
+        const name = appData.profile.name || auth.currentUser.displayName || 'Anonymous';
+        const dp = auth.currentUser.photoURL || '';
+        const payload = {
+            uid,
+            name,
+            dp,
+            streak: appData.streak.current || 0,
+            hours: parseFloat(((appData.stats.studyMinutes || 0) / 60).toFixed(2)),
+            tasks: appData.stats.completedTasks || 0,
+            updatedAt: Date.now()
+        };
+        await setDoc(doc(firestore, 'leaderboard', uid), payload);
+    } catch(e) { console.warn('Leaderboard push error:', e); }
+}
+window._fbPushLeaderboardStats = fbPushLeaderboardStats;
+
+/* ---- LEADERBOARD: Load all users ---- */
+window._fbLoadLeaderboard = async function(tab) {
+    try {
+        const snap = await getDocs(collection(firestore, 'leaderboard'));
+        let entries = [];
+        snap.forEach(d => entries.push(d.data()));
+        const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'hours' : 'tasks';
+        entries.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
+        entries = entries.slice(0, 50);
+        renderLeaderboard(entries, tab);
+    } catch(e) {
+        console.warn('Leaderboard load error:', e);
+        const loadingEl = document.getElementById('leaderboard-loading');
+        if (loadingEl) loadingEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> লোড করা যায়নি: ' + e.message;
+    }
+};
 
 /* ---- Log page views on navigation ---- */
 const origSwitch = window.switchView;
