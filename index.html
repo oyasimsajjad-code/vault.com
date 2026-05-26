@@ -1388,7 +1388,7 @@ async function startApp() {
     screens.main.classList.remove('hidden');
     document.getElementById('fab').classList.remove('hidden');
     document.getElementById('firebase-auth-overlay').style.display = 'none';
-    applyTheme(true);
+    applyTheme(appData.settings.darkMode !== false)
     updateProfileUI();
     renderTasks();
     renderNotes();
@@ -2402,7 +2402,7 @@ function updateProfileUI() {
     else{pinArea.classList.add('hidden');}
     document.getElementById('setting-sound').checked=appData.settings.sound!==false;
     document.getElementById('setting-darkmode').checked=appData.settings.darkMode!==false;
-applyTheme(true);
+applyTheme(appData.settings.darkMode !== false);
 }
 function saveProfile() {
     appData.profile.name=document.getElementById('prof-name').value;
@@ -2612,7 +2612,7 @@ function renderRoutine() {
 /* ---- INIT ---- */
 window.onload = async () => {
     await initDB();
-    applyTheme(true); // default dark until Firebase resolves
+    applyTheme(appData.settings.darkMode !== false);
     updateClock(); setInterval(updateClock, 1000);
     setInterval(updateGreeting, 60000);
     initCharts();
@@ -2964,6 +2964,7 @@ onAuthStateChanged(auth, async (user) => {
         // 2. Merge in cloud data (authoritative)
         const cloudData = await fbLoadAppData(user.uid);
         if (cloudData) mergeCloudData(cloudData);
+        applyTheme(appData.settings.darkMode !== false);
 
         // 3. Set profile name from Firebase Auth if not set
         if ((!appData.profile.name || appData.profile.name === 'Student') && user.displayName) {
