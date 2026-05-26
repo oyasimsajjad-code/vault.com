@@ -1386,7 +1386,7 @@ async function startApp() {
     screens.main.classList.remove('hidden');
     document.getElementById('fab').classList.remove('hidden');
     document.getElementById('firebase-auth-overlay').style.display = 'none';
-    applyTheme(appData.settings.darkMode !== false);
+    applyTheme(true);
     updateProfileUI();
     renderTasks();
     renderNotes();
