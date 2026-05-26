@@ -639,7 +639,9 @@
             <div class="nav-item" onclick="switchView('goals',this);closeMobileDrawer()"><i class="fa-solid fa-bullseye"></i> Goals</div>
             <div class="nav-item" onclick="switchView('achievements',this);closeMobileDrawer()"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this);closeMobileDrawer()"><i class="fa-solid fa-shield-halved"></i> Vault</div>
-            <div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
+            <div class="nav-item" onclick="switchView('routine',this);closeMobileDrawer()"><i class="fa-solid fa-calendar-days"></i> Routine</div>
+<div class="nav-item" onclick="switchView('routine',this);closeMobileDrawer()"><i class="fa-solid fa-calendar-days"></i> Routine</div>
+<div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <div class="drawer-footer">
             <p>Developed by<br><a href="https://oyasimsajjad-code.github.io/myprofile.com/" target="_blank">Oyasim Sajjad</a></p>
@@ -677,7 +679,9 @@
             <div class="nav-item" onclick="switchView('goals',this)"><i class="fa-solid fa-bullseye"></i> Goals</div>
             <div class="nav-item" onclick="switchView('achievements',this)"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
-            <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
+            <div class="nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i> Routine</div>
+<div class="nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i> Routine</div>
+<div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <footer>
             <p>Developed by<br><a href="https://oyasimsajjad-code.github.io/myprofile.com/" target="_blank">Oyasim Sajjad</a></p>
@@ -1010,6 +1014,69 @@
             </div>
         </section>
 
+<!-- Routine -->
+<section id="view-routine" class="view-section">
+  <div class="section-header">
+    <h2 class="section-title">Study Routine</h2>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" id="btn-ssc" onclick="switchRoutineSeg('ssc')">SSC</button>
+      <button class="btn btn-primary" id="btn-hsc" onclick="switchRoutineSeg('hsc')">HSC</button>
+    </div>
+  </div>
+  <div class="glass" style="padding:20px;margin-bottom:20px;">
+    <h3 style="margin-bottom:14px;color:var(--text-main);">নতুন Slot যোগ করুন</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div>
+        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">দিন</label>
+        <select id="rt-day" style="width:100%;">
+          <option>প্রতিদিন</option>
+          <option>শনিবার</option><option>রবিবার</option>
+          <option>সোমবার</option><option>মঙ্গলবার</option>
+          <option>বুধবার</option><option>বৃহস্পতিবার</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">সময়</label>
+        <select id="rt-time" style="width:100%;">
+          <option>ভোর (৫-৭টা)</option>
+          <option>সকাল (৭-৯টা)</option>
+          <option>সকাল (৯-১১টা)</option>
+          <option>দুপুর (১২-২টা)</option>
+          <option>বিকেল (৪-৬টা)</option>
+          <option>সন্ধ্যা (৬-৮টা)</option>
+          <option>রাত (৮-১০টা)</option>
+          <option>রাত (১০-১২টা)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">সময়কাল</label>
+        <select id="rt-dur" style="width:100%;">
+          <option>৩০ মিনিট</option>
+          <option>৪৫ মিনিট</option>
+          <option>৬০ মিনিট</option>
+          <option>৯০ মিনিট</option>
+          <option>১২০ মিনিট</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">বিষয়</label>
+      <select id="rt-subj" style="width:100%;">
+        <option value="bangla">বাংলা</option>
+        <option value="english">English</option>
+        <option value="physics">পদার্থবিজ্ঞান</option>
+        <option value="chemistry">রসায়ন</option>
+        <option value="math">উচ্চতর গণিত</option>
+        <option value="biology">জীববিজ্ঞান</option>
+        <option value="ict">ICT</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="addRoutineSlot()">
+      <i class="fa-solid fa-plus"></i> যোগ করুন
+    </button>
+  </div>
+  <div id="routine-list-container"></div>
+</section>
         <!-- Profile / Settings -->
         <section id="view-profile" class="view-section">
             <div class="section-header">
@@ -1164,7 +1231,7 @@ let appData = {
 };
 let db, charts = {};
 let navHistory = ['dashboard'], currentView = 'dashboard';
-let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','profile'];
+let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','profile'];
 
 const screens = {
     lock: document.getElementById('app-lock-screen'),
@@ -1329,6 +1396,7 @@ async function startApp() {
     await loadPDFs();
     updateDashboardStats();
     loadTimerSettings();
+    loadRoutine();
     renderRecentPDFs();
     updateGreeting();
     if (window.innerWidth > 768) document.getElementById('desktop-user-info').style.display = 'block';
@@ -2453,6 +2521,88 @@ document.addEventListener('keydown',e=>{
     }
 });
 
+/* ---- ROUTINE ---- */
+let routineData = { ssc:[], hsc:[] };
+let curRoutineSeg = 'hsc';
+
+const RT_COLORS = {
+  bangla:'#00f0ff', english:'#00ff66',
+  physics:'#7000ff', chemistry:'#ff6b35',
+  math:'#ffcc00', biology:'#ff003c', ict:'#00bcd4'
+};
+const RT_DAYS = ['প্রতিদিন','শনিবার','রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার'];
+
+function switchRoutineSeg(seg) {
+  curRoutineSeg = seg;
+  document.getElementById('btn-ssc').className = 'btn' + (seg==='ssc'?' btn-primary':'');
+  document.getElementById('btn-hsc').className = 'btn' + (seg==='hsc'?' btn-primary':'');
+  renderRoutine();
+}
+
+function addRoutineSlot() {
+  const slot = {
+    id: Date.now().toString(),
+    day: document.getElementById('rt-day').value,
+    time: document.getElementById('rt-time').value,
+    subj: document.getElementById('rt-subj').value,
+    dur: document.getElementById('rt-dur').value
+  };
+  if (!routineData[curRoutineSeg]) routineData[curRoutineSeg] = [];
+  routineData[curRoutineSeg].push(slot);
+  saveRoutine();
+  renderRoutine();
+  showToast('Slot যোগ হয়েছে!', 'success');
+}
+
+function deleteRoutineSlot(id) {
+  routineData[curRoutineSeg] = routineData[curRoutineSeg].filter(x => x.id !== id);
+  saveRoutine();
+  renderRoutine();
+}
+
+function saveRoutine() {
+  try { localStorage.setItem('studyVault_routine_' + (currentUser||'default'), JSON.stringify(routineData)); } catch(e){}
+}
+
+function loadRoutine() {
+  try {
+    const raw = localStorage.getItem('studyVault_routine_' + (currentUser||'default'));
+    if (raw) routineData = JSON.parse(raw);
+  } catch(e){}
+}
+
+function renderRoutine() {
+  const c = document.getElementById('routine-list-container');
+  if (!c) return;
+  const data = routineData[curRoutineSeg] || [];
+  if (!data.length) {
+    c.innerHTML = '<div class="glass" style="padding:40px;text-align:center;color:var(--text-muted);">কোনো slot নেই। উপরে যোগ করুন!</div>';
+    return;
+  }
+  const groups = {};
+  RT_DAYS.forEach(d => {
+    const slots = data.filter(x => x.day === d);
+    if (slots.length) groups[d] = slots;
+  });
+  let html = '';
+  Object.keys(groups).forEach(day => {
+    html += `<div class="glass" style="padding:16px;margin-bottom:14px;">
+      <h3 style="margin-bottom:12px;color:var(--text-main);font-size:1rem;">${day}</h3>`;
+    groups[day].forEach(slot => {
+      const color = RT_COLORS[slot.subj] || 'var(--primary)';
+      const subjName = {bangla:'বাংলা',english:'English',physics:'পদার্থবিজ্ঞান',chemistry:'রসায়ন',math:'উচ্চতর গণিত',biology:'জীববিজ্ঞান',ict:'ICT'}[slot.subj]||slot.subj;
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-left:4px solid ${color};background:rgba(255,255,255,0.04);border-radius:var(--radius-sm);margin-bottom:8px;">
+        <div>
+          <div style="font-weight:600;color:var(--text-main);">${subjName}</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);">${slot.time} • ${slot.dur}</div>
+        </div>
+        <button class="icon-btn danger" onclick="deleteRoutineSlot('${slot.id}')"><i class="fa-solid fa-trash"></i></button>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  c.innerHTML = html;
+}
 /* ---- INIT ---- */
 window.onload = async () => {
     await initDB();
