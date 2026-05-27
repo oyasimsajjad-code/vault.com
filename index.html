@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="/vault.com/manifest.json">
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/vault.com/service-worker.js');</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Vault | Smart PDF Library</title>
@@ -770,6 +769,7 @@
                 <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);margin-right:8px;"></i>Recently Opened</h3>
                 <div id="recent-pdfs-list" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
             </div>
+            <div id="dash-task-list" style="display:none;"></div>
             <div class="dash-grid">
                 <div class="glass stat-card"><div class="stat-icon blue"><i class="fa-solid fa-book"></i></div><div class="stat-info"><h3 id="dash-pdf-count">0</h3><p>Saved PDFs</p></div></div>
                 <div class="stat-card glass"><div class="stat-icon green"><i class="fa-solid fa-check-double"></i></div><div class="stat-info"><h3 id="dash-task-count">0</h3><p>Tasks Completed</p></div></div>
@@ -1077,7 +1077,8 @@
 <section id="view-routine" class="view-section">
   <div class="section-header">
     <h2 class="section-title">Study Routine</h2>
-    <div style="display:flex;gap:10px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" id="btn-class6" onclick="switchRoutineSeg('class6')">Class 6-8</button>
       <button class="btn" id="btn-ssc" onclick="switchRoutineSeg('ssc')">SSC</button>
       <button class="btn btn-primary" id="btn-hsc" onclick="switchRoutineSeg('hsc')">HSC</button>
     </div>
@@ -1096,7 +1097,7 @@
       </div>
       <div>
         <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">সময়</label>
-        <select id="rt-time" style="width:100%;">
+        <select id="rt-time" style="width:100%;" onchange="toggleRtCustomTime(this)">
           <option>ভোর (৫-৭টা)</option>
           <option>সকাল (৭-৯টা)</option>
           <option>সকাল (৯-১১টা)</option>
@@ -1105,22 +1106,26 @@
           <option>সন্ধ্যা (৬-৮টা)</option>
           <option>রাত (৮-১০টা)</option>
           <option>রাত (১০-১২টা)</option>
+          <option value="__custom__">+ Custom সময়</option>
         </select>
+        <input type="text" id="rt-time-custom" placeholder="যেমন: ৩টা-৫টা" style="margin-top:4px;display:none;">
       </div>
       <div>
         <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">সময়কাল</label>
-        <select id="rt-dur" style="width:100%;">
+        <select id="rt-dur" style="width:100%;" onchange="toggleRtCustomDur(this)">
           <option>৩০ মিনিট</option>
           <option>৪৫ মিনিট</option>
           <option>৬০ মিনিট</option>
           <option>৯০ মিনিট</option>
           <option>১২০ মিনিট</option>
+          <option value="__custom__">+ Custom সময়কাল</option>
         </select>
+        <input type="text" id="rt-dur-custom" placeholder="যেমন: ৪৫ মিনিট" style="margin-top:4px;display:none;">
       </div>
     </div>
     <div style="margin-bottom:12px;">
       <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">বিষয়</label>
-      <select id="rt-subj" style="width:100%;">
+      <select id="rt-subj" style="width:100%;" onchange="toggleRtCustomSubj(this)">
         <option value="bangla">বাংলা</option>
         <option value="english">English</option>
         <option value="physics">পদার্থবিজ্ঞান</option>
@@ -1128,7 +1133,17 @@
         <option value="math">উচ্চতর গণিত</option>
         <option value="biology">জীববিজ্ঞান</option>
         <option value="ict">ICT</option>
+        <optgroup label="── Class 6-8 ──">
+          <option value="bangla6">বাংলা (৬-৮)</option>
+          <option value="english6">English (৬-৮)</option>
+          <option value="math6">গণিত (৬-৮)</option>
+          <option value="science6">বিজ্ঞান (৬-৮)</option>
+          <option value="social6">সমাজ বিজ্ঞান (৬-৮)</option>
+          <option value="religion6">ধর্ম (৬-৮)</option>
+        </optgroup>
+        <option value="__custom__">+ Custom বিষয়</option>
       </select>
+      <input type="text" id="rt-subj-custom" placeholder="বিষয়ের নাম লিখুন..." style="margin-top:8px;display:none;">
     </div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="addRoutineSlot()">
       <i class="fa-solid fa-plus"></i> যোগ করুন
@@ -1154,6 +1169,7 @@
                         <input type="text" id="prof-goal" placeholder="Study Goal (e.g. Med Admission 2026)" onblur="autoSaveProfile()" style="color:var(--primary);background:transparent;border:none;padding:5px 0;">
                     </div>
                 </div>
+                <textarea id="prof-bio" rows="2" placeholder="Write a short bio..." onblur="autoSaveProfile()" style="margin-top:12px;"></textarea>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
                     <div>
                         <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">Class</label>
@@ -2055,7 +2071,9 @@ function renderTasks() {
     document.getElementById('task-progress-bar').style.width=pct+'%';
     document.getElementById('task-progress-text').innerText=pct+'%';
     document.getElementById('dash-task-count').innerText=appData.stats.completedTasks||0;
-    if(!dash) dl.innerHTML='<p style="color:var(--text-muted);">All caught up!</p>';
+    const dlEl = document.getElementById('dash-task-list');
+    if(dlEl) dlEl.innerHTML = dash ? dlEl.innerHTML : '<p style="color:var(--text-muted);">All caught up!</p>';
+    if(!dash) { if(dlEl) dlEl.innerHTML='<p style="color:var(--text-muted);">All caught up!</p>'; }
 }
 
 /* ---- NOTES ---- */
@@ -2291,6 +2309,11 @@ function stopAllSounds() {
 /* ---- STREAK ---- */
 function checkAndUpdateStreak(todayStr) {
     const today=todayStr||new Date().toISOString().split('T')[0];
+    // Reset todayMinutes if new day
+    if(appData.stats.lastStudyDate && appData.stats.lastStudyDate !== today) {
+        appData.stats.todayMinutes = 0;
+    }
+    appData.stats.lastStudyDate = today;
     if(appData.streak.lastDate===today) return;
     const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
     const yesterdayStr=yesterday.toISOString().split('T')[0];
@@ -2912,7 +2935,7 @@ function renderLeaderboard(entries, tab) {
 }
 
 /* ---- ROUTINE ---- */
-let routineData = { ssc:[], hsc:[] };
+let routineData = { ssc:[], hsc:[], class6:[] };
 let curRoutineSeg = 'hsc';
 
 const RT_COLORS = {
@@ -2924,18 +2947,38 @@ const RT_DAYS = ['প্রতিদিন','শনিবার','রবিব�
 
 function switchRoutineSeg(seg) {
   curRoutineSeg = seg;
-  document.getElementById('btn-ssc').className = 'btn' + (seg==='ssc'?' btn-primary':'');
-  document.getElementById('btn-hsc').className = 'btn' + (seg==='hsc'?' btn-primary':'');
+  ['ssc','hsc','class6'].forEach(s => {
+    const el = document.getElementById('btn-'+s);
+    if(el) el.className = 'btn' + (seg===s?' btn-primary':'');
+  });
   renderRoutine();
+}
+function toggleRtCustomSubj(sel) {
+  const c = document.getElementById('rt-subj-custom');
+  if(c) c.style.display = sel.value==='__custom__' ? 'block' : 'none';
+}
+function toggleRtCustomTime(sel) {
+  const c = document.getElementById('rt-time-custom');
+  if(c) c.style.display = sel.value==='__custom__' ? 'block' : 'none';
+}
+function toggleRtCustomDur(sel) {
+  const c = document.getElementById('rt-dur-custom');
+  if(c) c.style.display = sel.value==='__custom__' ? 'block' : 'none';
 }
 
 function addRoutineSlot() {
+  const rtTime = document.getElementById('rt-time');
+  const rtDur = document.getElementById('rt-dur');
+  const rtSubj = document.getElementById('rt-subj');
+  const timeVal = rtTime.value === '__custom__' ? (document.getElementById('rt-time-custom').value.trim()||'Custom') : rtTime.value;
+  const durVal = rtDur.value === '__custom__' ? (document.getElementById('rt-dur-custom').value.trim()||'Custom') : rtDur.value;
+  const subjVal = rtSubj.value === '__custom__' ? (document.getElementById('rt-subj-custom').value.trim()||'Custom') : rtSubj.value;
   const slot = {
     id: Date.now().toString(),
     day: document.getElementById('rt-day').value,
-    time: document.getElementById('rt-time').value,
-    subj: document.getElementById('rt-subj').value,
-    dur: document.getElementById('rt-dur').value
+    time: timeVal,
+    subj: subjVal,
+    dur: durVal
   };
   if (!routineData[curRoutineSeg]) routineData[curRoutineSeg] = [];
   routineData[curRoutineSeg].push(slot);
@@ -2980,7 +3023,8 @@ function renderRoutine() {
       <h3 style="margin-bottom:12px;color:var(--text-main);font-size:1rem;">${day}</h3>`;
     groups[day].forEach(slot => {
       const color = RT_COLORS[slot.subj] || 'var(--primary)';
-      const subjName = {bangla:'বাংলা',english:'English',physics:'পদার্থবিজ্ঞান',chemistry:'রসায়ন',math:'উচ্চতর গণিত',biology:'জীববিজ্ঞান',ict:'ICT'}[slot.subj]||slot.subj;
+      const subjMap = {bangla:'বাংলা',english:'English',physics:'পদার্থবিজ্ঞান',chemistry:'রসায়ন',math:'উচ্চতর গণিত',biology:'জীববিজ্ঞান',ict:'ICT',bangla6:'বাংলা (৬-৮)',english6:'English (৬-৮)',math6:'গণিত (৬-৮)',science6:'বিজ্ঞান (৬-৮)',social6:'সমাজ বিজ্ঞান (৬-৮)',religion6:'ধর্ম (৬-৮)'};
+      const subjName = subjMap[slot.subj] || slot.subj;
       html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-left:4px solid ${color};background:rgba(255,255,255,0.04);border-radius:var(--radius-sm);margin-bottom:8px;">
         <div>
           <div style="font-weight:600;color:var(--text-main);">${subjName}</div>
@@ -3301,10 +3345,7 @@ window.handleGoogleLogin = async function() {
         }
     } catch(e) {
         if (e.code === 'auth/popup-blocked') {
-            try {
-                const { signInWithRedirect, getRedirectResult } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
-                await signInWithRedirect(auth, googleProvider);
-            } catch(e2) { showFbError('Google sign-in failed: ' + e2.message); }
+            showFbError('Popup blocked। Browser-এ popup allow করুন অথবা incognito mode ব্যবহার করুন।');
         } else if (e.code !== 'auth/popup-closed-by-user') {
             const msg = e.code === 'auth/unauthorized-domain'
                 ? 'Domain authorized না। Firebase Console → Auth → Authorized domains-এ URL যোগ করুন।'
