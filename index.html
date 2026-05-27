@@ -168,10 +168,11 @@
         body.light-mode .fb-forgot a { color: var(--primary); }
         body.light-mode .fb-error { background: rgba(204,0,46,0.08); border-color: rgba(204,0,46,0.25); color: #cc002e; }
         body.light-mode .fb-logo-icon { color: var(--primary); }
-        body.theme-transitioning, body.theme-transitioning * { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease !important; }
-        .circle-timer, .splash-fill, .pdf-progress-fill, .goal-fill, .task-progress-bar, .subj-fill, .bg-animated, .focus-bg { transition: none !important; }
+        body.theme-transitioning, body.theme-transitioning * { transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important; }
+        .circle-timer, .splash-fill, .pdf-progress-fill, .goal-fill, .task-progress-bar, .subj-fill, .bg-animated, .focus-bg, img, canvas, #pdf-canvas-container { transition: none !important; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); color: var(--text-main); }
-        body { background-color: var(--bg-base); min-height: 100vh; overflow: hidden; position: relative; }
+        body { background-color: var(--bg-base); min-height: 100vh; overflow: hidden; position: relative; max-width: 100vw; }
+        * { min-width: 0; }
         .bg-animated { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: radial-gradient(circle at 15% 50%, rgba(112,0,255,0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(0,240,255,0.15), transparent 25%); animation: bgShift 20s infinite alternate; pointer-events: none; }
         @keyframes bgShift { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
         .glass { background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: var(--glass-shadow); }
@@ -306,7 +307,7 @@
         .greeting-banner { background: linear-gradient(135deg, rgba(0,240,255,0.08), rgba(112,0,255,0.08)); border: 1px solid rgba(0,240,255,0.15); border-radius: var(--radius-md); padding: 16px 22px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
         .greeting-text { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
         .greeting-sub { color: var(--text-muted); font-size: 0.88rem; margin-top: 2px; }
-        .view-section { padding: 30px 40px; overflow-y: auto; height: calc(100vh - 85px); display: none; animation: fadeIn 0.4s ease; }
+        .view-section { padding: 30px 40px; overflow-y: auto; height: calc(100vh - 85px); display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; contain: layout style; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
@@ -562,6 +563,10 @@
             .b-nav-item.active { color: var(--primary); }
             .b-nav-item:active { background: rgba(255,255,255,0.08); }
             #toast-container { bottom: 75px; right: 12px; left: 12px; }
+            .view-section { padding: 14px 14px 80px; }
+            .section-header { flex-wrap: wrap; }
+            .dash-grid { grid-template-columns: 1fr 1fr; }
+            .pdf-grid { grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); }
             .toast { padding: 11px 14px; font-size: 0.82rem; }
             .viewer-header { padding: 9px 14px; }
             .viewer-header h3 { font-size: 0.85rem; max-width: 130px; }
@@ -668,15 +673,12 @@
             <div class="nav-item active" onclick="switchView('dashboard',this);closeMobileDrawer()"><i class="fa-solid fa-border-all"></i> Dashboard</div>
             <div class="nav-item" onclick="switchView('library',this);closeMobileDrawer()"><i class="fa-solid fa-book-open"></i> PDF Library</div>
             <div class="nav-item" onclick="switchView('notes',this);closeMobileDrawer()"><i class="fa-solid fa-note-sticky"></i> Notes</div>
-            <div class="nav-item" onclick="switchView('todo',this);closeMobileDrawer()"><i class="fa-solid fa-list-check"></i> Tasks</div>
-            <div class="nav-item" onclick="switchView('pomodoro',this);closeMobileDrawer()"><i class="fa-solid fa-stopwatch"></i> Timer</div>
             <div class="nav-item" onclick="switchView('revision',this);closeMobileDrawer()"><i class="fa-solid fa-rotate"></i> Revision</div>
             <div class="nav-item" onclick="switchView('analytics',this);closeMobileDrawer()"><i class="fa-solid fa-chart-line"></i> Analytics</div>
             <div class="nav-item" onclick="switchView('goals',this);closeMobileDrawer()"><i class="fa-solid fa-bullseye"></i> Goals</div>
             <div class="nav-item" onclick="switchView('achievements',this);closeMobileDrawer()"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this);closeMobileDrawer()"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this);closeMobileDrawer()"><i class="fa-solid fa-calendar-days"></i> Routine</div>
-            <div class="nav-item" onclick="switchView('leaderboard',this);closeMobileDrawer()"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div>
             <div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <div class="drawer-footer">
@@ -746,42 +748,33 @@
 
         <!-- Dashboard -->
         <section id="view-dashboard" class="view-section active">
-            <div class="section-header">
+            <div class="section-header" style="margin-bottom:10px;">
                 <h2 class="section-title">Overview</h2>
-                <span id="datetime-widget" style="color:var(--primary);font-family:var(--font-display);font-size:1.2rem;"></span>
+                <div style="text-align:right;">
+                    <div id="datetime-widget" style="color:var(--primary);font-family:var(--font-display);font-size:1.2rem;"></div>
+                    <div id="date-widget" style="color:var(--text-muted);font-size:0.78rem;margin-top:2px;"></div>
+                </div>
             </div>
-            <div class="greeting-banner glass">
+            <div class="greeting-banner glass" style="margin-bottom:20px;">
                 <div>
                     <div class="greeting-text" id="greeting-text">Good Morning!</div>
                     <div class="greeting-sub" id="greeting-sub">Ready to conquer today?</div>
                 </div>
-                <div style="text-align:right;">
-                    <div style="font-size:0.78rem;color:var(--text-muted);">Today's Goal</div>
-                    <div id="today-goal-display" style="color:var(--primary);font-weight:600;font-size:0.9rem;">—</div>
-                </div>
             </div>
-            <div class="glass" style="padding:20px;margin-bottom:26px;border-left:4px solid var(--secondary);">
-                <i class="fa-solid fa-quote-left" style="color:var(--text-muted);margin-bottom:8px;"></i>
-                <p id="daily-quote" style="font-size:1.05rem;font-style:italic;color:var(--text-main);">"The future depends on what you do today."</p>
+            <div class="glass" style="padding:20px;margin-bottom:20px;">
+                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-ranking-star" style="color:var(--warning);margin-right:8px;"></i>Top Learners — Study Hours</h3>
+                <div id="dash-leaderboard-list"></div>
+                <button class="btn" style="width:100%;justify-content:center;margin-top:12px;" onclick="switchView('leaderboard',null)"><i class="fa-solid fa-arrow-right"></i> Full Leaderboard</button>
+            </div>
+            <div class="glass" style="padding:20px;margin-bottom:20px;">
+                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);margin-right:8px;"></i>Recently Opened</h3>
+                <div id="recent-pdfs-list" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
             </div>
             <div class="dash-grid">
                 <div class="glass stat-card"><div class="stat-icon blue"><i class="fa-solid fa-book"></i></div><div class="stat-info"><h3 id="dash-pdf-count">0</h3><p>Saved PDFs</p></div></div>
                 <div class="stat-card glass"><div class="stat-icon green"><i class="fa-solid fa-check-double"></i></div><div class="stat-info"><h3 id="dash-task-count">0</h3><p>Tasks Completed</p></div></div>
                 <div class="stat-card glass"><div class="stat-icon purple"><i class="fa-solid fa-fire"></i></div><div class="stat-info"><h3 id="dash-focus-hours">0h</h3><p>Focus Time</p></div></div>
                 <div class="stat-card glass"><div class="stat-icon orange"><i class="fa-solid fa-bolt"></i></div><div class="stat-info"><h3 id="dash-streak-display">0</h3><p>Day Streak 🔥</p></div></div>
-            </div>
-            <div class="glass" style="padding:20px;margin-bottom:24px;">
-                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);margin-right:8px;"></i>Recently Opened</h3>
-                <div id="recent-pdfs-list" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
-            </div>
-            <div class="glass" style="padding:20px;margin-bottom:24px;">
-                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-ranking-star" style="color:var(--warning);margin-right:8px;"></i>Top Learners — Study Hours</h3>
-                <div id="dash-leaderboard-list"></div>
-                <button class="btn" style="width:100%;justify-content:center;margin-top:12px;" onclick="switchView('leaderboard',null)"><i class="fa-solid fa-arrow-right"></i> Full Leaderboard</button>
-            </div>
-            <div class="analytics-grid">
-                <div class="chart-container glass"><h3 style="margin-bottom:14px;color:var(--text-main);">Study Activity</h3><canvas id="dash-chart" height="100"></canvas></div>
-                <div class="glass" style="padding:20px;"><h3 style="margin-bottom:14px;color:var(--text-main);">Pending Tasks</h3><div class="task-list" id="dash-task-list"></div></div>
             </div>
         </section>
 
@@ -1148,7 +1141,7 @@
             <div class="section-header">
                 <h2 class="section-title">Settings & Profile</h2>
             </div>
-            <button class="btn btn-primary" onclick="saveProfile()" style="position:sticky;top:10px;z-index:50;width:100%;justify-content:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,240,255,0.3);"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            <!-- Facebook-style: auto-save on blur, no sticky save button -->
             <div class="glass" style="padding:28px;margin-bottom:28px;">
                 <div class="profile-header">
                     <div class="profile-pic-wrapper">
@@ -1157,11 +1150,10 @@
                         <input type="file" id="dp-upload" accept="image/*" class="hidden">
                     </div>
                     <div style="flex:1;min-width:0;">
-                        <input type="text" id="prof-name" placeholder="Your Name" style="font-size:1.4rem;font-weight:bold;background:transparent;border:none;border-bottom:1px solid var(--glass-border);border-radius:0;padding:5px 0;margin-bottom:10px;">
-                        <input type="text" id="prof-goal" placeholder="Study Goal (e.g. Med Admission 2026)" style="color:var(--primary);background:transparent;border:none;padding:5px 0;">
+                        <input type="text" id="prof-name" placeholder="Your Name" onblur="autoSaveProfile()" style="font-size:1.4rem;font-weight:bold;background:transparent;border:none;border-bottom:1px solid var(--glass-border);border-radius:0;padding:5px 0;margin-bottom:10px;">
+                        <input type="text" id="prof-goal" placeholder="Study Goal (e.g. Med Admission 2026)" onblur="autoSaveProfile()" style="color:var(--primary);background:transparent;border:none;padding:5px 0;">
                     </div>
                 </div>
-                <textarea id="prof-bio" rows="3" placeholder="Write a short bio..."></textarea>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
                     <div>
                         <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">Class</label>
@@ -1181,7 +1173,7 @@
                     </div>
                     <div>
                         <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">Institution</label>
-                        <input type="text" id="prof-institution" placeholder="School/College name...">
+                        <input type="text" id="prof-institution" placeholder="School/College name..." onblur="autoSaveProfile()">
                     </div>
                 </div>
             </div>
@@ -1207,8 +1199,8 @@
                     <div class="toggle-switch-wrapper" style="flex-direction:column;align-items:flex-start;gap:8px;">
                         <span class="toggle-switch-label" data-i18n="language">Language</span>
                         <div style="display:flex;gap:10px;">
-                            <button id="lang-btn-en" class="btn" onclick="setLanguage('en')" style="padding:7px 18px;font-size:0.85rem;">🇬🇧 English</button>
-                            <button id="lang-btn-bn" class="btn" onclick="setLanguage('bn')" style="padding:7px 18px;font-size:0.85rem;">🇧🇩 বাংলা</button>
+                            <button id="lang-btn-en" class="btn" onclick="setLanguage('en')" style="padding:7px 18px;font-size:0.85rem;">ENG</button>
+                            <button id="lang-btn-bn" class="btn" onclick="setLanguage('bn')" style="padding:7px 18px;font-size:0.85rem;">BAN</button>
                         </div>
                     </div>
                     <div class="toggle-switch-wrapper">
@@ -1600,7 +1592,7 @@ function updateGreeting() {
     const name = appData.profile.name || currentUser || 'Student';
     document.getElementById('greeting-text').innerText = g + ', ' + name + '!';
     document.getElementById('greeting-sub').innerText = sub;
-    document.getElementById('today-goal-display').innerText = appData.profile.goal || appData.goals.exam || 'No goal set';
+    const tgd = document.getElementById('today-goal-display'); if(tgd) tgd.innerText = appData.profile.goal || appData.goals.exam || 'No goal set';
 }
 
 /* ---- NAVIGATION ---- */
@@ -1661,6 +1653,8 @@ function updateClock() {
     const now = new Date();
     const el = document.getElementById('datetime-widget');
     if (el) el.innerText = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+    const del = document.getElementById('date-widget');
+    if (del) del.innerText = now.toLocaleDateString([], { weekday:'short', day:'numeric', month:'short', year:'numeric' });
 }
 
 /* ---- MOBILE ---- */
@@ -2368,10 +2362,10 @@ function initCharts() {
     const cc = getChartColors();
     Chart.defaults.color = cc.text;
     Chart.defaults.font.family = "'Outfit', sans-serif";
-    const c1=document.getElementById('dash-chart').getContext('2d');
+    const dashChartEl = document.getElementById('dash-chart'); const c1 = dashChartEl ? dashChartEl.getContext('2d') : null; if(!c1) { charts.dash = null; }
     const c2=document.getElementById('weekly-chart').getContext('2d');
     const c3=document.getElementById('task-chart').getContext('2d');
-    charts.dash=new Chart(c1,{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Study Hours',data:[0,0,0,0,0,0,0],borderColor:cc.primary,tension:0.4,fill:true,backgroundColor:'rgba(0,240,255,0.08)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:cc.grid}}}}});
+    if(c1) charts.dash=new Chart(c1,{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Study Hours',data:[0,0,0,0,0,0,0],borderColor:cc.primary,tension:0.4,fill:true,backgroundColor:'rgba(0,240,255,0.08)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:cc.grid}}}}});
     charts.weekly=new Chart(c2,{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Hours',data:[0,0,0,0,0,0,0],backgroundColor:cc.border,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}}}});
     charts.task=new Chart(c3,{type:'doughnut',data:{labels:['Completed','Pending'],datasets:[{data:[1,1],backgroundColor:['#00ff66','rgba(255,255,255,0.1)'],borderWidth:0}]},options:{responsive:true,cutout:'80%'}});
 }
@@ -2622,6 +2616,20 @@ function updateProfileUI() {
     document.getElementById('setting-darkmode').checked=appData.settings.darkMode!==false;
 applyTheme(appData.settings.darkMode !== false);
 }
+function autoSaveProfile() {
+    appData.profile.name = document.getElementById('prof-name').value;
+    appData.profile.goal = document.getElementById('prof-goal').value;
+    appData.profile.bio = document.getElementById('prof-bio').value;
+    const classSelect = document.getElementById('prof-class');
+    const classCustom = document.getElementById('prof-class-custom');
+    appData.profile.class = classSelect.value === '__custom__' ? (classCustom.value.trim() || '') : classSelect.value;
+    appData.profile.institution = document.getElementById('prof-institution').value;
+    appData.settings.sound = document.getElementById('setting-sound').checked;
+    appData.settings.darkMode = document.getElementById('setting-darkmode').checked;
+    saveAppData();
+    updateProfileUI();
+    showToast('Saved ✓', 'success');
+}
 function saveProfile() {
     appData.profile.name=document.getElementById('prof-name').value;
     appData.profile.goal=document.getElementById('prof-goal').value;
@@ -2641,7 +2649,7 @@ appData.profile.class = classSelect.value === '__custom__' ? (classCustom.value.
     appData.settings.darkMode=document.getElementById('setting-darkmode').checked;
     saveAppData();
     updateProfileUI();
-    showToast('Profile saved!', 'success');
+    showToast('Settings saved!', 'success');
 }
 document.getElementById('prof-class').addEventListener('change', function() {
     const customInput = document.getElementById('prof-class-custom');
