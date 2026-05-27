@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="manifest" href="./manifest.json">
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');</script>
+<link rel="manifest" href="/vault.com/manifest.json">
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/vault.com/service-worker.js');</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Vault | Smart PDF Library</title>
@@ -168,7 +168,7 @@
         body.light-mode .fb-forgot a { color: var(--primary); }
         body.light-mode .fb-error { background: rgba(204,0,46,0.08); border-color: rgba(204,0,46,0.25); color: #cc002e; }
         body.light-mode .fb-logo-icon { color: var(--primary); }
-        body.theme-transitioning, body.theme-transitioning * { transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important; }
+        body.theme-transitioning, body.theme-transitioning * { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease !important; }
         .circle-timer, .splash-fill, .pdf-progress-fill, .goal-fill, .task-progress-bar, .subj-fill, .bg-animated, .focus-bg { transition: none !important; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); color: var(--text-main); }
         body { background-color: var(--bg-base); min-height: 100vh; overflow: hidden; position: relative; }
@@ -306,7 +306,7 @@
         .greeting-banner { background: linear-gradient(135deg, rgba(0,240,255,0.08), rgba(112,0,255,0.08)); border: 1px solid rgba(0,240,255,0.15); border-radius: var(--radius-md); padding: 16px 22px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
         .greeting-text { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
         .greeting-sub { color: var(--text-muted); font-size: 0.88rem; margin-top: 2px; }
-        .view-section { padding: 30px 40px; overflow-y: auto; overflow-x: hidden; height: calc(100vh - 85px); display: none; animation: fadeIn 0.3s ease; -webkit-overflow-scrolling: touch; }
+        .view-section { padding: 30px 40px; overflow-y: auto; height: calc(100vh - 85px); display: none; animation: fadeIn 0.4s ease; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
@@ -746,25 +746,23 @@
 
         <!-- Dashboard -->
         <section id="view-dashboard" class="view-section active">
-            <div class="greeting-banner glass" style="margin-bottom:18px;">
+            <div class="section-header">
+                <h2 class="section-title">Overview</h2>
+                <span id="datetime-widget" style="color:var(--primary);font-family:var(--font-display);font-size:1.2rem;"></span>
+            </div>
+            <div class="greeting-banner glass">
                 <div>
                     <div class="greeting-text" id="greeting-text">Good Morning!</div>
                     <div class="greeting-sub" id="greeting-sub">Ready to conquer today?</div>
-                    <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;" id="datetime-widget"></div>
                 </div>
                 <div style="text-align:right;">
                     <div style="font-size:0.78rem;color:var(--text-muted);">Today's Goal</div>
                     <div id="today-goal-display" style="color:var(--primary);font-weight:600;font-size:0.9rem;">—</div>
                 </div>
             </div>
-            <div class="glass" style="padding:20px;margin-bottom:18px;">
-                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-ranking-star" style="color:var(--warning);margin-right:8px;"></i>Top Learners</h3>
-                <div id="dash-leaderboard-list"></div>
-                <button class="btn" style="width:100%;justify-content:center;margin-top:12px;" onclick="switchView('leaderboard',null)"><i class="fa-solid fa-arrow-right"></i> Full Leaderboard</button>
-            </div>
-            <div class="glass" style="padding:20px;margin-bottom:18px;">
-                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);margin-right:8px;"></i>Recently Opened</h3>
-                <div id="recent-pdfs-list" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+            <div class="glass" style="padding:20px;margin-bottom:26px;border-left:4px solid var(--secondary);">
+                <i class="fa-solid fa-quote-left" style="color:var(--text-muted);margin-bottom:8px;"></i>
+                <p id="daily-quote" style="font-size:1.05rem;font-style:italic;color:var(--text-main);">"The future depends on what you do today."</p>
             </div>
             <div class="dash-grid">
                 <div class="glass stat-card"><div class="stat-icon blue"><i class="fa-solid fa-book"></i></div><div class="stat-info"><h3 id="dash-pdf-count">0</h3><p>Saved PDFs</p></div></div>
@@ -772,9 +770,19 @@
                 <div class="stat-card glass"><div class="stat-icon purple"><i class="fa-solid fa-fire"></i></div><div class="stat-info"><h3 id="dash-focus-hours">0h</h3><p>Focus Time</p></div></div>
                 <div class="stat-card glass"><div class="stat-icon orange"><i class="fa-solid fa-bolt"></i></div><div class="stat-info"><h3 id="dash-streak-display">0</h3><p>Day Streak 🔥</p></div></div>
             </div>
-            <!-- Hidden elements kept for JS compatibility -->
-            <canvas id="dash-chart" style="display:none;"></canvas>
-            <div id="dash-task-list" style="display:none;"></div>
+            <div class="glass" style="padding:20px;margin-bottom:24px;">
+                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);margin-right:8px;"></i>Recently Opened</h3>
+                <div id="recent-pdfs-list" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+            </div>
+            <div class="glass" style="padding:20px;margin-bottom:24px;">
+                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-ranking-star" style="color:var(--warning);margin-right:8px;"></i>Top Learners — Study Hours</h3>
+                <div id="dash-leaderboard-list"></div>
+                <button class="btn" style="width:100%;justify-content:center;margin-top:12px;" onclick="switchView('leaderboard',null)"><i class="fa-solid fa-arrow-right"></i> Full Leaderboard</button>
+            </div>
+            <div class="analytics-grid">
+                <div class="chart-container glass"><h3 style="margin-bottom:14px;color:var(--text-main);">Study Activity</h3><canvas id="dash-chart" height="100"></canvas></div>
+                <div class="glass" style="padding:20px;"><h3 style="margin-bottom:14px;color:var(--text-main);">Pending Tasks</h3><div class="task-list" id="dash-task-list"></div></div>
+            </div>
         </section>
 
         <!-- Library -->
@@ -1140,28 +1148,21 @@
             <div class="section-header">
                 <h2 class="section-title">Settings & Profile</h2>
             </div>
-            <div class="glass" style="padding:28px;margin-bottom:28px;position:relative;">
-                <!-- Cover photo area -->
-                <div style="height:80px;background:linear-gradient(135deg,var(--secondary),var(--primary));border-radius:12px;margin:-28px -28px 0 -28px;position:relative;">
-                    <div style="position:absolute;bottom:-40px;left:24px;display:flex;align-items:flex-end;gap:16px;">
-                        <div class="profile-pic-wrapper" style="width:80px;height:80px;border:3px solid var(--glass-bg);">
-                            <img src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" id="profile-preview" alt="Profile">
-                            <div class="profile-pic-upload" onclick="document.getElementById('dp-upload').click()"><i class="fa-solid fa-camera"></i></div>
-                            <input type="file" id="dp-upload" accept="image/*" class="hidden">
-                        </div>
+            <button class="btn btn-primary" onclick="saveProfile()" style="position:sticky;top:10px;z-index:50;width:100%;justify-content:center;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,240,255,0.3);"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            <div class="glass" style="padding:28px;margin-bottom:28px;">
+                <div class="profile-header">
+                    <div class="profile-pic-wrapper">
+                        <img src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" id="profile-preview" alt="Profile">
+                        <div class="profile-pic-upload" onclick="document.getElementById('dp-upload').click()"><i class="fa-solid fa-camera"></i></div>
+                        <input type="file" id="dp-upload" accept="image/*" class="hidden">
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <input type="text" id="prof-name" placeholder="Your Name" style="font-size:1.4rem;font-weight:bold;background:transparent;border:none;border-bottom:1px solid var(--glass-border);border-radius:0;padding:5px 0;margin-bottom:10px;">
+                        <input type="text" id="prof-goal" placeholder="Study Goal (e.g. Med Admission 2026)" style="color:var(--primary);background:transparent;border:none;padding:5px 0;">
                     </div>
                 </div>
-                <div style="margin-top:52px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-                        <div style="flex:1;min-width:200px;">
-                            <input type="text" id="prof-name" placeholder="Your Name" style="font-size:1.3rem;font-weight:700;background:transparent;border:none;border-bottom:2px solid var(--glass-border);border-radius:0;padding:4px 0;margin-bottom:6px;width:100%;">
-                            <input type="text" id="prof-goal" placeholder="Study Goal (e.g. Med Admission 2026)" style="font-size:0.85rem;color:var(--primary);background:transparent;border:none;padding:4px 0;width:100%;">
-                        </div>
-                        <button class="btn btn-primary" onclick="saveProfile()" style="padding:9px 22px;font-size:0.88rem;border-radius:20px;"><i class="fa-solid fa-check"></i> Save Profile</button>
-                    </div>
-                    <textarea id="prof-bio" rows="2" placeholder="Write a short bio..." style="margin-bottom:0;font-size:0.88rem;"></textarea>
-                </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                <textarea id="prof-bio" rows="3" placeholder="Write a short bio..."></textarea>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
                     <div>
                         <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">Class</label>
                         <select id="prof-class">
@@ -1206,8 +1207,8 @@
                     <div class="toggle-switch-wrapper" style="flex-direction:column;align-items:flex-start;gap:8px;">
                         <span class="toggle-switch-label" data-i18n="language">Language</span>
                         <div style="display:flex;gap:10px;">
-                            <button id="lang-btn-en" class="btn" onclick="setLanguage('en')" style="padding:7px 18px;font-size:0.85rem;">ENG</button>
-                            <button id="lang-btn-bn" class="btn" onclick="setLanguage('bn')" style="padding:7px 18px;font-size:0.85rem;">BAN</button>
+                            <button id="lang-btn-en" class="btn" onclick="setLanguage('en')" style="padding:7px 18px;font-size:0.85rem;">🇬🇧 English</button>
+                            <button id="lang-btn-bn" class="btn" onclick="setLanguage('bn')" style="padding:7px 18px;font-size:0.85rem;">🇧🇩 বাংলা</button>
                         </div>
                     </div>
                     <div class="toggle-switch-wrapper">
@@ -1241,9 +1242,9 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
-        <div class="b-nav-item" onclick="switchView('notes',this)"><i class="fa-solid fa-note-sticky"></i>Notes</div>
+        <div class="b-nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i>Board</div>
         <div class="b-nav-item" onclick="switchView('todo',this)"><i class="fa-solid fa-list-check"></i>Tasks</div>
-        <div class="b-nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i>Settings</div>
+        <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
     </nav>
 </div>
 
@@ -1659,11 +1660,7 @@ window.addEventListener('popstate', e => {
 function updateClock() {
     const now = new Date();
     const el = document.getElementById('datetime-widget');
-    if (el) {
-        const dateStr = now.toLocaleDateString([], { weekday:'short', day:'numeric', month:'short' });
-        const timeStr = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-        el.innerText = dateStr + ' · ' + timeStr;
-    }
+    if (el) el.innerText = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
 }
 
 /* ---- MOBILE ---- */
