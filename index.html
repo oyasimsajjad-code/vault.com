@@ -3344,9 +3344,12 @@ window.handleGoogleLogin = async function() {
             logEvent(analytics, 'login', { method: 'google' });
         }
     } catch(e) {
-        if (e.code === 'auth/popup-blocked') {
-            showFbError('Popup blocked। Browser-এ popup allow করুন অথবা incognito mode ব্যবহার করুন।');
-        } else if (e.code !== 'auth/popup-closed-by-user') {
+        if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+            try {
+                const { signInWithRedirect } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+                await signInWithRedirect(auth, googleProvider);
+            } catch(e2) { showFbError('Google sign-in failed: ' + (e2.message || e2.code)); }
+        } else if (e.code !== 'auth/cancelled-popup-request') {
             const msg = e.code === 'auth/unauthorized-domain'
                 ? 'Domain authorized না। Firebase Console → Auth → Authorized domains-এ URL যোগ করুন।'
                 : 'Google sign-in failed: ' + (e.message || e.code);
