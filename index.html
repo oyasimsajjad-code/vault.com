@@ -774,6 +774,11 @@
                 <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);margin-right:8px;"></i>Recently Opened</h3>
                 <div id="recent-pdfs-list" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
             </div>
+            <div class="glass" style="padding:20px;margin-bottom:24px;">
+                <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-ranking-star" style="color:var(--warning);margin-right:8px;"></i>Top Learners — Study Hours</h3>
+                <div id="dash-leaderboard-list"></div>
+                <button class="btn" style="width:100%;justify-content:center;margin-top:12px;" onclick="switchView('leaderboard',null)"><i class="fa-solid fa-arrow-right"></i> Full Leaderboard</button>
+            </div>
             <div class="analytics-grid">
                 <div class="chart-container glass"><h3 style="margin-bottom:14px;color:var(--text-main);">Study Activity</h3><canvas id="dash-chart" height="100"></canvas></div>
                 <div class="glass" style="padding:20px;"><h3 style="margin-bottom:14px;color:var(--text-main);">Pending Tasks</h3><div class="task-list" id="dash-task-list"></div></div>
@@ -1170,7 +1175,9 @@
                             <option value="Medical Admission">Medical Admission</option>
                             <option value="Varsity Admission">Varsity Admission</option>
                             <option value="Others">Others</option>
+                            <option value="__custom__">+ Custom Class</option>
                         </select>
+                        <input type="text" id="prof-class-custom" placeholder="Class লিখুন..." style="margin-top:8px;display:none;">
                     </div>
                     <div>
                         <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">Institution</label>
@@ -1228,7 +1235,7 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
-        <div class="b-nav-item" onclick="switchView('notes',this)"><i class="fa-solid fa-note-sticky"></i>Notes</div>
+        <div class="b-nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i>Board</div>
         <div class="b-nav-item" onclick="switchView('todo',this)"><i class="fa-solid fa-list-check"></i>Tasks</div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
     </nav>
@@ -1483,6 +1490,7 @@ async function startApp() {
     loadRoutine();
     renderRecentPDFs();
     updateGreeting();
+    renderDashLeaderboard();
     if (window.innerWidth > 768) document.getElementById('desktop-user-info').style.display = 'block';
     navHistory = ['dashboard']; currentView = 'dashboard';
     history.replaceState({ view: 'dashboard' }, '');
@@ -1513,7 +1521,7 @@ function updateGreeting() {
 
 /* ---- NAVIGATION ---- */
 const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, profile:12 };
-const BNAV_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4 };
+const BNAV_INDEX = { dashboard:0, library:1, leaderboard:2, todo:3, pomodoro:4 };
 
 function syncNavHighlight(viewId) {
     document.querySelectorAll('#sidebar-nav-links .nav-item, #drawer-nav-links .nav-item').forEach(el => el.classList.remove('active'));
@@ -1711,6 +1719,13 @@ async function renamePDF(id,e) {
         if (window._fbSyncPDFMeta) window._fbSyncPDFMeta(p);
         renderPDFs();
     }
+}
+
+async function renderDashLeaderboard() {
+    const el = document.getElementById('dash-leaderboard-list');
+    if (!el) return;
+    if (!window._fbLoadDashLeaderboard) { el.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">লোড হচ্ছে...</p>'; return; }
+    await window._fbLoadDashLeaderboard();
 }
 
 function renderRecentPDFs() {
@@ -1912,7 +1927,14 @@ function toggleTask(id) {
     if(t.completed) playSound();
     saveAppData(); renderTasks(); checkAchievements();
 }
-function deleteTask(id) { appData.tasks=appData.tasks.filter(x=>x.id!==id); saveAppData(); renderTasks(); }
+function deleteTask(id) {
+    const t = appData.tasks.find(x => x.id === id);
+    if (t && t.completed) {
+        appData.stats.completedTasks = Math.max(0, (appData.stats.completedTasks || 0) - 1);
+    }
+    appData.tasks = appData.tasks.filter(x => x.id !== id);
+    saveAppData(); renderTasks();
+}
 
 function renderTasks() {
     if(!appData.tasks) appData.tasks=[];
@@ -2472,7 +2494,18 @@ function updateProfileUI() {
     document.getElementById('prof-name').value=appData.profile.name||'';
     document.getElementById('prof-goal').value=appData.profile.goal||'';
     document.getElementById('prof-bio').value=appData.profile.bio||'';
-    if(document.getElementById('prof-class')) document.getElementById('prof-class').value=appData.profile.class||'';
+    if(document.getElementById('prof-class')) {
+    const knownClasses = ['','SSC 2025','SSC 2026','HSC 2025','HSC 2026','HSC 2027','Medical Admission','Varsity Admission','Others'];
+    const savedClass = appData.profile.class || '';
+    if (knownClasses.includes(savedClass)) {
+        document.getElementById('prof-class').value = savedClass;
+        document.getElementById('prof-class-custom').style.display = 'none';
+    } else if (savedClass) {
+        document.getElementById('prof-class').value = '__custom__';
+        document.getElementById('prof-class-custom').value = savedClass;
+        document.getElementById('prof-class-custom').style.display = 'block';
+    }
+}
     if(document.getElementById('prof-institution')) document.getElementById('prof-institution').value=appData.profile.institution||'';
     const dp=appData.profile.dp||(appData.profile.name?`https://ui-avatars.com/api/?name=${encodeURIComponent(appData.profile.name)}&background=0D8ABC&color=fff`:'https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff');
     document.getElementById('profile-preview').src=dp;
@@ -2492,7 +2525,9 @@ function saveProfile() {
     appData.profile.name=document.getElementById('prof-name').value;
     appData.profile.goal=document.getElementById('prof-goal').value;
     appData.profile.bio=document.getElementById('prof-bio').value;
-    appData.profile.class=document.getElementById('prof-class').value;
+    const classSelect = document.getElementById('prof-class');
+const classCustom = document.getElementById('prof-class-custom');
+appData.profile.class = classSelect.value === '__custom__' ? (classCustom.value.trim() || '') : classSelect.value;
     appData.profile.institution=document.getElementById('prof-institution').value;
     const lockEnabled=document.getElementById('setting-applock').checked;
     appData.settings.appLock=lockEnabled;
@@ -2507,6 +2542,16 @@ function saveProfile() {
     updateProfileUI();
     showToast('Profile saved!', 'success');
 }
+document.getElementById('prof-class').addEventListener('change', function() {
+    const customInput = document.getElementById('prof-class-custom');
+    if (this.value === '__custom__') {
+        customInput.style.display = 'block';
+        customInput.focus();
+    } else {
+        customInput.style.display = 'none';
+    }
+});
+
 document.getElementById('dp-upload').addEventListener('change', function(e) {
     const f=e.target.files[0]; if(!f) return;
     const r=new FileReader(); r.onload=ev=>{
@@ -3252,6 +3297,33 @@ window._fbLoadLeaderboard = async function(tab) {
         const loadingEl = document.getElementById('leaderboard-loading');
         if (loadingEl) loadingEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> লোড করা যায়নি: ' + e.message;
     }
+};
+
+/* ---- DASHBOARD: Mini Leaderboard (hours only, top 5) ---- */
+window._fbLoadDashLeaderboard = async function() {
+    const el = document.getElementById('dash-leaderboard-list');
+    if (!el) return;
+    try {
+        const snap = await getDocs(collection(firestore, 'leaderboard'));
+        let entries = [];
+        snap.forEach(d => entries.push(d.data()));
+        entries.sort((a, b) => (b.hours || 0) - (a.hours || 0));
+        entries = entries.slice(0, 5);
+        if (!entries.length) { el.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">এখনো কেউ নেই।</p>'; return; }
+        const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+        el.innerHTML = entries.map((e, i) => {
+            const isMe = e.uid === currentUser;
+            const dp = e.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(e.name||'U')+'&background=0D8ABC&color=fff');
+            return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--glass-border);cursor:pointer;" onclick="showUserProfile(${JSON.stringify(e).replace(/"/g,'&quot;')})">
+                <span style="font-size:1.2rem;min-width:28px;text-align:center;">${medals[i]}</span>
+                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid ${isMe?'var(--primary)':'var(--glass-border)'};">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;font-size:0.88rem;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.name||'Anonymous'}${isMe?' <span style="color:var(--primary);font-size:0.7rem;">(আপনি)</span>':''}</div>
+                </div>
+                <div style="font-family:var(--font-display);font-weight:700;color:var(--primary);font-size:0.95rem;">${parseFloat((e.hours||0).toFixed(1))}h</div>
+            </div>`;
+        }).join('');
+    } catch(e) { console.warn('Dash LB error:', e); }
 };
 
 /* ---- Log page views on navigation ---- */
