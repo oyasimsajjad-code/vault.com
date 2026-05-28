@@ -306,6 +306,7 @@
         .greeting-text { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
         .greeting-sub { color: var(--text-muted); font-size: 0.88rem; margin-top: 2px; }
         .view-section { padding: 30px 40px; overflow-y: auto; height: calc(100vh - 85px); display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; contain: layout style; }
+        #view-inbox { overflow: hidden !important; padding: 0 !important; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
@@ -518,7 +519,7 @@
         .upload-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; transition: width 0.3s; }
         .upload-pct { margin-top: 10px; color: var(--text-muted); font-size: 0.88rem; }
         @media (max-width: 768px) {
-            #inbox-layout { grid-template-columns: 1fr !important; height: calc(100vh - 128px) !important; border-radius: 0 !important; border: none !important; }
+            #inbox-layout { grid-template-columns: 1fr !important; height: calc(100vh - 56px) !important; border-radius: 0 !important; border: none !important; margin-top: 0 !important; }
             #chat-area { min-height: unset !important; }
             #inbox-layout > .conv-panel { border-right: none !important; }
             .msg-bubble-me { background: linear-gradient(135deg,var(--secondary),var(--primary)) !important; }
@@ -1189,16 +1190,13 @@
 
 <!-- Inbox Section -->
 <section id="view-inbox" class="view-section">
-  <div class="section-header">
-    <h2 class="section-title"><i class="fa-solid fa-envelope" style="color:var(--primary);margin-right:10px;"></i>Inbox</h2>
-  </div>
-  <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 160px);border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--glass-border);" id="inbox-layout">
+  <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 56px);border-radius:0;overflow:hidden;border:1px solid var(--glass-border);" id="inbox-layout">
     <div class="conv-panel" style="background:var(--sidebar-bg);backdrop-filter:blur(16px);display:flex;flex-direction:column;border-right:1px solid var(--glass-border);overflow:hidden;">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
-      <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;display:flex;flex-direction:column;"></div>
+      <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--sidebar-bg);"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
+      <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;display:flex;flex-direction:column;overscroll-behavior:contain;"></div>
     </div>
     <div style="background:var(--glass-bg);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden;" id="chat-area">
-      <div id="chat-header" style="padding:12px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:10px;background:var(--header-bg);backdrop-filter:blur(12px);flex-shrink:0;">
+      <div id="chat-header" style="padding:12px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:10px;background:var(--header-bg);backdrop-filter:blur(12px);flex-shrink:0;position:sticky;top:0;z-index:10;">
         <span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>
       </div>
       <div id="chat-messages" style="flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;scroll-behavior:smooth;overscroll-behavior:contain;"></div>
@@ -2904,7 +2902,13 @@ async function requestPushPermission() {
     if (!('Notification' in window)) return;
     if (Notification.permission === 'default') {
         const perm = await Notification.requestPermission();
-        if (perm === 'granted') showToast('Notifications চালু হয়েছে! 🔔', 'success');
+        if (perm === 'granted') {
+            showToast('Notifications চালু হয়েছে! 🔔', 'success');
+        } else if (perm === 'denied') {
+            showToast('Notifications blocked! Browser settings থেকে allow করুন।', 'error');
+        }
+    } else if (Notification.permission === 'granted') {
+        // Already granted, good
     }
 }
 function sendPushNotification(title, body) {
@@ -4515,12 +4519,38 @@ window._fbSendImage = async function(toUid, blob, fileName) {
     const myName = appData.profile.name || 'Anonymous';
     const myDp = appData.profile.dp || '';
     const msgId = Date.now().toString() + '_img_' + Math.random().toString(36).substr(2,5);
-    const imgRef = ref(storage, `chats/${chatId}/${msgId}`);
-    await new Promise((resolve, reject) => {
-        const task = uploadBytesResumable(imgRef, blob, { contentType: 'image/jpeg' });
-        task.on('state_changed', null, reject, resolve);
-    });
-    const downloadURL = await getDownloadURL(imgRef);
+    const imgRef = ref(storage, `chats/${chatId}/${msgId}.jpg`);
+    let downloadURL;
+    try {
+        const uploadResult = await new Promise((resolve, reject) => {
+            const task = uploadBytesResumable(imgRef, blob, { 
+                contentType: 'image/jpeg',
+                customMetadata: { uploadedBy: uid, chatId: chatId }
+            });
+            task.on('state_changed', 
+                (snapshot) => {
+                    const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                    showToast(`📷 Uploading... ${pct}%`, 'success');
+                },
+                (error) => { 
+                    console.error('Image upload error:', error);
+                    reject(error); 
+                }, 
+                () => resolve(task.snapshot)
+            );
+        });
+        downloadURL = await getDownloadURL(uploadResult.ref);
+    } catch(uploadErr) {
+        console.error('Upload failed:', uploadErr);
+        // Fallback: convert to base64 and store in Firestore directly (for small images)
+        const base64 = await new Promise(res => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result);
+            reader.readAsDataURL(blob);
+        });
+        if (base64.length > 900000) { showToast('ছবি অনেক বড়! Storage rules চেক করুন।', 'error'); return; }
+        downloadURL = base64;
+    }
     await setDoc(doc(firestore, 'chats', chatId, 'messages', msgId), {
         fromUid: uid, toUid, text: '📷 Photo', imageUrl: downloadURL,
         type: 'image', timestamp: Date.now(), read: false
@@ -4548,22 +4578,74 @@ window._fbLoadConversations = async function() {
 };
 
 /* ---- Firestore Notifications listener ---- */
-try {
-    const notifsRef = collection(firestore, 'users', auth.currentUser?.uid || 'x', 'notifications');
-    onSnapshot(notifsRef, (snap) => {
-        snap.docChanges().forEach(change => {
-            if (change.type === 'added') {
-                const data = change.doc.data();
-                if (!data.read) {
-                    addNotification(data.msg || 'নতুন notification', data.type || 'info');
-                    if (typeof sendPushNotification === 'function') sendPushNotification('StudyVault 🔔', data.msg || 'নতুন notification');
-                    // Mark as read
-                    updateDoc(change.doc.ref, { read: true }).catch(()=>{});
+let _notifListenerActive = false;
+async function startNotifListener(uid) {
+    if (_notifListenerActive || !uid) return;
+    _notifListenerActive = true;
+    try {
+        const notifsRef = collection(firestore, 'users', uid, 'notifications');
+        onSnapshot(notifsRef, (snap) => {
+            snap.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const data = change.doc.data();
+                    if (!data.read) {
+                        addNotification(data.msg || 'নতুন notification', data.type || 'info');
+                        // Show browser notification regardless of app state
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            try {
+                                new Notification('StudyVault 🔔', {
+                                    body: data.msg || 'নতুন notification',
+                                    icon: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=64',
+                                    badge: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=32',
+                                    tag: 'sv-notif-' + change.doc.id,
+                                    requireInteraction: false,
+                                    silent: false
+                                });
+                            } catch(ne) { console.warn('Notification error:', ne); }
+                        }
+                        updateDoc(change.doc.ref, { read: true }).catch(()=>{});
+                    }
                 }
-            }
+            });
+        }, (err) => { console.warn('Notif listener error:', err); _notifListenerActive = false; });
+    } catch(e) { console.warn('Notification listener setup error:', e); _notifListenerActive = false; }
+}
+
+/* ---- Message notification listener (new messages from others) ---- */
+async function startMessageNotifListener(uid) {
+    try {
+        const convRef = collection(firestore, 'users', uid, 'conversations');
+        onSnapshot(convRef, (snap) => {
+            snap.docChanges().forEach(change => {
+                if (change.type === 'modified' || change.type === 'added') {
+                    const data = change.doc.data();
+                    if (data.unread > 0 && change.doc.id !== currentChatUid) {
+                        const senderName = data.name || 'কেউ';
+                        const lastMsg = data.lastMsg || 'নতুন message';
+                        addNotification(`📨 ${senderName}: ${lastMsg}`, 'info');
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            try {
+                                new Notification(`📨 ${senderName}`, {
+                                    body: lastMsg,
+                                    icon: data.dp || 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=64',
+                                    tag: 'sv-msg-' + change.doc.id,
+                                    requireInteraction: false
+                                });
+                            } catch(ne) {}
+                        }
+                        // Update inbox badge
+                        if (typeof loadInboxBadge === 'function') loadInboxBadge();
+                    }
+                }
+            });
         });
-    });
-} catch(e) { console.warn('Notification listener error:', e); }
+    } catch(e) { console.warn('Message notif listener error:', e); }
+}
+
+if (auth.currentUser) {
+    startNotifListener(auth.currentUser.uid);
+    startMessageNotifListener(auth.currentUser.uid);
+}
 
 /* ---- Log page views on navigation ---- */
 const origSwitch = window.switchView;
