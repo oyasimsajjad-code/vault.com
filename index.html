@@ -308,7 +308,6 @@
         .view-section { padding: 30px 40px; overflow-y: auto; height: calc(100vh - 85px); display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; contain: layout style; }
         #view-inbox { overflow: hidden !important; padding: 0 !important; display: flex; flex-direction: column; }
         .view-section.active { display: block; }
-        #view-inbox.active { display: flex !important; flex-direction: column !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
         .section-title { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--text-main); }
@@ -520,7 +519,7 @@
         .upload-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; transition: width 0.3s; }
         .upload-pct { margin-top: 10px; color: var(--text-muted); font-size: 0.88rem; }
         @media (max-width: 768px) {
-            #inbox-layout { grid-template-columns: 1fr !important; height: 100% !important; max-height: calc(100vh - 56px) !important; border-radius: 0 !important; border: none !important; margin-top: 0 !important; display: flex !important; flex-direction: column !important; }
+            #inbox-layout { grid-template-columns: 1fr !important; height: calc(100vh - 56px) !important; border-radius: 0 !important; border: none !important; margin-top: 0 !important; display: flex !important; flex-direction: column !important; }
             #chat-area { min-height: 0 !important; flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
             #chat-messages { flex: 1 !important; min-height: 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
             #chat-header { position: sticky !important; top: 0 !important; z-index: 50 !important; flex-shrink: 0 !important; }
@@ -1194,7 +1193,10 @@
 
 <!-- Inbox Section -->
 <section id="view-inbox" class="view-section">
-  <div style="display:grid;grid-template-columns:300px 1fr;height:100%;border-radius:0;overflow:hidden;border:1px solid var(--glass-border);position:relative;" id="inbox-layout">
+  <div class="section-header">
+    <h2 class="section-title"><i class="fa-solid fa-envelope" style="color:var(--primary);margin-right:10px;"></i>Inbox</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 85px);border-radius:0;overflow:hidden;border:1px solid var(--glass-border);position:relative;" id="inbox-layout">
     <div class="conv-panel" style="background:var(--sidebar-bg);backdrop-filter:blur(16px);display:flex;flex-direction:column;border-right:1px solid var(--glass-border);overflow:hidden;">
       <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--sidebar-bg);"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
       <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;display:flex;flex-direction:column;overscroll-behavior:contain;"></div>
@@ -4658,7 +4660,6 @@ window._fbListenMessages = function(friendUid, callback) {
     const uid = auth.currentUser.uid;
     const chatId = getChatId(uid, friendUid);
     const msgsRef = collection(firestore, 'chats', chatId, 'messages');
-    let _renderInboxDebounce = null;
     const unsubscribe = onSnapshot(
         query(msgsRef),
         (snap) => {
@@ -4670,11 +4671,7 @@ window._fbListenMessages = function(friendUid, callback) {
             setDoc(doc(firestore, 'users', uid, 'conversations', friendUid), {
                 unread: 0
             }, { merge: true }).catch(()=>{});
-            // Debounce renderInbox to prevent rapid Firestore reads and header races
-            clearTimeout(_renderInboxDebounce);
-            _renderInboxDebounce = setTimeout(() => {
-                if (typeof renderInbox === 'function') renderInbox();
-            }, 800);
+            renderInbox();
         },
         (err) => { console.warn('Message listener error:', err); }
     );
