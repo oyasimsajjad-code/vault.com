@@ -1190,7 +1190,10 @@
 
 <!-- Inbox Section -->
 <section id="view-inbox" class="view-section">
-  <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 56px);border-radius:0;overflow:hidden;border:1px solid var(--glass-border);" id="inbox-layout">
+  <div class="section-header">
+    <h2 class="section-title"><i class="fa-solid fa-envelope" style="color:var(--primary);margin-right:10px;"></i>Inbox</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 85px);border-radius:0;overflow:hidden;border:1px solid var(--glass-border);" id="inbox-layout">
     <div class="conv-panel" style="background:var(--sidebar-bg);backdrop-filter:blur(16px);display:flex;flex-direction:column;border-right:1px solid var(--glass-border);overflow:hidden;">
       <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--sidebar-bg);"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
       <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;display:flex;flex-direction:column;overscroll-behavior:contain;"></div>
@@ -4252,10 +4255,6 @@ onAuthStateChanged(auth, async (user) => {
             await startApp();
         }
 
-        // Start real-time listeners AFTER app is ready
-        startNotifListener(user.uid);
-        startMessageNotifListener(user.uid);
-        
         logEvent(analytics, 'session_start', { uid: user.uid });
         setTimeout(() => hideSplash(), 500);
 
@@ -4646,7 +4645,10 @@ async function startMessageNotifListener(uid) {
     } catch(e) { console.warn('Message notif listener error:', e); }
 }
 
-// Listeners are started inside onAuthStateChanged now - remove this block
+if (auth.currentUser) {
+    startNotifListener(auth.currentUser.uid);
+    startMessageNotifListener(auth.currentUser.uid);
+}
 
 /* ---- Log page views on navigation ---- */
 const origSwitch = window.switchView;
