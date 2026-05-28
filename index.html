@@ -306,8 +306,9 @@
         .greeting-text { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
         .greeting-sub { color: var(--text-muted); font-size: 0.88rem; margin-top: 2px; }
         .view-section { padding: 30px 40px; overflow-y: auto; height: calc(100vh - 85px); display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; contain: layout style; }
-        #view-inbox { overflow: hidden !important; padding: 0 !important; display: flex; flex-direction: column; }
+        #view-inbox { overflow: hidden !important; padding: 0 !important; height: calc(100vh - 85px); }
         .view-section.active { display: block; }
+        #view-inbox.active { display: flex !important; flex-direction: column; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
         .section-title { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--text-main); }
@@ -519,7 +520,7 @@
         .upload-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; transition: width 0.3s; }
         .upload-pct { margin-top: 10px; color: var(--text-muted); font-size: 0.88rem; }
         @media (max-width: 768px) {
-            #inbox-layout { grid-template-columns: 1fr !important; height: calc(100vh - 56px) !important; border-radius: 0 !important; border: none !important; margin-top: 0 !important; display: flex !important; flex-direction: column !important; }
+            #inbox-layout { grid-template-columns: 1fr !important; height: 100% !important; border-radius: 0 !important; border: none !important; margin-top: 0 !important; display: flex !important; flex-direction: column !important; }
             #chat-area { min-height: 0 !important; flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
             #chat-messages { flex: 1 !important; min-height: 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
             #chat-header { position: sticky !important; top: 0 !important; z-index: 50 !important; flex-shrink: 0 !important; }
@@ -532,7 +533,8 @@
             .search-bar { max-width: 180px; }
             .search-bar input { font-size: 0.82rem; padding: 9px 9px 9px 38px; }
             .search-bar > i { top: 11px; left: 12px; font-size: 0.85rem; }
-            .view-section { padding: 14px 14px 14px; height: calc(100vh - 128px); }
+            .view-section { padding: 14px 14px 80px; height: calc(100vh - 56px); }
+            #view-inbox { padding: 0 !important; height: calc(100vh - 56px); overflow: hidden !important; }
             .section-title { font-size: 1.4rem; }
             .analytics-grid, .todo-container, .settings-grid { grid-template-columns: 1fr; }
             .focus-time { font-size: 5rem; }
@@ -561,7 +563,7 @@
             .b-nav-item.active { color: var(--primary); }
             .b-nav-item:active { background: rgba(255,255,255,0.08); }
             #toast-container { bottom: 75px; right: 12px; left: 12px; }
-            .view-section { padding: 14px 14px 80px; }
+            .view-section { padding: 14px 14px 80px; height: calc(100vh - 56px); overflow-y: auto; }
             .section-header { flex-wrap: wrap; }
             .dash-grid { grid-template-columns: 1fr 1fr; }
             .pdf-grid { grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); }
@@ -1193,10 +1195,7 @@
 
 <!-- Inbox Section -->
 <section id="view-inbox" class="view-section">
-  <div class="section-header">
-    <h2 class="section-title"><i class="fa-solid fa-envelope" style="color:var(--primary);margin-right:10px;"></i>Inbox</h2>
-  </div>
-  <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 85px);border-radius:0;overflow:hidden;border:1px solid var(--glass-border);position:relative;" id="inbox-layout">
+  <div style="display:grid;grid-template-columns:300px 1fr;height:100%;overflow:hidden;border:1px solid var(--glass-border);position:relative;" id="inbox-layout">
     <div class="conv-panel" style="background:var(--sidebar-bg);backdrop-filter:blur(16px);display:flex;flex-direction:column;border-right:1px solid var(--glass-border);overflow:hidden;">
       <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--sidebar-bg);"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
       <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;display:flex;flex-direction:column;overscroll-behavior:contain;"></div>
@@ -1709,6 +1708,10 @@ function switchView(viewId, navEl) {
         history.pushState({ view: viewId }, '');
         currentView = viewId;
     }
+    // Ensure inbox layout is hidden when not on inbox tab
+    if (viewId !== 'inbox') {
+        if (chatListenerUnsubscribe && viewId !== 'friends') { /* keep listener alive */ }
+    }
     if (viewId === 'dashboard' || viewId === 'analytics') setTimeout(updateCharts, 80);
     if (viewId === 'analytics') { setTimeout(renderHeatmap, 80); setTimeout(renderSubjectAnalytics, 80); }
     if (viewId === 'goals') updateGoalUI();
@@ -1727,25 +1730,28 @@ function switchView(viewId, navEl) {
     }
     if (viewId === 'inbox') {
         renderInbox();
-        if (window.innerWidth <= 768) {
-            setTimeout(() => {
-                const ca = document.getElementById('chat-area');
-                const cp = document.querySelector('#inbox-layout .conv-panel');
-                // Only reset to conversation list if no active chat
+        setTimeout(() => {
+            const ca = document.getElementById('chat-area');
+            const cp = document.querySelector('#inbox-layout .conv-panel');
+            if (window.innerWidth <= 768) {
                 if (!currentChatUid) {
-                    if (ca) ca.style.display = 'none';
+                    if (ca) { ca.style.display = 'none'; ca.style.flex = ''; }
                     if (cp) { cp.style.display = 'flex'; cp.style.flex = '1'; }
                     const ci = document.getElementById('chat-input-area');
                     if (ci) ci.style.display = 'none';
                     const ch = document.getElementById('chat-header');
                     if (ch) ch.innerHTML = '<span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>';
                 } else {
-                    // Chat is open — keep it visible
                     if (ca) { ca.style.display = 'flex'; ca.style.flex = '1'; }
-                    if (cp) cp.style.display = 'none';
+                    if (cp) { cp.style.display = 'none'; cp.style.flex = ''; }
                 }
-            }, 50);
-        }
+            } else {
+                if (ca) { ca.style.display = 'flex'; ca.style.flex = '1'; }
+                if (cp) { cp.style.display = 'flex'; cp.style.flex = ''; }
+                const il = document.getElementById('inbox-layout');
+                if (il) il.style.gridTemplateColumns = '300px 1fr';
+            }
+        }, 30);
     }
 }
 
@@ -4366,12 +4372,39 @@ window.handleForgotPassword = async function() {
 };
 
 window._fbLogout = async function() {
-    await signOut(auth);
-    currentUser = null;
+    // 1. Stop all Firestore listeners
+    if (chatListenerUnsubscribe) { try { chatListenerUnsubscribe(); } catch(e){} chatListenerUnsubscribe = null; }
+    // 2. Clear all chat & friend state
+    currentChatUid = null;
+    conversations = {};
+    friendsList = [];
+    sentRequests = [];
+    incomingRequests = [];
+    appNotifications = [];
+    // 3. Reset chat UI
+    const chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) chatMessages.innerHTML = '';
+    const chatHeader = document.getElementById('chat-header');
+    if (chatHeader) chatHeader.innerHTML = '<span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>';
+    const chatInputArea = document.getElementById('chat-input-area');
+    if (chatInputArea) chatInputArea.style.display = 'none';
+    const convList = document.getElementById('conversations-list');
+    if (convList) convList.innerHTML = '';
+    // 4. Reset timer
+    if (typeof stopTimer === 'function') stopTimer();
+    if (typeof stopAllSounds === 'function') stopAllSounds();
+    // 5. Reset appData
     appData = { tasks:[], notes:[], revisionTopics:[], goals:{daily:0,weekly:0,monthly:0,exam:''}, stats:{studyMinutes:0,focusSessions:0,completedTasks:0,subjectHours:{},heatmap:{},todayMinutes:0,lastStudyDate:''}, streak:{current:0,longest:0,lastDate:''}, profile:{name:'Student',bio:'',goal:'',dp:''}, settings:{appLock:false,pin:'',sound:true,darkMode:true,vaultPassword:'112233'}, timerSettings:{focus:25,short:5,long:15}, pdfProgress:{}, pdfAnnotations:{}, recentPDFs:[], earnedBadges:[] };
+    // 6. Clear localStorage for previous user
+    if (currentUser) { try { localStorage.removeItem('studyVault_data_' + currentUser); } catch(e){} }
+    currentUser = null;
+    // 7. Sign out Firebase
+    await signOut(auth);
+    // 8. Hide app, show auth
     document.getElementById('main-app').classList.add('hidden');
     document.getElementById('firebase-auth-overlay').style.display = 'flex';
     showAuthTab('login');
+    updateNotifBadge();
     showToast('Logged out successfully', 'success');
     logEvent(analytics, 'logout');
 };
