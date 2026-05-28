@@ -711,7 +711,6 @@
         </div>
         <div class="nav-links" id="sidebar-nav-links">
             <div class="nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i> Dashboard</div>
-            <div class="nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i> PDF Library</div>
             <div class="nav-item" onclick="switchView('notes',this)"><i class="fa-solid fa-note-sticky"></i> Notes</div>
             <div class="nav-item" onclick="switchView('todo',this)"><i class="fa-solid fa-list-check"></i> Tasks</div>
             <div class="nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i> Timer</div>
@@ -723,7 +722,6 @@
             <div class="nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i> Routine</div>
             <div class="nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div>
             <div class="nav-item" onclick="switchView('friends',this)"><i class="fa-solid fa-user-group"></i> Friends</div>
-            <div class="nav-item" onclick="switchView('inbox',this)" id="sidebar-inbox-nav" style="position:relative;"><i class="fa-solid fa-envelope"></i> Inbox <span id="sidebar-inbox-badge" style="display:none;background:var(--accent);color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:10px;margin-left:4px;"></span></div>
             <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <footer>
@@ -740,11 +738,7 @@
                 <div class="search-results glass" id="search-results"></div>
             </div>
             <div class="header-right">
-                <button class="theme-btn" onclick="switchView('inbox',null)" title="Messages" id="inbox-btn" style="position:relative;">
-  <i class="fa-solid fa-envelope"></i>
-  <span id="inbox-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:0.6rem;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;" id="inbox-badge">0</span>
-</button>
-<button class="theme-btn" onclick="toggleNotifPanel()" title="Notifications" style="position:relative;">
+                <button class="theme-btn" onclick="toggleNotifPanel()" title="Notifications" style="position:relative;">
   <i class="fa-solid fa-bell"></i>
   <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:0.6rem;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;">0</span>
 </button>
@@ -4137,6 +4131,7 @@ window._fbGetAllLeaderboard = async function() {
 };
 
 window._fbSendFriendRequest = async function(toUid) {
+    if (!auth.currentUser) { showToast('Login করুন প্রথমে','error'); return; }
     const uid = auth.currentUser.uid;
     const myName = appData.profile.name || auth.currentUser.displayName || 'Anonymous';
     const myDp = appData.profile.dp || auth.currentUser.photoURL || '';
