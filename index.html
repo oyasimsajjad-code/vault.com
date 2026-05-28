@@ -527,6 +527,8 @@
         .upload-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; transition: width 0.3s; }
         .upload-pct { margin-top: 10px; color: var(--text-muted); font-size: 0.88rem; }
         @media (max-width: 768px) {
+            #inbox-layout { grid-template-columns: 1fr !important; height: auto !important; }
+            #chat-area { min-height: 400px; }
             #sidebar { display: none; }
             #mobile-menu-btn { display: flex; }
             header { padding: 11px 14px; }
@@ -678,6 +680,8 @@
             <div class="nav-item" onclick="switchView('achievements',this);closeMobileDrawer()"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this);closeMobileDrawer()"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this);closeMobileDrawer()"><i class="fa-solid fa-calendar-days"></i> Routine</div>
+            <div class="nav-item" onclick="switchView('friends',this);closeMobileDrawer()"><i class="fa-solid fa-user-group"></i> Friends</div>
+            <div class="nav-item" onclick="switchView('inbox',this);closeMobileDrawer()"><i class="fa-solid fa-envelope"></i> Inbox</div>
             <div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <div class="drawer-footer">
@@ -718,6 +722,8 @@
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i> Routine</div>
             <div class="nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div>
+            <div class="nav-item" onclick="switchView('friends',this)"><i class="fa-solid fa-user-group"></i> Friends</div>
+            <div class="nav-item" onclick="switchView('inbox',this)" id="sidebar-inbox-nav" style="position:relative;"><i class="fa-solid fa-envelope"></i> Inbox <span id="sidebar-inbox-badge" style="display:none;background:var(--accent);color:#fff;font-size:0.65rem;padding:1px 6px;border-radius:10px;margin-left:4px;"></span></div>
             <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <footer>
@@ -734,7 +740,22 @@
                 <div class="search-results glass" id="search-results"></div>
             </div>
             <div class="header-right">
-                <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+                <button class="theme-btn" onclick="switchView('inbox',null)" title="Messages" id="inbox-btn" style="position:relative;">
+  <i class="fa-solid fa-envelope"></i>
+  <span id="inbox-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:0.6rem;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;" id="inbox-badge">0</span>
+</button>
+<button class="theme-btn" onclick="toggleNotifPanel()" title="Notifications" style="position:relative;">
+  <i class="fa-solid fa-bell"></i>
+  <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--accent);color:#fff;font-size:0.6rem;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;">0</span>
+</button>
+<div id="notif-panel" style="display:none;position:absolute;top:70px;right:90px;width:320px;max-height:400px;overflow-y:auto;z-index:999;border-radius:var(--radius-md);border:1px solid var(--primary);box-shadow:var(--primary-glow);" class="glass">
+  <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-weight:700;color:var(--text-main);">Notifications</span>
+    <button onclick="clearAllNotifs()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.78rem;">Clear All</button>
+  </div>
+  <div id="notif-list" style="padding:10px;"></div>
+</div>
+<button class="theme-btn" onclick="toggleTheme()" title="Toggle theme"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
                 <div class="user-widget" onclick="switchView('profile',getSidebarItem(10))">
                     <div style="text-align:right;display:none;" id="desktop-user-info">
                         <div id="topbar-name" style="font-weight:600;">Student</div>
@@ -1155,7 +1176,62 @@
   </div>
   <div id="routine-list-container"></div>
 </section>
-        <!-- Profile / Settings -->
+        <!-- Friends Section -->
+<section id="view-friends" class="view-section">
+  <div class="section-header">
+    <h2 class="section-title"><i class="fa-solid fa-user-group" style="color:var(--primary);margin-right:10px;"></i>Friends</h2>
+  </div>
+  <!-- Search Users -->
+  <div class="glass" style="padding:20px;margin-bottom:20px;">
+    <h3 style="margin-bottom:14px;color:var(--text-main);">Find Friends</h3>
+    <div style="display:flex;gap:10px;">
+      <input type="text" id="friend-search-input" placeholder="Name বা institution দিয়ে খুঁজুন..." style="flex:1;" oninput="searchUsersForFriend(this.value)">
+    </div>
+    <div id="friend-search-results" style="margin-top:12px;display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+  <!-- Incoming Requests -->
+  <div class="glass" style="padding:20px;margin-bottom:20px;">
+    <h3 style="margin-bottom:14px;color:var(--warning);"><i class="fa-solid fa-bell"></i> Incoming Requests <span id="incoming-req-count" style="background:var(--accent);color:#fff;font-size:0.7rem;padding:2px 8px;border-radius:10px;margin-left:8px;"></span></h3>
+    <div id="incoming-requests-list"></div>
+  </div>
+  <!-- Sent Requests -->
+  <div class="glass" style="padding:20px;margin-bottom:20px;">
+    <h3 style="margin-bottom:14px;color:var(--text-muted);"><i class="fa-solid fa-paper-plane"></i> Sent Requests</h3>
+    <div id="sent-requests-list"></div>
+  </div>
+  <!-- My Friends -->
+  <div class="glass" style="padding:20px;">
+    <h3 style="margin-bottom:14px;color:var(--primary);"><i class="fa-solid fa-users"></i> My Friends <span id="friends-count" style="color:var(--text-muted);font-size:0.85rem;"></span></h3>
+    <div id="friends-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;"></div>
+  </div>
+</section>
+
+<!-- Inbox Section -->
+<section id="view-inbox" class="view-section">
+  <div class="section-header">
+    <h2 class="section-title"><i class="fa-solid fa-envelope" style="color:var(--primary);margin-right:10px;"></i>Inbox</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;height:calc(100vh - 200px);" id="inbox-layout">
+    <!-- Conversations List -->
+    <div class="glass" style="padding:0;overflow-y:auto;border-radius:var(--radius-md);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);">Conversations</div>
+      <div id="conversations-list" style="padding:8px;"></div>
+    </div>
+    <!-- Chat Area -->
+    <div class="glass" style="padding:0;display:flex;flex-direction:column;border-radius:var(--radius-md);overflow:hidden;" id="chat-area">
+      <div id="chat-header" style="padding:14px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:12px;">
+        <span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>
+      </div>
+      <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div id="chat-input-area" style="padding:14px;border-top:1px solid var(--glass-border);display:none;gap:10px;align-items:center;">
+        <input type="text" id="chat-msg-input" placeholder="Message লিখুন..." style="flex:1;" onkeydown="if(event.key==='Enter')sendMessage()">
+        <button class="btn btn-primary" onclick="sendMessage()" style="padding:10px 18px;"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Profile / Settings -->
         <section id="view-profile" class="view-section">
             <div class="section-header">
                 <h2 class="section-title">Settings & Profile</h2>
@@ -1257,7 +1333,7 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
-        <div class="b-nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i>Board</div>
+        <div class="b-nav-item" onclick="switchView('inbox',this)" id="bnav-inbox" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:8px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
         <div class="b-nav-item" onclick="switchView('todo',this)"><i class="fa-solid fa-list-check"></i>Tasks</div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
     </nav>
@@ -1412,7 +1488,7 @@ let appData = {
 };
 let db, charts = {};
 let navHistory = ['dashboard'], currentView = 'dashboard';
-let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','leaderboard','profile'];
+let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','leaderboard','friends','inbox','profile'];
 
 const screens = {
     lock: document.getElementById('app-lock-screen'),
@@ -1584,6 +1660,8 @@ async function startApp() {
     renderRecentPDFs();
     updateGreeting();
     setTimeout(renderDashLeaderboard, 1500);
+    setTimeout(loadFriendRequestsBadge, 2000);
+    setTimeout(loadInboxBadge, 2000);
     currentLang = appData.settings.language || 'en';
     applyLang();
     const lbEn = document.getElementById('lang-btn-en');
@@ -1619,7 +1697,7 @@ function updateGreeting() {
 }
 
 /* ---- NAVIGATION ---- */
-const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, profile:12 };
+const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, friends:12, inbox:13, profile:14 };
 const BNAV_INDEX = { dashboard:0, library:1, leaderboard:2, todo:3, pomodoro:4 };
 
 function syncNavHighlight(viewId) {
@@ -1658,6 +1736,8 @@ function switchView(viewId, navEl) {
     if (viewId === 'routine') { loadRoutine(); renderRoutine(); }
     if (viewId === 'dashboard') { renderRecentPDFs(); updateGreeting(); }
     if (viewId === 'leaderboard') { switchLeaderboardTab('streak'); }
+    if (viewId === 'friends') { renderFriendsSection(); }
+    if (viewId === 'inbox') { renderInbox(); }
 }
 
 window.addEventListener('popstate', e => {
@@ -2844,7 +2924,8 @@ function showUserProfile(entry) {
                 ${entry.institution ? `<div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;"><i class="fa-solid fa-school" style="margin-right:6px;"></i>${entry.institution}</div>` : ''}
                 ${entry.bio ? `<p style="font-size:0.85rem;color:var(--text-secondary);font-style:italic;border-top:1px solid var(--glass-border);padding-top:12px;margin-top:8px;">"${entry.bio}"</p>` : ''}
             </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;">
+            <div id="profile-modal-actions" style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;"></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;">
                 <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;">
                     <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--warning);">${entry.streak || 0}</div>
                     <div style="font-size:0.72rem;color:var(--text-muted);">🔥 Streak</div>
@@ -2861,6 +2942,8 @@ function showUserProfile(entry) {
         </div>`;
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
+    // Load friend status
+    setTimeout(() => loadFriendStatus(entry.uid), 100);
 }
 
 /* ---- LEADERBOARD ---- */
@@ -3209,6 +3292,375 @@ async function searchInstitution(val) {
 function selectInstitution(name) {
     document.getElementById('prof-institution').value = name;
     document.getElementById('inst-suggestions').style.display = 'none';
+}
+
+/* ===================== FRIENDS & MESSAGING SYSTEM ===================== */
+
+// ---- Notification System ----
+let appNotifications = [];
+function addNotification(msg, type='info', actionFn=null) {
+    appNotifications.unshift({ id: Date.now().toString(), msg, type, time: new Date().toLocaleTimeString(), read: false, actionFn });
+    updateNotifBadge();
+    renderNotifPanel();
+}
+function updateNotifBadge() {
+    const unread = appNotifications.filter(n => !n.read).length;
+    const badges = document.querySelectorAll('#notif-badge');
+    badges.forEach(b => {
+        if (unread > 0) { b.style.display='flex'; b.innerText=unread > 9 ? '9+' : unread; }
+        else { b.style.display='none'; }
+    });
+}
+function renderNotifPanel() {
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+    if (!appNotifications.length) { list.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px;font-size:0.85rem;">কোনো notification নেই</p>'; return; }
+    list.innerHTML = appNotifications.slice(0,20).map(n => `
+        <div onclick="markNotifRead('${n.id}')" style="padding:10px 12px;border-radius:10px;background:${n.read?'transparent':'rgba(0,240,255,0.06)'};margin-bottom:6px;cursor:pointer;border:1px solid ${n.read?'transparent':'rgba(0,240,255,0.12)'};">
+            <div style="font-size:0.85rem;color:var(--text-main);">${n.msg}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-top:3px;">${n.time}</div>
+        </div>`).join('');
+}
+function markNotifRead(id) {
+    const n = appNotifications.find(x => x.id === id);
+    if (n) { n.read = true; updateNotifBadge(); renderNotifPanel(); }
+}
+function clearAllNotifs() {
+    appNotifications = [];
+    updateNotifBadge();
+    renderNotifPanel();
+}
+let notifPanelOpen = false;
+function toggleNotifPanel() {
+    const panel = document.getElementById('notif-panel');
+    if (!panel) return;
+    notifPanelOpen = !notifPanelOpen;
+    panel.style.display = notifPanelOpen ? 'block' : 'none';
+    if (notifPanelOpen) { appNotifications.forEach(n => n.read = true); updateNotifBadge(); renderNotifPanel(); }
+}
+document.addEventListener('click', e => {
+    if (notifPanelOpen && !e.target.closest('#notif-panel') && !e.target.closest('.theme-btn')) {
+        notifPanelOpen = false;
+        const p = document.getElementById('notif-panel'); if (p) p.style.display = 'none';
+    }
+});
+
+// ---- Friend Requests (Firestore) ----
+let friendsList = [], sentRequests = [], incomingRequests = [];
+let friendSearchTimeout = null;
+
+async function searchUsersForFriend(query) {
+    const resultsEl = document.getElementById('friend-search-results');
+    if (!resultsEl) return;
+    if (!query || query.length < 2) { resultsEl.innerHTML = ''; return; }
+    clearTimeout(friendSearchTimeout);
+    friendSearchTimeout = setTimeout(async () => {
+        if (!window._fbFirestore || !window._fbAuth) { resultsEl.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">Firebase loading...</p>'; return; }
+        try {
+            const snap = await window._fbGetAllLeaderboard();
+            if (!snap) return;
+            const q = query.toLowerCase();
+            const matches = snap.filter(e =>
+                e.uid !== currentUser &&
+                ((e.name||'').toLowerCase().includes(q) || (e.institution||'').toLowerCase().includes(q))
+            ).slice(0, 8);
+            if (!matches.length) { resultsEl.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">কেউ পাওয়া যায়নি</p>'; return; }
+            resultsEl.innerHTML = matches.map(u => {
+                const dp = u.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(u.name||'U')+'&background=0D8ABC&color=fff');
+                const isFriend = friendsList.some(f => f.uid === u.uid);
+                const isSent = sentRequests.some(r => r.toUid === u.uid);
+                const isIncoming = incomingRequests.some(r => r.fromUid === u.uid);
+                let actionBtn = '';
+                if (isFriend) actionBtn = '<span style="color:var(--success);font-size:0.8rem;"><i class="fa-solid fa-check"></i> Friends</span>';
+                else if (isSent) actionBtn = '<span style="color:var(--text-muted);font-size:0.8rem;"><i class="fa-solid fa-clock"></i> Sent</span>';
+                else if (isIncoming) actionBtn = `<button class="btn" style="padding:6px 12px;font-size:0.8rem;border-color:var(--success);color:var(--success);" onclick="acceptFriendRequest('${u.uid}')"><i class="fa-solid fa-check"></i> Accept</button>`;
+                else actionBtn = `<button class="btn btn-primary" style="padding:6px 12px;font-size:0.8rem;" onclick="sendFriendRequest('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}')"><i class="fa-solid fa-user-plus"></i> Add</button>`;
+                return `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid var(--glass-border);">
+                    <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;color:var(--text-main);">${u.name||'Anonymous'}</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);">${u.institution||u.class||'StudyVault User'}</div>
+                    </div>
+                    ${actionBtn}
+                </div>`;
+            }).join('');
+        } catch(e) { resultsEl.innerHTML='<p style="color:var(--text-muted);">Search failed</p>'; }
+    }, 500);
+}
+
+async function sendFriendRequest(toUid, toName) {
+    if (!window._fbSendFriendRequest) { showToast('Firebase not ready','error'); return; }
+    try {
+        await window._fbSendFriendRequest(toUid);
+        sentRequests.push({ toUid, toName, timestamp: Date.now() });
+        showToast('Friend request পাঠানো হয়েছে! 📨', 'success');
+        // Re-render search
+        const input = document.getElementById('friend-search-input');
+        if (input) searchUsersForFriend(input.value);
+    } catch(e) { showToast('Request পাঠানো যায়নি', 'error'); }
+}
+
+async function acceptFriendRequest(fromUid) {
+    if (!window._fbAcceptFriendRequest) { showToast('Firebase not ready','error'); return; }
+    try {
+        await window._fbAcceptFriendRequest(fromUid);
+        incomingRequests = incomingRequests.filter(r => r.fromUid !== fromUid);
+        await loadFriendsList();
+        renderFriendsSection();
+        addNotification('নতুন friend যোগ হয়েছে! 🎉', 'success');
+        showToast('Friend request accept করা হয়েছে! 🎉', 'success');
+    } catch(e) { showToast('Accept failed', 'error'); }
+}
+
+async function rejectFriendRequest(fromUid) {
+    if (!window._fbRejectFriendRequest) { showToast('Firebase not ready','error'); return; }
+    try {
+        await window._fbRejectFriendRequest(fromUid);
+        incomingRequests = incomingRequests.filter(r => r.fromUid !== fromUid);
+        renderFriendsSection();
+        showToast('Request decline করা হয়েছে', 'success');
+    } catch(e) { showToast('Failed', 'error'); }
+}
+
+async function removeFriend(friendUid) {
+    if (!confirm('এই friend কে remove করবেন?')) return;
+    if (!window._fbRemoveFriend) return;
+    try {
+        await window._fbRemoveFriend(friendUid);
+        friendsList = friendsList.filter(f => f.uid !== friendUid);
+        renderFriendsSection();
+        showToast('Friend remove করা হয়েছে', 'success');
+    } catch(e) { showToast('Failed', 'error'); }
+}
+
+async function loadFriendsList() {
+    if (!window._fbLoadFriendsList) return;
+    try {
+        const data = await window._fbLoadFriendsList();
+        friendsList = data.friends || [];
+        sentRequests = data.sent || [];
+        incomingRequests = data.incoming || [];
+    } catch(e) { console.warn('Friends load error:', e); }
+}
+
+async function loadFriendRequestsBadge() {
+    if (!window._fbLoadFriendsList) return;
+    try {
+        const data = await window._fbLoadFriendsList();
+        incomingRequests = data.incoming || [];
+        const count = incomingRequests.length;
+        if (count > 0) {
+            addNotification(`${count}টি নতুন friend request আছে!`, 'info');
+        }
+    } catch(e) {}
+}
+
+async function loadFriendStatus(uid) {
+    const modal = document.getElementById('user-profile-modal');
+    if (!modal) return;
+    const actionDiv = modal.querySelector('#profile-modal-actions');
+    if (!actionDiv) return;
+    if (uid === currentUser) { actionDiv.innerHTML = ''; return; }
+    const isFriend = friendsList.some(f => f.uid === uid);
+    const isSent = sentRequests.some(r => r.toUid === uid);
+    const isIncoming = incomingRequests.some(r => r.fromUid === uid);
+    if (isFriend) {
+        actionDiv.innerHTML = `
+            <button class="btn" style="flex:1;justify-content:center;border-color:var(--primary);color:var(--primary);" onclick="openChatWith('${uid}');document.getElementById('user-profile-modal').remove();switchView('inbox',null);">
+                <i class="fa-solid fa-envelope"></i> Message
+            </button>
+            <button class="btn btn-danger" style="padding:10px 16px;" onclick="removeFriend('${uid}');document.getElementById('user-profile-modal').remove();">
+                <i class="fa-solid fa-user-minus"></i>
+            </button>`;
+    } else if (isSent) {
+        actionDiv.innerHTML = `<button class="btn" style="flex:1;justify-content:center;opacity:0.6;" disabled><i class="fa-solid fa-clock"></i> Request Sent</button>`;
+    } else if (isIncoming) {
+        actionDiv.innerHTML = `<button class="btn" style="flex:1;justify-content:center;border-color:var(--success);color:var(--success);" onclick="acceptFriendRequest('${uid}');document.getElementById('user-profile-modal').remove();">
+            <i class="fa-solid fa-check"></i> Accept Request</button>`;
+    } else {
+        const entry = window._dashLbEntries?.[uid] || {};
+        actionDiv.innerHTML = `<button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="sendFriendRequest('${uid}','${(entry.name||'').replace(/'/g,"\\'")}');document.getElementById('user-profile-modal').remove();">
+            <i class="fa-solid fa-user-plus"></i> Add Friend</button>`;
+    }
+}
+
+function renderFriendsSection() {
+    // Incoming requests
+    const incEl = document.getElementById('incoming-requests-list');
+    const cntEl = document.getElementById('incoming-req-count');
+    if (incEl) {
+        if (cntEl) cntEl.innerText = incomingRequests.length || '';
+        incEl.innerHTML = incomingRequests.length ? incomingRequests.map(r => {
+            const dp = r.fromDp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(r.fromName||'U')+'&background=0D8ABC&color=fff');
+            return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,204,0,0.06);border-radius:12px;border:1px solid rgba(255,204,0,0.2);margin-bottom:8px;">
+                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;color:var(--text-main);">${r.fromName||'Someone'}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">${r.fromInstitution||'StudyVault User'}</div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn" style="padding:6px 12px;font-size:0.8rem;border-color:var(--success);color:var(--success);" onclick="acceptFriendRequest('${r.fromUid}')"><i class="fa-solid fa-check"></i></button>
+                    <button class="btn btn-danger" style="padding:6px 12px;font-size:0.8rem;" onclick="rejectFriendRequest('${r.fromUid}')"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>`;
+        }).join('') : '<p style="color:var(--text-muted);font-size:0.85rem;">কোনো request নেই</p>';
+    }
+    // Sent requests
+    const sentEl = document.getElementById('sent-requests-list');
+    if (sentEl) {
+        sentEl.innerHTML = sentRequests.length ? sentRequests.map(r => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--glass-border);margin-bottom:8px;">
+                <i class="fa-solid fa-paper-plane" style="color:var(--primary);font-size:1.2rem;"></i>
+                <div style="flex:1;">
+                    <div style="font-weight:600;color:var(--text-main);">${r.toName||'Unknown'}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Pending...</div>
+                </div>
+            </div>`).join('')
+        : '<p style="color:var(--text-muted);font-size:0.85rem;">কোনো sent request নেই</p>';
+    }
+    // Friends list
+    const friendsEl = document.getElementById('friends-list');
+    const friendsCnt = document.getElementById('friends-count');
+    if (friendsEl) {
+        if (friendsCnt) friendsCnt.innerText = `(${friendsList.length})`;
+        friendsEl.innerHTML = friendsList.length ? friendsList.map(f => {
+            const dp = f.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(f.name||'U')+'&background=0D8ABC&color=fff');
+            return `<div style="padding:16px;background:rgba(255,255,255,0.04);border-radius:14px;border:1px solid var(--glass-border);text-align:center;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);margin-bottom:8px;">
+                <div style="font-weight:600;color:var(--text-main);margin-bottom:3px;">${f.name||'Anonymous'}</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">${f.institution||f.class||''}</div>
+                <div style="display:flex;gap:6px;justify-content:center;">
+                    <button class="btn" style="padding:5px 10px;font-size:0.75rem;border-color:var(--primary);color:var(--primary);" onclick="openChatWith('${f.uid}');switchView('inbox',null)"><i class="fa-solid fa-envelope"></i></button>
+                    <button class="btn btn-danger" style="padding:5px 10px;font-size:0.75rem;" onclick="removeFriend('${f.uid}')"><i class="fa-solid fa-user-minus"></i></button>
+                </div>
+            </div>`;
+        }).join('')
+        : '<p style="color:var(--text-muted);font-size:0.85rem;grid-column:1/-1;text-align:center;padding:20px;">এখনো কোনো friend নেই। উপরে খুঁজুন!</p>';
+    }
+}
+
+// ---- Messaging System ----
+let conversations = {};
+let currentChatUid = null;
+let chatListenerUnsubscribe = null;
+
+async function loadInboxBadge() {
+    if (!window._fbLoadConversations) return;
+    try {
+        const convs = await window._fbLoadConversations();
+        conversations = convs || {};
+        const unread = Object.values(conversations).filter(c => c.unread > 0).length;
+        updateInboxBadge(unread);
+    } catch(e) {}
+}
+
+function updateInboxBadge(count) {
+    const badges = ['inbox-badge','bnav-inbox-badge','sidebar-inbox-badge'];
+    badges.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (count > 0) { el.style.display='flex'; el.innerText=count > 9?'9+':count; }
+        else { el.style.display='none'; }
+    });
+}
+
+async function renderInbox() {
+    if (!window._fbLoadConversations) return;
+    try {
+        conversations = await window._fbLoadConversations() || {};
+    } catch(e) {}
+    const list = document.getElementById('conversations-list');
+    if (!list) return;
+    const convEntries = Object.entries(conversations).sort((a,b) => (b[1].lastTimestamp||0)-(a[1].lastTimestamp||0));
+    if (!convEntries.length) {
+        list.innerHTML = '<p style="color:var(--text-muted);font-size:0.82rem;text-align:center;padding:20px;">কোনো conversation নেই।<br>Friends-এ গিয়ে কাউকে message করুন।</p>';
+        return;
+    }
+    list.innerHTML = convEntries.map(([uid, conv]) => {
+        const dp = conv.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(conv.name||'U')+'&background=0D8ABC&color=fff');
+        const isActive = uid === currentChatUid;
+        return `<div onclick="openChatWith('${uid}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;background:${isActive?'rgba(0,240,255,0.1)':'transparent'};border:1px solid ${isActive?'var(--primary)':'transparent'};margin-bottom:4px;transition:background 0.2s;" onmouseover="if('${uid}'!==currentChatUid)this.style.background='rgba(255,255,255,0.05)'" onmouseout="if('${uid}'!==currentChatUid)this.style.background='transparent'">
+            <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:0.88rem;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${conv.name||'Unknown'}</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${conv.lastMsg||'...'}</div>
+            </div>
+            ${conv.unread > 0 ? `<span style="background:var(--accent);color:#fff;font-size:0.65rem;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${conv.unread}</span>` : ''}
+        </div>`;
+    }).join('');
+    // Handle mobile layout
+    if (window.innerWidth <= 768) {
+        const layout = document.getElementById('inbox-layout');
+        if (layout) layout.style.gridTemplateColumns = '1fr';
+    }
+}
+
+async function openChatWith(friendUid) {
+    currentChatUid = friendUid;
+    const chatHeader = document.getElementById('chat-header');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInputArea = document.getElementById('chat-input-area');
+    if (!chatHeader || !chatMessages || !chatInputArea) return;
+    // Get friend info
+    const friendInfo = conversations[friendUid] || friendsList.find(f=>f.uid===friendUid) || window._dashLbEntries?.[friendUid] || {};
+    const friendName = friendInfo.name || 'Friend';
+    const friendDp = friendInfo.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(friendName)+'&background=0D8ABC&color=fff');
+    chatHeader.innerHTML = `
+        <img src="${friendDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">
+        <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;color:var(--text-main);">${friendName}</div>
+            <div style="font-size:0.72rem;color:var(--success);">● Online</div>
+        </div>`;
+    chatInputArea.style.display = 'flex';
+    chatMessages.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    // Update conversations display
+    renderInbox();
+    // Load messages
+    if (chatListenerUnsubscribe) { chatListenerUnsubscribe(); chatListenerUnsubscribe = null; }
+    if (window._fbListenMessages) {
+        chatListenerUnsubscribe = window._fbListenMessages(friendUid, (messages) => {
+            renderChatMessages(messages, friendName, friendDp);
+        });
+    }
+}
+
+function renderChatMessages(messages, friendName, friendDp) {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    if (!messages || !messages.length) {
+        container.innerHTML = `<div style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:40px;">${friendName} কে প্রথম message করুন! 👋</div>`;
+        return;
+    }
+    container.innerHTML = messages.map(msg => {
+        const isMe = msg.fromUid === currentUser;
+        const dp = isMe ? (appData.profile.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(appData.profile.name||'U')+'&background=0D8ABC&color=fff')) : friendDp;
+        const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+        return `<div style="display:flex;align-items:flex-end;gap:8px;${isMe?'flex-direction:row-reverse;':''}">
+            <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+            <div style="max-width:70%;${isMe?'text-align:right;':''}">
+                <div style="background:${isMe?'linear-gradient(135deg,var(--secondary),var(--primary))':'rgba(255,255,255,0.08)'};color:${isMe?'#fff':'var(--text-main)'};padding:10px 14px;border-radius:${isMe?'18px 18px 4px 18px':'18px 18px 18px 4px'};font-size:0.88rem;word-break:break-word;">${msg.text}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);margin-top:3px;">${time}</div>
+            </div>
+        </div>`;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendMessage() {
+    if (!currentChatUid) return;
+    const input = document.getElementById('chat-msg-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    if (!window._fbSendMessage) { showToast('Firebase not ready','error'); return; }
+    try {
+        await window._fbSendMessage(currentChatUid, text);
+        // Update conversations cache
+        if (!conversations[currentChatUid]) conversations[currentChatUid] = {};
+        conversations[currentChatUid].lastMsg = text;
+        conversations[currentChatUid].lastTimestamp = Date.now();
+    } catch(e) { showToast('Message পাঠানো যায়নি','error'); input.value = text; }
 }
 
 /* ---- INIT ---- */
@@ -3670,6 +4122,170 @@ window._fbLoadDashLeaderboard = async function() {
         }).join('');
     } catch(e) { console.warn('Dash LB error:', e); }
 };
+
+/* ---- FRIENDS SYSTEM (Firestore) ---- */
+window._fbFirestore = firestore;
+window._fbAuth = auth;
+
+window._fbGetAllLeaderboard = async function() {
+    try {
+        const snap = await getDocs(collection(firestore, 'leaderboard'));
+        const entries = [];
+        snap.forEach(d => entries.push(d.data()));
+        return entries;
+    } catch(e) { return []; }
+};
+
+window._fbSendFriendRequest = async function(toUid) {
+    const uid = auth.currentUser.uid;
+    const myName = appData.profile.name || auth.currentUser.displayName || 'Anonymous';
+    const myDp = appData.profile.dp || auth.currentUser.photoURL || '';
+    const myInstitution = appData.profile.institution || '';
+    // Save to recipient's incoming
+    await setDoc(doc(firestore, 'users', toUid, 'friendRequests', uid), {
+        fromUid: uid, fromName: myName, fromDp: myDp, fromInstitution: myInstitution,
+        type: 'incoming', timestamp: Date.now()
+    });
+    // Save to sender's sent
+    await setDoc(doc(firestore, 'users', uid, 'sentRequests', toUid), {
+        toUid, timestamp: Date.now()
+    });
+};
+
+window._fbAcceptFriendRequest = async function(fromUid) {
+    const uid = auth.currentUser.uid;
+    const myName = appData.profile.name || auth.currentUser.displayName || 'Anonymous';
+    const myDp = appData.profile.dp || '';
+    const myInstitution = appData.profile.institution || '';
+    // Get requester info
+    const reqSnap = await getDoc(doc(firestore, 'users', uid, 'friendRequests', fromUid));
+    const reqData = reqSnap.exists() ? reqSnap.data() : { fromName: 'Friend', fromDp: '', fromInstitution: '' };
+    // Add to both friends lists
+    await setDoc(doc(firestore, 'users', uid, 'friends', fromUid), {
+        uid: fromUid, name: reqData.fromName, dp: reqData.fromDp, institution: reqData.fromInstitution, since: Date.now()
+    });
+    await setDoc(doc(firestore, 'users', fromUid, 'friends', uid), {
+        uid, name: myName, dp: myDp, institution: myInstitution, since: Date.now()
+    });
+    // Delete request
+    await deleteDoc(doc(firestore, 'users', uid, 'friendRequests', fromUid));
+    await deleteDoc(doc(firestore, 'users', fromUid, 'sentRequests', uid));
+    // Notify requester
+    await setDoc(doc(firestore, 'users', fromUid, 'notifications', Date.now().toString()), {
+        msg: myName + ' আপনার friend request accept করেছে! 🎉',
+        type: 'friend_accepted', timestamp: Date.now(), read: false
+    });
+};
+
+window._fbRejectFriendRequest = async function(fromUid) {
+    const uid = auth.currentUser.uid;
+    await deleteDoc(doc(firestore, 'users', uid, 'friendRequests', fromUid));
+    await deleteDoc(doc(firestore, 'users', fromUid, 'sentRequests', uid));
+};
+
+window._fbRemoveFriend = async function(friendUid) {
+    const uid = auth.currentUser.uid;
+    await deleteDoc(doc(firestore, 'users', uid, 'friends', friendUid));
+    await deleteDoc(doc(firestore, 'users', friendUid, 'friends', uid));
+};
+
+window._fbLoadFriendsList = async function() {
+    const uid = auth.currentUser.uid;
+    try {
+        const [friendsSnap, sentSnap, incomingSnap] = await Promise.all([
+            getDocs(collection(firestore, 'users', uid, 'friends')),
+            getDocs(collection(firestore, 'users', uid, 'sentRequests')),
+            getDocs(collection(firestore, 'users', uid, 'friendRequests'))
+        ]);
+        const friends = []; friendsSnap.forEach(d => friends.push(d.data()));
+        const sent = []; sentSnap.forEach(d => sent.push(d.data()));
+        const incoming = []; incomingSnap.forEach(d => incoming.push(d.data()));
+        // Update global state
+        friendsList = friends;
+        sentRequests = sent;
+        incomingRequests = incoming;
+        return { friends, sent, incoming };
+    } catch(e) { return { friends:[], sent:[], incoming:[] }; }
+};
+
+/* ---- MESSAGING SYSTEM (Firestore) ---- */
+const { onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+
+function getChatId(uid1, uid2) {
+    return [uid1, uid2].sort().join('_');
+}
+
+window._fbSendMessage = async function(toUid, text) {
+    const uid = auth.currentUser.uid;
+    const chatId = getChatId(uid, toUid);
+    const msgId = Date.now().toString() + '_' + Math.random().toString(36).substr(2,5);
+    const msgData = { fromUid: uid, toUid, text, timestamp: Date.now(), read: false };
+    // Save message
+    await setDoc(doc(firestore, 'chats', chatId, 'messages', msgId), msgData);
+    // Update conversation metadata for both users
+    const myName = appData.profile.name || 'Anonymous';
+    const myDp = appData.profile.dp || '';
+    const friendInfo = friendsList.find(f=>f.uid===toUid) || {};
+    await setDoc(doc(firestore, 'users', uid, 'conversations', toUid), {
+        uid: toUid, name: friendInfo.name||'Friend', dp: friendInfo.dp||'',
+        lastMsg: text.length > 50 ? text.substring(0,50)+'...' : text,
+        lastTimestamp: Date.now(), unread: 0
+    });
+    await setDoc(doc(firestore, 'users', toUid, 'conversations', uid), {
+        uid, name: myName, dp: myDp,
+        lastMsg: text.length > 50 ? text.substring(0,50)+'...' : text,
+        lastTimestamp: Date.now(), unread: 1
+    });
+};
+
+window._fbListenMessages = function(friendUid, callback) {
+    const uid = auth.currentUser.uid;
+    const chatId = getChatId(uid, friendUid);
+    const msgsRef = collection(firestore, 'chats', chatId, 'messages');
+    // Mark messages as read
+    const unsubscribe = onSnapshot(
+        query(msgsRef),
+        (snap) => {
+            const messages = [];
+            snap.forEach(d => messages.push(d.data()));
+            messages.sort((a,b) => (a.timestamp||0)-(b.timestamp||0));
+            callback(messages);
+        },
+        (err) => { console.warn('Message listener error:', err); }
+    );
+    // Mark as read
+    setDoc(doc(firestore, 'users', uid, 'conversations', friendUid), {
+        unread: 0
+    }, { merge: true }).catch(()=>{});
+    return unsubscribe;
+};
+
+window._fbLoadConversations = async function() {
+    const uid = auth.currentUser.uid;
+    try {
+        const snap = await getDocs(collection(firestore, 'users', uid, 'conversations'));
+        const convs = {};
+        snap.forEach(d => { convs[d.id] = d.data(); });
+        return convs;
+    } catch(e) { return {}; }
+};
+
+/* ---- Firestore Notifications listener ---- */
+try {
+    const notifsRef = collection(firestore, 'users', auth.currentUser?.uid || 'x', 'notifications');
+    onSnapshot(notifsRef, (snap) => {
+        snap.docChanges().forEach(change => {
+            if (change.type === 'added') {
+                const data = change.doc.data();
+                if (!data.read) {
+                    addNotification(data.msg || 'নতুন notification', data.type || 'info');
+                    // Mark as read
+                    updateDoc(change.doc.ref, { read: true }).catch(()=>{});
+                }
+            }
+        });
+    });
+} catch(e) { console.warn('Notification listener error:', e); }
 
 /* ---- Log page views on navigation ---- */
 const origSwitch = window.switchView;
