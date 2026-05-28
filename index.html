@@ -3689,6 +3689,8 @@ async function renderInbox() {
 
 async function openChatWith(friendUid) {
     currentChatUid = friendUid;
+    const msgInp = document.getElementById('chat-msg-input');
+    if(msgInp){ msgInp.value=''; msgInp.style.height='auto'; }
     const chatHeader = document.getElementById('chat-header');
     const chatMessages = document.getElementById('chat-messages');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -3702,7 +3704,7 @@ async function openChatWith(friendUid) {
             if (ca) ca.style.display = 'flex';
         }
     }
-    const friendInfo = conversations[friendUid] || friendsList.find(f=>f.uid===friendUid) || window._dashLbEntries?.[friendUid] || {};
+    const friendInfo = (window._dashLbEntries&&window._dashLbEntries[friendUid]) || friendsList.find(f=>f.uid===friendUid) || conversations[friendUid] || {};
     const friendName = friendInfo.name || 'Friend';
     const friendDp = friendInfo.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(friendName)+'&background=0D8ABC&color=fff');
     const isOnline = window._onlineStatus && window._onlineStatus[friendUid];
@@ -4711,6 +4713,9 @@ async function startMessageNotifListener(uid) {
                 if (change.type === 'modified' || change.type === 'added') {
                     const data = change.doc.data();
                     if (data.unread > 0 && change.doc.id !== currentChatUid) {
+                        conversations[change.doc.id] = data;
+                        const unreadCount = Object.values(conversations).filter(c=>c.unread>0).length;
+                        updateInboxBadge(unreadCount);
                         const senderName = data.name || 'কেউ';
                         const lastMsg = data.lastMsg || 'নতুন message';
                         addNotification(`📨 ${senderName}: ${lastMsg}`, 'info');
