@@ -1195,7 +1195,7 @@
   <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 160px);border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--glass-border);" id="inbox-layout">
     <div class="conv-panel" style="background:var(--sidebar-bg);backdrop-filter:blur(16px);display:flex;flex-direction:column;border-right:1px solid var(--glass-border);overflow:hidden;">
       <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
-      <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;"></div>
+      <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;display:flex;flex-direction:column;"></div>
     </div>
     <div style="background:var(--glass-bg);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden;" id="chat-area">
       <div id="chat-header" style="padding:12px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:10px;background:var(--header-bg);backdrop-filter:blur(12px);flex-shrink:0;">
@@ -1708,7 +1708,13 @@ function switchView(viewId, navEl) {
     if (viewId === 'routine') { loadRoutine(); renderRoutine(); }
     if (viewId === 'dashboard') { renderRecentPDFs(); updateGreeting(); }
     if (viewId === 'leaderboard') { switchLeaderboardTab('streak'); }
-    if (viewId === 'friends') { loadFriendsList().then(renderFriendsSection); }
+    if (viewId === 'friends') {
+        if (window._fbLoadDashLeaderboard && Object.keys(window._dashLbEntries||{}).length === 0) {
+            window._fbLoadDashLeaderboard().then(() => loadFriendsList().then(renderFriendsSection));
+        } else {
+            loadFriendsList().then(renderFriendsSection);
+        }
+    }
     if (viewId === 'inbox') {
         renderInbox();
         if (window.innerWidth <= 768) {
@@ -3531,14 +3537,15 @@ function renderFriendsSection() {
         incEl.innerHTML = incomingRequests.length ? incomingRequests.map(r => {
             const resolvedName = r.fromName || (window._dashLbEntries&&window._dashLbEntries[r.fromUid]&&window._dashLbEntries[r.fromUid].name) || 'User';
             const dp = r.fromDp || (window._dashLbEntries&&window._dashLbEntries[r.fromUid]&&window._dashLbEntries[r.fromUid].dp) || ('https://ui-avatars.com/api/?name='+encodeURIComponent(resolvedName)+'&background=0D8ABC&color=fff');
-            return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,204,0,0.06);border-radius:12px;border:1px solid rgba(255,204,0,0.2);margin-bottom:8px;">
+            const profileEntry = (window._dashLbEntries&&window._dashLbEntries[r.fromUid]) || {uid:r.fromUid,name:resolvedName,dp,institution:r.fromInstitution||''};
+            return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,204,0,0.06);border-radius:12px;border:1px solid rgba(255,204,0,0.2);margin-bottom:8px;cursor:pointer;" onclick="showUserProfile(${JSON.stringify(profileEntry).replace(/"/g,'&quot;')})">
                 <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,204,0,0.3);">
                 <div style="flex:1;min-width:0;">
                     <div style="font-weight:700;color:var(--text-main);font-size:0.95rem;">${resolvedName}</div>
                     <div style="font-size:0.73rem;color:var(--text-muted);">${r.fromInstitution||'StudyVault User'}</div>
                     <div style="font-size:0.7rem;color:var(--warning);margin-top:2px;"><i class="fa-solid fa-user-plus"></i> Friend Request পাঠিয়েছে</div>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;flex-direction:column;gap:6px;" onclick="event.stopPropagation()">
                     <button style="background:var(--primary);color:#000;border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.82rem;font-family:var(--font-main);" onclick="acceptFriendRequest('${r.fromUid}')">Confirm</button>
                     <button style="background:rgba(255,255,255,0.1);color:var(--text-main);border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.82rem;font-family:var(--font-main);" onclick="rejectFriendRequest('${r.fromUid}')">Delete</button>
                 </div>
@@ -3551,7 +3558,8 @@ function renderFriendsSection() {
         sentEl.innerHTML = sentRequests.length ? sentRequests.map(r => {
             const resolvedName = r.toName || (window._dashLbEntries&&window._dashLbEntries[r.toUid]&&window._dashLbEntries[r.toUid].name) || 'User';
             const resolvedDp = (window._dashLbEntries&&window._dashLbEntries[r.toUid]&&window._dashLbEntries[r.toUid].dp) || ('https://ui-avatars.com/api/?name='+encodeURIComponent(resolvedName)+'&background=0D8ABC&color=fff');
-            return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--glass-border);margin-bottom:8px;">
+            const sentProfileEntry = (window._dashLbEntries&&window._dashLbEntries[r.toUid]) || {uid:r.toUid,name:resolvedName,dp:resolvedDp};
+            return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--glass-border);margin-bottom:8px;cursor:pointer;" onclick="showUserProfile(${JSON.stringify(sentProfileEntry).replace(/"/g,'&quot;')})">
                 <img src="${resolvedDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--glass-border);">
                 <div style="flex:1;">
                     <div style="font-weight:600;color:var(--text-main);">${resolvedName}</div>
@@ -3806,6 +3814,61 @@ async function sendMessage() {
         playSound();
         renderInbox();
     } catch(e) { showToast('Message পাঠানো যায়নি','error'); input.value = text; }
+}
+
+/* ---- TIMEAGO HELPER ---- */
+function timeAgo(ts) {
+    if (!ts) return '';
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'now';
+    if (mins < 60) return mins + 'm';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h';
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return days + 'd';
+    return Math.floor(days / 7) + 'w';
+}
+
+/* ---- MSG MENU ---- */
+function openMsgMenu(msgId, msgText, isMe) {
+    const existing = document.getElementById('msg-menu-overlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'msg-menu-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:6000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);';
+    const reactions = ['❤️','😂','😮','😢','👍','👎'];
+    overlay.innerHTML = `
+        <div class="glass" style="width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:20px;margin:0;">
+            <div style="display:flex;justify-content:center;gap:14px;margin-bottom:16px;font-size:1.6rem;">
+                ${reactions.map(r=>`<span onclick="reactMsg('${msgId}','${r}')" style="cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform='scale(1)'">${r}</span>`).join('')}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <button onclick="copyMsgText('${msgText}')" style="background:rgba(255,255,255,0.08);border:none;padding:12px 16px;border-radius:10px;color:var(--text-main);cursor:pointer;text-align:left;font-family:var(--font-main);font-size:0.9rem;"><i class="fa-solid fa-copy" style="margin-right:10px;color:var(--primary);"></i>Copy</button>
+                ${isMe ? `<button onclick="unsendMsg('${msgId}')" style="background:rgba(255,0,60,0.1);border:none;padding:12px 16px;border-radius:10px;color:var(--accent);cursor:pointer;text-align:left;font-family:var(--font-main);font-size:0.9rem;"><i class="fa-solid fa-trash" style="margin-right:10px;"></i>Unsend</button>` : ''}
+                ${isMe ? `<button onclick="editMsg('${msgId}','${msgText}')" style="background:rgba(255,255,255,0.06);border:none;padding:12px 16px;border-radius:10px;color:var(--text-main);cursor:pointer;text-align:left;font-family:var(--font-main);font-size:0.9rem;"><i class="fa-solid fa-pen" style="margin-right:10px;color:var(--warning);"></i>Edit</button>` : ''}
+            </div>
+            <button onclick="document.getElementById('msg-menu-overlay').remove()" style="width:100%;margin-top:12px;background:rgba(255,255,255,0.05);border:none;padding:12px;border-radius:10px;color:var(--text-muted);cursor:pointer;font-family:var(--font-main);">Cancel</button>
+        </div>`;
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+}
+function reactMsg(msgId, reaction) {
+    document.getElementById('msg-menu-overlay')?.remove();
+    if (window._fbReactMsg && currentChatUid) window._fbReactMsg(msgId, reaction, currentChatUid);
+}
+function unsendMsg(msgId) {
+    document.getElementById('msg-menu-overlay')?.remove();
+    if (window._fbUnsendMsg && currentChatUid) window._fbUnsendMsg(msgId, currentChatUid);
+}
+function editMsg(msgId, oldText) {
+    document.getElementById('msg-menu-overlay')?.remove();
+    const newText = prompt('Edit message:', oldText.replace(/\\'/g,"'"));
+    if (newText && newText.trim() && window._fbEditMsg && currentChatUid) window._fbEditMsg(msgId, newText.trim(), currentChatUid);
+}
+function copyMsgText(text) {
+    document.getElementById('msg-menu-overlay')?.remove();
+    navigator.clipboard.writeText(text.replace(/\\'/g,"'")).then(()=>showToast('Copied!','success')).catch(()=>{});
 }
 
 /* ---- INIT ---- */
