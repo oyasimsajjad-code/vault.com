@@ -1208,9 +1208,7 @@
         <div style="position:relative;">
   <button id="emoji-btn" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;" onclick="toggleEmojiPicker()" title="Emoji">😊</button>
   <div id="emoji-picker" style="display:none;position:absolute;bottom:48px;left:0;background:var(--glass-bg);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:16px;padding:10px;width:260px;flex-wrap:wrap;gap:4px;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-    <div style="display:flex;flex-wrap:wrap;gap:2px;">
-      ${['😀','😂','😍','🥰','😎','🤩','😢','😭','😡','🤔','👍','👎','❤️','🔥','✅','🎉','💯','😴','🤯','😬','🙏','💪','🫡','😏','🤗','😇','🥳','😆','😅','🤣','😁','😊','🫠','🫶','💀','👀','🫂','🤝','👏','🙌'].map(em=>`<span onclick="insertEmoji('${em}')" style="font-size:1.4rem;cursor:pointer;padding:4px;border-radius:8px;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background=''">${em}</span>`).join('')}
-    </div>
+    <div id="emoji-grid" style="display:flex;flex-wrap:wrap;gap:2px;"></div>
   </div>
 </div>
 <button style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1rem;flex-shrink:0;transition:all 0.2s;" onclick="document.getElementById('chat-photo-input').click()" onmouseover="this.style.background='rgba(0,240,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'" title="Send Photo"><i class="fa-solid fa-image"></i></button>
@@ -3481,6 +3479,22 @@ async function rejectFriendRequest(fromUid) {
     } catch(e) { showToast('Failed', 'error'); }
 }
 
+async function cancelSentRequest(toUid) {
+    if (!window._fbRejectFriendRequest) { showToast('Firebase not ready','error'); return; }
+    if (!confirm('Request cancel করবেন?')) return;
+    try {
+        const uid = window._fbAuth && window._fbAuth.currentUser ? window._fbAuth.currentUser.uid : null;
+        if (!uid) return;
+        // Delete from sender's sent
+        if (window._fbCancelSentRequest) {
+            await window._fbCancelSentRequest(toUid);
+        }
+        sentRequests = sentRequests.filter(r => r.toUid !== toUid);
+        renderFriendsSection();
+        showToast('Request cancel করা হয়েছে', 'success');
+    } catch(e) { showToast('Cancel failed', 'error'); }
+}
+
 async function removeFriend(friendUid) {
     if (!confirm('এই friend কে remove করবেন?')) return;
     if (!window._fbRemoveFriend) return;
@@ -3574,12 +3588,13 @@ function renderFriendsSection() {
             const resolvedName = r.toName || (window._dashLbEntries&&window._dashLbEntries[r.toUid]&&window._dashLbEntries[r.toUid].name) || 'User';
             const resolvedDp = (window._dashLbEntries&&window._dashLbEntries[r.toUid]&&window._dashLbEntries[r.toUid].dp) || ('https://ui-avatars.com/api/?name='+encodeURIComponent(resolvedName)+'&background=0D8ABC&color=fff');
             const sentProfileEntry = (window._dashLbEntries&&window._dashLbEntries[r.toUid]) || {uid:r.toUid,name:resolvedName,dp:resolvedDp};
-            return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--glass-border);margin-bottom:8px;cursor:pointer;" onclick="showUserProfile(${JSON.stringify(sentProfileEntry).replace(/"/g,'&quot;')})">
-                <img src="${resolvedDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--glass-border);">
-                <div style="flex:1;">
+            return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--glass-border);margin-bottom:8px;">
+                <img src="${resolvedDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--glass-border);cursor:pointer;" onclick="showUserProfile(${JSON.stringify(sentProfileEntry).replace(/"/g,'&quot;')})">
+                <div style="flex:1;min-width:0;">
                     <div style="font-weight:600;color:var(--text-main);">${resolvedName}</div>
                     <div style="font-size:0.72rem;color:var(--warning);"><i class="fa-solid fa-clock"></i> Pending...</div>
                 </div>
+                <button onclick="cancelSentRequest('${r.toUid}')" style="background:rgba(255,0,60,0.12);color:var(--accent);border:1px solid rgba(255,0,60,0.3);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:0.78rem;font-weight:600;font-family:var(--font-main);white-space:nowrap;">Cancel</button>
             </div>`;
         }).join('')
         : '<p style="color:var(--text-muted);font-size:0.85rem;">কোনো sent request নেই</p>';
@@ -3696,7 +3711,7 @@ async function openChatWith(friendUid) {
         ? '<span style="color:var(--success);font-size:0.7rem;">● Active now</span>'
         : (lastSeenTs ? `<span style="color:var(--text-muted);font-size:0.7rem;">Active ${timeAgo(lastSeenTs)} ago</span>` : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
     chatHeader.innerHTML = `
-        <button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;"><i class="fa-solid fa-arrow-left"></i></button>
+        <button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;"><i class="fa-solid fa-arrow-left"></i></button>
         <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries['${friendUid}'])showUserProfile(window._dashLbEntries['${friendUid}'])">
             <img src="${friendDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">
             ${isOnline?'<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>':''}
@@ -3869,7 +3884,13 @@ function timeAgo(ts) {
 function toggleEmojiPicker() {
     const p = document.getElementById('emoji-picker');
     if (!p) return;
-    p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+    const grid = document.getElementById('emoji-grid');
+    if (grid && !grid.innerHTML) {
+        const emojis = ['😀','😂','😍','🥰','😎','🤩','😢','😭','😡','🤔','👍','👎','❤️','🔥','✅','🎉','💯','😴','🤯','😬','🙏','💪','🫡','😏','🤗','😇','🥳','😆','😅','🤣','😁','😊','🫠','🫶','💀','👀','🫂','🤝','👏','🙌','😋','🤤','😶','🫥','🤫','🫨','😒','🙄','😤','🤬','🥺','🫠','🤑','🥴','😵','🤡','👻','💩','👾','🤖','😸','🎃','🎄','🎁','🎊','🥂','🍕','🍔','🍟','🍜','🍣','🍦','🎂','🍩','💌','💘','💝','💖','💗','💓','💞','💕','❣️','🖤','🤍','🤎','💛','💚','💙','💜','🧡','❤️‍🔥','✨','⚡','🌈','🌟','⭐','🔮','🎵','🎶','🎸','🎹','🎺','🥁','🎤','🎧'];
+        grid.innerHTML = emojis.map(em => `<span onclick="insertEmoji('${em}')" style="font-size:1.4rem;cursor:pointer;padding:5px;border-radius:8px;transition:background 0.15s;user-select:none;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background=''">${em}</span>`).join('');
+    }
+    const isOpen = p.style.display !== 'none';
+    p.style.display = isOpen ? 'none' : 'flex';
 }
 function insertEmoji(em) {
     const inp = document.getElementById('chat-msg-input');
@@ -4489,6 +4510,12 @@ window._fbRemoveFriend = async function(friendUid) {
     const uid = auth.currentUser.uid;
     await deleteDoc(doc(firestore, 'users', uid, 'friends', friendUid));
     await deleteDoc(doc(firestore, 'users', friendUid, 'friends', uid));
+};
+
+window._fbCancelSentRequest = async function(toUid) {
+    const uid = auth.currentUser.uid;
+    await deleteDoc(doc(firestore, 'users', uid, 'sentRequests', toUid));
+    await deleteDoc(doc(firestore, 'users', toUid, 'friendRequests', uid));
 };
 
 window._fbLoadFriendsList = async function() {
