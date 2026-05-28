@@ -306,8 +306,9 @@
         .greeting-text { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
         .greeting-sub { color: var(--text-muted); font-size: 0.88rem; margin-top: 2px; }
         .view-section { padding: 30px 40px; overflow-y: auto; height: calc(100vh - 85px); display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; contain: layout style; }
-        #view-inbox { overflow: hidden !important; padding: 0 !important; }
+        #view-inbox { overflow: hidden !important; padding: 0 !important; display: flex; flex-direction: column; }
         .view-section.active { display: block; }
+        #view-inbox.active { display: flex !important; flex-direction: column !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
         .section-title { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--text-main); }
@@ -519,9 +520,12 @@
         .upload-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; transition: width 0.3s; }
         .upload-pct { margin-top: 10px; color: var(--text-muted); font-size: 0.88rem; }
         @media (max-width: 768px) {
-            #inbox-layout { grid-template-columns: 1fr !important; height: calc(100vh - 56px) !important; border-radius: 0 !important; border: none !important; margin-top: 0 !important; }
-            #chat-area { min-height: unset !important; }
-            #inbox-layout > .conv-panel { border-right: none !important; }
+            #inbox-layout { grid-template-columns: 1fr !important; height: 100% !important; max-height: calc(100vh - 56px) !important; border-radius: 0 !important; border: none !important; margin-top: 0 !important; display: flex !important; flex-direction: column !important; }
+            #chat-area { min-height: 0 !important; flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+            #chat-messages { flex: 1 !important; min-height: 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; }
+            #chat-header { position: sticky !important; top: 0 !important; z-index: 50 !important; flex-shrink: 0 !important; }
+            #chat-input-area { position: sticky !important; bottom: 0 !important; z-index: 50 !important; flex-shrink: 0 !important; }
+            #inbox-layout > .conv-panel { border-right: none !important; flex: 1 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; }
             .msg-bubble-me { background: linear-gradient(135deg,var(--secondary),var(--primary)) !important; }
             #sidebar { display: none; }
             #mobile-menu-btn { display: flex; }
@@ -1190,20 +1194,17 @@
 
 <!-- Inbox Section -->
 <section id="view-inbox" class="view-section">
-  <div class="section-header">
-    <h2 class="section-title"><i class="fa-solid fa-envelope" style="color:var(--primary);margin-right:10px;"></i>Inbox</h2>
-  </div>
-  <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 85px);border-radius:0;overflow:hidden;border:1px solid var(--glass-border);" id="inbox-layout">
+  <div style="display:grid;grid-template-columns:300px 1fr;height:100%;border-radius:0;overflow:hidden;border:1px solid var(--glass-border);position:relative;" id="inbox-layout">
     <div class="conv-panel" style="background:var(--sidebar-bg);backdrop-filter:blur(16px);display:flex;flex-direction:column;border-right:1px solid var(--glass-border);overflow:hidden;">
       <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--sidebar-bg);"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
       <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;display:flex;flex-direction:column;overscroll-behavior:contain;"></div>
     </div>
-    <div style="background:var(--glass-bg);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden;" id="chat-area">
-      <div id="chat-header" style="padding:12px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:10px;background:var(--header-bg);backdrop-filter:blur(12px);flex-shrink:0;position:sticky;top:0;z-index:10;">
+    <div style="background:var(--glass-bg);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden;height:100%;position:relative;" id="chat-area">
+      <div id="chat-header" style="padding:12px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:10px;background:var(--header-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);flex-shrink:0;position:sticky;top:0;z-index:50;min-height:60px;width:100%;">
         <span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>
       </div>
-      <div id="chat-messages" style="flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;scroll-behavior:smooth;overscroll-behavior:contain;"></div>
-      <div id="chat-input-area" style="padding:10px 14px;border-top:1px solid var(--glass-border);display:none;gap:8px;align-items:flex-end;background:var(--header-bg);flex-shrink:0;">
+      <div id="chat-messages" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 18px;display:flex;flex-direction:column;scroll-behavior:smooth;overscroll-behavior:contain;min-height:0;"></div>
+      <div id="chat-input-area" style="padding:10px 14px;border-top:1px solid var(--glass-border);display:none;gap:8px;align-items:flex-end;background:var(--header-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);flex-shrink:0;position:sticky;bottom:0;z-index:50;width:100%;padding-bottom:calc(10px + env(safe-area-inset-bottom));">
         <input type="file" id="chat-photo-input" accept="image/*" class="hidden" onchange="sendChatPhoto(this)">
         <div style="position:relative;">
   <button id="emoji-btn" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;" onclick="toggleEmojiPicker()" title="Emoji">😊</button>
@@ -1728,12 +1729,19 @@ function switchView(viewId, navEl) {
             setTimeout(() => {
                 const ca = document.getElementById('chat-area');
                 const cp = document.querySelector('#inbox-layout .conv-panel');
-                if (ca) ca.style.display = 'none';
-                if (cp) cp.style.display = 'flex';
-                const ci = document.getElementById('chat-input-area');
-                if (ci) ci.style.display = 'none';
-                const ch = document.getElementById('chat-header');
-                if (ch && !currentChatUid) ch.innerHTML = '<span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>';
+                // Only reset to conversation list if no active chat
+                if (!currentChatUid) {
+                    if (ca) ca.style.display = 'none';
+                    if (cp) { cp.style.display = 'flex'; cp.style.flex = '1'; }
+                    const ci = document.getElementById('chat-input-area');
+                    if (ci) ci.style.display = 'none';
+                    const ch = document.getElementById('chat-header');
+                    if (ch) ch.innerHTML = '<span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>';
+                } else {
+                    // Chat is open — keep it visible
+                    if (ca) { ca.style.display = 'flex'; ca.style.flex = '1'; }
+                    if (cp) cp.style.display = 'none';
+                }
             }, 50);
         }
     }
@@ -3659,6 +3667,8 @@ async function renderInbox() {
     list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i></div>';
     if (!window._fbLoadConversations) return;
     try { conversations = await window._fbLoadConversations() || {}; } catch(e) { conversations = {}; }
+    // Guard: if a chat is open and header was rendered, do not disturb it
+    const _activeChat = currentChatUid;
     const entries = Object.entries(conversations).sort((a,b)=>(b[1].lastTimestamp||0)-(a[1].lastTimestamp||0));
     if (!entries.length) {
         list.innerHTML = '<div style="padding:24px 16px;text-align:center;"><div style="font-size:2.5rem;margin-bottom:10px;">💬</div><p style="color:var(--text-muted);font-size:0.82rem;">কোনো conversation নেই।<br>Friends থেকে message করুন।</p></div>';
@@ -3695,44 +3705,102 @@ async function openChatWith(friendUid) {
     const chatMessages = document.getElementById('chat-messages');
     const chatInputArea = document.getElementById('chat-input-area');
     if (!chatHeader || !chatMessages || !chatInputArea) return;
+
     // Mobile: hide conv list, show chat
     if (window.innerWidth <= 768) {
         const layout = document.getElementById('inbox-layout');
         if (layout) {
-            const cp = layout.querySelector('.conv-panel'); const ca = document.getElementById('chat-area');
-            if (cp) cp.style.display = 'none';
-            if (ca) ca.style.display = 'flex';
+            const cp = layout.querySelector('.conv-panel');
+            const ca = document.getElementById('chat-area');
+            if (cp) { cp.style.display = 'none'; cp.style.flex = ''; }
+            if (ca) { ca.style.display = 'flex'; ca.style.flex = '1'; }
         }
     }
-    const friendInfo = (window._dashLbEntries&&window._dashLbEntries[friendUid]) || friendsList.find(f=>f.uid===friendUid) || conversations[friendUid] || {};
-    const friendName = friendInfo.name || 'Friend';
-    const friendDp = friendInfo.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(friendName)+'&background=0D8ABC&color=fff');
-    const isOnline = window._onlineStatus && window._onlineStatus[friendUid];
-    const lastSeenTs = window._lastSeen && window._lastSeen[friendUid];
-    const statusHtml = isOnline
-        ? '<span style="color:var(--success);font-size:0.7rem;">● Active now</span>'
-        : (lastSeenTs ? `<span style="color:var(--text-muted);font-size:0.7rem;">Active ${timeAgo(lastSeenTs)} ago</span>` : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
-    chatHeader.innerHTML = `
-        <button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;"><i class="fa-solid fa-arrow-left"></i></button>
-        <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries['${friendUid}'])showUserProfile(window._dashLbEntries['${friendUid}'])">
-            <img src="${friendDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">
-            ${isOnline?'<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>':''}
-        </div>
-        <div style="flex:1;min-width:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries['${friendUid}'])showUserProfile(window._dashLbEntries['${friendUid}'])">
-            <div style="font-weight:700;color:var(--text-main);font-size:0.95rem;">${friendName}</div>
-            <div>${statusHtml}</div>
-        </div>`;
+
+    // Step 1: Resolve best available name/dp immediately from all local caches
+    let friendName = 'Loading...';
+    let friendDp = 'https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff';
+
+    const fromLb = window._dashLbEntries && window._dashLbEntries[friendUid];
+    const fromFriends = friendsList.find(f => f.uid === friendUid);
+    const fromConv = conversations[friendUid];
+
+    if (fromLb && fromLb.name && fromLb.name !== 'Anonymous') {
+        friendName = fromLb.name;
+        friendDp = fromLb.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(fromLb.name) + '&background=0D8ABC&color=fff');
+    } else if (fromFriends && fromFriends.name) {
+        friendName = fromFriends.name;
+        friendDp = fromFriends.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(fromFriends.name) + '&background=0D8ABC&color=fff');
+    } else if (fromConv && fromConv.name && fromConv.name !== 'Unknown' && fromConv.name !== 'Friend') {
+        friendName = fromConv.name;
+        friendDp = fromConv.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(fromConv.name) + '&background=0D8ABC&color=fff');
+    }
+
+    // Step 2: Render header immediately with best available data
+    function _renderChatHeader(name, dp) {
+        // Only update if this chat is still open
+        if (currentChatUid !== friendUid) return;
+        const isOnline = window._onlineStatus && window._onlineStatus[friendUid];
+        const lastSeenTs = window._lastSeen && window._lastSeen[friendUid];
+        const statusHtml = isOnline
+            ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active now</span>'
+            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+        const safeUid = friendUid.replace(/'/g, "\\'");
+        chatHeader.innerHTML =
+            '<button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background=\'rgba(0,240,255,0.1)\'" onmouseout="this.style.background=\'none\'"><i class="fa-solid fa-arrow-left"></i></button>' +
+            '<div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries[\'' + safeUid + '\'])showUserProfile(window._dashLbEntries[\'' + safeUid + '\'])">' +
+            '<img src="' + dp + '" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff\'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">' +
+            (isOnline ? '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>' : '') +
+            '</div>' +
+            '<div style="flex:1;min-width:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries[\'' + safeUid + '\'])showUserProfile(window._dashLbEntries[\'' + safeUid + '\'])">' +
+            '<div style="font-weight:700;color:var(--text-main);font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + name + '</div>' +
+            '<div style="margin-top:1px;">' + statusHtml + '</div>' +
+            '</div>';
+    }
+
+    _renderChatHeader(friendName, friendDp);
     chatInputArea.style.display = 'flex';
-    chatMessages.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i></div>';
-    renderInbox();
+    chatMessages.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);padding:40px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;"></i></div>';
+
+    // Step 3: Fetch real data from Firestore in background, refresh header only
+    if (window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
+        (async () => {
+            try {
+                const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+                const lbSnap = await getDoc(doc(window._fbFirestore, 'leaderboard', friendUid));
+                if (lbSnap.exists()) {
+                    const lbData = lbSnap.data();
+                    if (lbData.name && lbData.name !== 'Anonymous') {
+                        friendName = lbData.name;
+                        friendDp = lbData.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(lbData.name) + '&background=0D8ABC&color=fff');
+                        window._dashLbEntries = window._dashLbEntries || {};
+                        window._dashLbEntries[friendUid] = lbData;
+                        _renderChatHeader(friendName, friendDp);
+                    }
+                }
+            } catch(e) { /* silently keep existing header */ }
+        })();
+    }
+
+    // Step 4: Start message listener — does NOT re-render header
     if (chatListenerUnsubscribe) { chatListenerUnsubscribe(); chatListenerUnsubscribe = null; }
     if (window._fbListenMessages) {
         chatListenerUnsubscribe = window._fbListenMessages(friendUid, (messages) => {
-            renderChatMessages(messages, friendName, friendDp);
+            if (currentChatUid === friendUid) {
+                renderChatMessages(messages, friendName, friendDp);
+            }
         });
     }
-    // Focus input
-    setTimeout(() => { const inp = document.getElementById('chat-msg-input'); if(inp) inp.focus(); }, 200);
+
+    // Step 5: Refresh conversation list without clearing currentChatUid or header
+    setTimeout(() => {
+        if (currentChatUid === friendUid) renderInbox();
+    }, 300);
+
+    setTimeout(() => {
+        const inp = document.getElementById('chat-msg-input');
+        if(inp && currentChatUid === friendUid) inp.focus();
+    }, 250);
 }
 
 function closeChatPanel() {
@@ -3740,19 +3808,22 @@ function closeChatPanel() {
     if (chatListenerUnsubscribe) { chatListenerUnsubscribe(); chatListenerUnsubscribe = null; }
     const layout = document.getElementById('inbox-layout');
     if (layout) {
-        const cp = layout.querySelector('.conv-panel'); const ca = document.getElementById('chat-area');
+        const cp = layout.querySelector('.conv-panel');
+        const ca = document.getElementById('chat-area');
         if (window.innerWidth <= 768) {
-            if (cp) cp.style.display = 'flex';
-            if (ca) ca.style.display = 'none';
+            if (cp) { cp.style.display = 'flex'; cp.style.flex = '1'; }
+            if (ca) { ca.style.display = 'none'; ca.style.flex = ''; }
         } else {
-            if (cp) cp.style.display = 'flex';
-            if (ca) { ca.style.display = 'flex'; }
+            if (cp) { cp.style.display = 'flex'; }
+            if (ca) { ca.style.display = 'flex'; ca.style.flex = '1'; }
         }
     }
     const chatInputArea = document.getElementById('chat-input-area');
     if (chatInputArea) chatInputArea.style.display = 'none';
     const chatHeader = document.getElementById('chat-header');
     if (chatHeader) chatHeader.innerHTML = '<span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>';
+    const chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) chatMessages.innerHTML = '';
     renderInbox();
 }
 
@@ -4587,6 +4658,7 @@ window._fbListenMessages = function(friendUid, callback) {
     const uid = auth.currentUser.uid;
     const chatId = getChatId(uid, friendUid);
     const msgsRef = collection(firestore, 'chats', chatId, 'messages');
+    let _renderInboxDebounce = null;
     const unsubscribe = onSnapshot(
         query(msgsRef),
         (snap) => {
@@ -4598,7 +4670,11 @@ window._fbListenMessages = function(friendUid, callback) {
             setDoc(doc(firestore, 'users', uid, 'conversations', friendUid), {
                 unread: 0
             }, { merge: true }).catch(()=>{});
-            renderInbox();
+            // Debounce renderInbox to prevent rapid Firestore reads and header races
+            clearTimeout(_renderInboxDebounce);
+            _renderInboxDebounce = setTimeout(() => {
+                if (typeof renderInbox === 'function') renderInbox();
+            }, 800);
         },
         (err) => { console.warn('Message listener error:', err); }
     );
