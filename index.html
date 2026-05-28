@@ -527,8 +527,10 @@
         .upload-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; transition: width 0.3s; }
         .upload-pct { margin-top: 10px; color: var(--text-muted); font-size: 0.88rem; }
         @media (max-width: 768px) {
-            #inbox-layout { grid-template-columns: 1fr !important; height: auto !important; }
-            #chat-area { min-height: 400px; }
+            #inbox-layout { grid-template-columns: 1fr !important; height: calc(100vh - 128px) !important; border-radius: 0 !important; border: none !important; }
+            #chat-area { min-height: unset !important; }
+            #inbox-layout > .conv-panel { border-right: none !important; }
+            .msg-bubble-me { background: linear-gradient(135deg,var(--secondary),var(--primary)) !important; }
             #sidebar { display: none; }
             #mobile-menu-btn { display: flex; }
             header { padding: 11px 14px; }
@@ -680,8 +682,6 @@
             <div class="nav-item" onclick="switchView('achievements',this);closeMobileDrawer()"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this);closeMobileDrawer()"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this);closeMobileDrawer()"><i class="fa-solid fa-calendar-days"></i> Routine</div>
-            <div class="nav-item" onclick="switchView('friends',this);closeMobileDrawer()"><i class="fa-solid fa-user-group"></i> Friends</div>
-            <div class="nav-item" onclick="switchView('inbox',this);closeMobileDrawer()"><i class="fa-solid fa-envelope"></i> Inbox</div>
             <div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <div class="drawer-footer">
@@ -721,7 +721,6 @@
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i> Routine</div>
             <div class="nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div>
-            <div class="nav-item" onclick="switchView('friends',this)"><i class="fa-solid fa-user-group"></i> Friends</div>
             <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <footer>
@@ -1205,21 +1204,19 @@
   <div class="section-header">
     <h2 class="section-title"><i class="fa-solid fa-envelope" style="color:var(--primary);margin-right:10px;"></i>Inbox</h2>
   </div>
-  <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;height:calc(100vh - 200px);" id="inbox-layout">
-    <!-- Conversations List -->
-    <div class="glass" style="padding:0;overflow-y:auto;border-radius:var(--radius-md);">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);">Conversations</div>
-      <div id="conversations-list" style="padding:8px;"></div>
+  <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 160px);border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--glass-border);" id="inbox-layout">
+    <div class="conv-panel" style="background:var(--sidebar-bg);backdrop-filter:blur(16px);display:flex;flex-direction:column;border-right:1px solid var(--glass-border);overflow:hidden;">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
+      <div id="conversations-list" style="padding:6px;overflow-y:auto;flex:1;"></div>
     </div>
-    <!-- Chat Area -->
-    <div class="glass" style="padding:0;display:flex;flex-direction:column;border-radius:var(--radius-md);overflow:hidden;" id="chat-area">
-      <div id="chat-header" style="padding:14px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:12px;">
+    <div style="background:var(--glass-bg);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden;" id="chat-area">
+      <div id="chat-header" style="padding:12px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:10px;background:var(--header-bg);backdrop-filter:blur(12px);flex-shrink:0;">
         <span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>
       </div>
-      <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
-      <div id="chat-input-area" style="padding:14px;border-top:1px solid var(--glass-border);display:none;gap:10px;align-items:center;">
-        <input type="text" id="chat-msg-input" placeholder="Message লিখুন..." style="flex:1;" onkeydown="if(event.key==='Enter')sendMessage()">
-        <button class="btn btn-primary" onclick="sendMessage()" style="padding:10px 18px;"><i class="fa-solid fa-paper-plane"></i></button>
+      <div id="chat-messages" style="flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;scroll-behavior:smooth;overscroll-behavior:contain;"></div>
+      <div id="chat-input-area" style="padding:10px 14px;border-top:1px solid var(--glass-border);display:none;gap:10px;align-items:flex-end;background:var(--header-bg);flex-shrink:0;">
+        <textarea id="chat-msg-input" placeholder="Message লিখুন..." rows="1" style="flex:1;resize:none;min-height:38px;max-height:110px;padding:9px 14px;border-radius:20px;overflow-y:hidden;font-size:0.9rem;line-height:1.4;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';"></textarea>
+        <button style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--secondary),var(--primary));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.95rem;flex-shrink:0;transition:transform 0.2s,box-shadow 0.2s;" onclick="sendMessage()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
     </div>
   </div>
@@ -1327,8 +1324,8 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
-        <div class="b-nav-item" onclick="switchView('inbox',this)" id="bnav-inbox" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:8px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
-        <div class="b-nav-item" onclick="switchView('todo',this)"><i class="fa-solid fa-list-check"></i>Tasks</div>
+        <div class="b-nav-item" onclick="switchView('friends',this)" style="position:relative;"><i class="fa-solid fa-user-group"></i>Friends<span id="bnav-friends-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;"></span></div>
+        <div class="b-nav-item" onclick="switchView('inbox',this)" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
     </nav>
 </div>
@@ -1637,6 +1634,7 @@ function saveAppData() {
 
 async function startApp() {
     screens.main.classList.remove('hidden');
+    setTimeout(requestPushPermission, 3000);
     document.getElementById('fab').classList.remove('hidden');
     document.getElementById('firebase-auth-overlay').style.display = 'none';
     applyTheme(appData.settings.darkMode !== false)
@@ -1759,12 +1757,55 @@ function openMobileDrawer() { document.getElementById('mobile-drawer').classList
 function closeMobileDrawer() { document.getElementById('mobile-drawer').classList.remove('open'); }
 
 function setupSwipeGestures() {
-    let startX = 0, startY = 0;
+    let startX = 0, startY = 0, pulling = false, pullDist = 0;
     const contentArea = document.getElementById('content-area');
-    contentArea.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive:true });
+    // Pull-to-refresh indicator
+    const ptr = document.createElement('div');
+    ptr.id = 'ptr-indicator';
+    ptr.style.cssText = 'position:fixed;top:0;left:0;width:100%;z-index:9000;display:flex;align-items:center;justify-content:center;height:0;overflow:hidden;background:linear-gradient(135deg,var(--secondary),var(--primary));color:#fff;font-size:0.85rem;font-weight:600;transition:height 0.2s ease;pointer-events:none;';
+    ptr.innerHTML = '<i class="fa-solid fa-arrows-rotate" id="ptr-icon" style="margin-right:8px;"></i><span id="ptr-text">টেনে নামুন — Refresh</span>';
+    document.body.appendChild(ptr);
+    contentArea.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        pulling = false; pullDist = 0;
+    }, { passive:true });
+    contentArea.addEventListener('touchmove', e => {
+        const dy = e.touches[0].clientY - startY;
+        const dx = e.touches[0].clientX - startX;
+        const section = document.querySelector('.view-section.active');
+        const scrollTop = section ? section.scrollTop : 0;
+        if (dy > 10 && scrollTop === 0 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+            pulling = true;
+            pullDist = Math.min(dy * 0.5, 70);
+            ptr.style.height = pullDist + 'px';
+            const icon = document.getElementById('ptr-icon');
+            const txt = document.getElementById('ptr-text');
+            if (pullDist > 55) {
+                if(icon) { icon.className='fa-solid fa-arrows-rotate fa-spin'; icon.style.color='#fff'; }
+                if(txt) txt.innerText = 'ছেড়ে দিন — Refreshing!';
+            } else {
+                if(icon) icon.className='fa-solid fa-arrow-down';
+                if(txt) txt.innerText = 'টেনে নামুন — Refresh';
+            }
+        }
+    }, { passive:true });
     contentArea.addEventListener('touchend', e => {
         const dx = e.changedTouches[0].clientX - startX;
         const dy = e.changedTouches[0].clientY - startY;
+        if (pulling) {
+            ptr.style.height = '0px';
+            if (pullDist > 55) {
+                showToast('Refreshing...', 'success');
+                if (currentView === 'leaderboard') loadLeaderboard();
+                else if (currentView === 'library') loadPDFs();
+                else if (currentView === 'friends') { loadFriendsList().then(renderFriendsSection); }
+                else if (currentView === 'inbox') renderInbox();
+                else if (currentView === 'dashboard') { renderDashLeaderboard(); renderRecentPDFs(); updateGreeting(); }
+            }
+            pulling = false; pullDist = 0;
+            return;
+        }
         if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
             const idx = viewOrder.indexOf(currentView);
             if (dx < 0 && idx < viewOrder.length - 1) switchView(viewOrder[idx + 1], null);
@@ -2847,13 +2888,14 @@ searchInput.addEventListener('input',function(e){
     if(q.length<2){searchBox.style.display='none';return;}
     let res=[];
     currentPDFs.forEach(p=>{if(p.name.toLowerCase().includes(q)||p.subject.toLowerCase().includes(q))res.push({type:'PDF',text:p.name,action:`openPDF('${p.id}')`,icon:'fa-file-pdf',color:'var(--primary)'});});
-    (appData.tasks||[]).forEach(t=>{if(t.title.toLowerCase().includes(q))res.push({type:'Task',text:t.title,action:`switchView('todo',null)`,icon:'fa-list-check',color:'var(--success)'});});
-    (appData.notes||[]).forEach(n=>{if(n.title.toLowerCase().includes(q)||(n.body||'').toLowerCase().includes(q))res.push({type:'Note',text:n.title,action:`switchView('notes',null)`,icon:'fa-note-sticky',color:'var(--warning)'});});
+    (appData.tasks||[]).forEach(t=>{if(t&&t.title&&t.title.toLowerCase().includes(q))res.push({type:'Task',text:t.title,action:`switchView('todo',null)`,icon:'fa-list-check',color:'var(--success)'});});
+    (appData.notes||[]).forEach(n=>{if(n&&n.title&&(n.title.toLowerCase().includes(q)||(n.body||'').toLowerCase().includes(q)))res.push({type:'Note',text:n.title,action:`switchView('notes',null)`,icon:'fa-note-sticky',color:'var(--warning)'});});
+    (appData.revisionTopics||[]).forEach(r2=>{if(r2&&r2.topic&&r2.topic.toLowerCase().includes(q))res.push({type:'Topic',text:r2.topic,action:`switchView('revision',null)`,icon:'fa-rotate',color:'var(--primary)'});});
     if(res.length){
-        searchBox.innerHTML=res.map(r=>`<div class="search-item" onclick="${r.action};document.getElementById('search-results').style.display='none';document.getElementById('global-search').value='';"><i class="fa-solid ${r.icon}" style="color:${r.color};margin-right:10px;"></i><span style="font-size:0.78rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;margin-right:8px;">${r.type}</span>${r.text}</div>`).join('');
+        searchBox.innerHTML=res.slice(0,8).map(r=>`<div class="search-item" onclick="${r.action};document.getElementById('search-results').style.display='none';document.getElementById('global-search').value='';"><i class="fa-solid ${r.icon}" style="color:${r.color};margin-right:10px;"></i><span style="font-size:0.78rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;margin-right:8px;">${r.type}</span>${r.text}</div>`).join('');
         searchBox.style.display='block';
     } else {
-        searchBox.innerHTML='<div style="padding:14px;color:var(--text-muted);">No results.</div>';
+        searchBox.innerHTML='<div style="padding:14px 20px;color:var(--text-muted);font-size:0.85rem;display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-magnifying-glass-minus"></i> কোনো ফলাফল পাওয়া যায়নি</div>';
         searchBox.style.display='block';
     }
 });
@@ -2868,6 +2910,25 @@ function showToast(msg,type='success') {
     t.innerHTML=`<i class="fa-solid ${ic}" style="color:${col};font-size:1.1rem;flex-shrink:0;"></i><div style="color:var(--text-main);">${msg}</div>`;
     c.appendChild(t);
     setTimeout(()=>{t.style.animation='fadeOutT 0.3s ease forwards';setTimeout(()=>t.remove(),300);},3000);
+}
+async function requestPushPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') showToast('Notifications চালু হয়েছে! 🔔', 'success');
+    }
+}
+function sendPushNotification(title, body) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.visibilityState === 'visible') return;
+    try {
+        new Notification(title, {
+            body: body || '',
+            icon: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=64',
+            badge: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=32',
+            tag: 'sv-' + Date.now(),
+        });
+    } catch(e) {}
 }
 function playSound() {
     if(appData.settings.sound===false) return;
@@ -3560,33 +3621,33 @@ function updateInboxBadge(count) {
 
 async function renderInbox() {
     if (!window._fbLoadConversations) return;
-    try {
-        conversations = await window._fbLoadConversations() || {};
-    } catch(e) {}
+    try { conversations = await window._fbLoadConversations() || {}; } catch(e) {}
     const list = document.getElementById('conversations-list');
     if (!list) return;
-    const convEntries = Object.entries(conversations).sort((a,b) => (b[1].lastTimestamp||0)-(a[1].lastTimestamp||0));
-    if (!convEntries.length) {
-        list.innerHTML = '<p style="color:var(--text-muted);font-size:0.82rem;text-align:center;padding:20px;">কোনো conversation নেই।<br>Friends-এ গিয়ে কাউকে message করুন।</p>';
+    const entries = Object.entries(conversations).sort((a,b)=>(b[1].lastTimestamp||0)-(a[1].lastTimestamp||0));
+    if (!entries.length) {
+        list.innerHTML = '<div style="padding:24px 16px;text-align:center;"><div style="font-size:2.5rem;margin-bottom:10px;">💬</div><p style="color:var(--text-muted);font-size:0.82rem;">কোনো conversation নেই।<br>Friends থেকে message করুন।</p></div>';
         return;
     }
-    list.innerHTML = convEntries.map(([uid, conv]) => {
+    list.innerHTML = entries.map(([uid, conv]) => {
         const dp = conv.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(conv.name||'U')+'&background=0D8ABC&color=fff');
         const isActive = uid === currentChatUid;
-        return `<div onclick="openChatWith('${uid}')" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;background:${isActive?'rgba(0,240,255,0.1)':'transparent'};border:1px solid ${isActive?'var(--primary)':'transparent'};margin-bottom:4px;transition:background 0.2s;" onmouseover="if('${uid}'!==currentChatUid)this.style.background='rgba(255,255,255,0.05)'" onmouseout="if('${uid}'!==currentChatUid)this.style.background='transparent'">
-            <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-            <div style="flex:1;min-width:0;">
-                <div style="font-weight:600;font-size:0.88rem;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${conv.name||'Unknown'}</div>
-                <div style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${conv.lastMsg||'...'}</div>
+        const isOnline = window._onlineStatus && window._onlineStatus[uid];
+        return `<div onclick="openChatWith('${uid}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;background:${isActive?'rgba(0,240,255,0.1)':'transparent'};border:1px solid ${isActive?'var(--primary)':'transparent'};margin-bottom:2px;transition:all 0.18s;" onmouseover="this.style.background=this.style.background||'rgba(255,255,255,0.05)'" onmouseout="if('${uid}'!==currentChatUid)this.style.background='transparent'">
+            <div style="position:relative;flex-shrink:0;">
+                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${isActive?'var(--primary)':isOnline?'var(--success)':'transparent'};">
+                ${isOnline?'<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>':''}
             </div>
-            ${conv.unread > 0 ? `<span style="background:var(--accent);color:#fff;font-size:0.65rem;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${conv.unread}</span>` : ''}
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-weight:${conv.unread>0?'700':'600'};font-size:0.88rem;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">${conv.name||'Unknown'}</div>
+                    <div style="font-size:0.62rem;color:var(--text-muted);flex-shrink:0;">${conv.lastTimestamp?timeAgo(conv.lastTimestamp):''}</div>
+                </div>
+                <div style="font-size:0.73rem;color:${conv.unread>0?'var(--text-secondary)':'var(--text-muted)'};font-weight:${conv.unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${conv.lastMsg||'...'}</div>
+            </div>
+            ${conv.unread>0?`<span style="background:var(--primary);color:#000;font-size:0.62rem;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;padding:0 3px;">${conv.unread}</span>`:''}
         </div>`;
     }).join('');
-    // Handle mobile layout
-    if (window.innerWidth <= 768) {
-        const layout = document.getElementById('inbox-layout');
-        if (layout) layout.style.gridTemplateColumns = '1fr';
-    }
 }
 
 async function openChatWith(friendUid) {
@@ -3595,49 +3656,103 @@ async function openChatWith(friendUid) {
     const chatMessages = document.getElementById('chat-messages');
     const chatInputArea = document.getElementById('chat-input-area');
     if (!chatHeader || !chatMessages || !chatInputArea) return;
-    // Get friend info
+    // Mobile: hide conv list, show chat
+    if (window.innerWidth <= 768) {
+        const layout = document.getElementById('inbox-layout');
+        if (layout) {
+            const cp = layout.querySelector('.conv-panel'); const ca = document.getElementById('chat-area');
+            if (cp) cp.style.display = 'none';
+            if (ca) ca.style.display = 'flex';
+        }
+    }
     const friendInfo = conversations[friendUid] || friendsList.find(f=>f.uid===friendUid) || window._dashLbEntries?.[friendUid] || {};
     const friendName = friendInfo.name || 'Friend';
     const friendDp = friendInfo.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(friendName)+'&background=0D8ABC&color=fff');
+    const isOnline = window._onlineStatus && window._onlineStatus[friendUid];
+    const lastSeenTs = window._lastSeen && window._lastSeen[friendUid];
+    const statusHtml = isOnline
+        ? '<span style="color:var(--success);font-size:0.7rem;">● Active now</span>'
+        : (lastSeenTs ? `<span style="color:var(--text-muted);font-size:0.7rem;">Active ${timeAgo(lastSeenTs)} ago</span>` : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
     chatHeader.innerHTML = `
-        <img src="${friendDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">
-        <div style="flex:1;min-width:0;">
-            <div style="font-weight:700;color:var(--text-main);">${friendName}</div>
-            <div style="font-size:0.72rem;color:var(--success);">● Online</div>
+        ${window.innerWidth<=768?`<button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;"><i class="fa-solid fa-arrow-left"></i></button>`:''}
+        <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries['${friendUid}'])showUserProfile(window._dashLbEntries['${friendUid}'])">
+            <img src="${friendDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">
+            ${isOnline?'<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>':''}
+        </div>
+        <div style="flex:1;min-width:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries['${friendUid}'])showUserProfile(window._dashLbEntries['${friendUid}'])">
+            <div style="font-weight:700;color:var(--text-main);font-size:0.95rem;">${friendName}</div>
+            <div>${statusHtml}</div>
         </div>`;
     chatInputArea.style.display = 'flex';
-    chatMessages.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
-    // Update conversations display
+    chatMessages.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i></div>';
     renderInbox();
-    // Load messages
     if (chatListenerUnsubscribe) { chatListenerUnsubscribe(); chatListenerUnsubscribe = null; }
     if (window._fbListenMessages) {
         chatListenerUnsubscribe = window._fbListenMessages(friendUid, (messages) => {
             renderChatMessages(messages, friendName, friendDp);
         });
     }
+    // Focus input
+    setTimeout(() => { const inp = document.getElementById('chat-msg-input'); if(inp) inp.focus(); }, 200);
+}
+
+function closeChatPanel() {
+    currentChatUid = null;
+    if (chatListenerUnsubscribe) { chatListenerUnsubscribe(); chatListenerUnsubscribe = null; }
+    const layout = document.getElementById('inbox-layout');
+    if (layout) {
+        const cp = layout.querySelector('.conv-panel'); const ca = document.getElementById('chat-area');
+        if (cp) cp.style.display = 'flex';
+        if (ca) ca.style.display = 'none';
+    }
+    const chatInputArea = document.getElementById('chat-input-area');
+    if (chatInputArea) chatInputArea.style.display = 'none';
+    const chatHeader = document.getElementById('chat-header');
+    if (chatHeader) chatHeader.innerHTML = '<span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>';
 }
 
 function renderChatMessages(messages, friendName, friendDp) {
     const container = document.getElementById('chat-messages');
     if (!container) return;
     if (!messages || !messages.length) {
-        container.innerHTML = `<div style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:40px;">${friendName} কে প্রথম message করুন! 👋</div>`;
+        container.innerHTML = `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;"><div style="font-size:3rem;margin-bottom:12px;">👋</div><div style="color:var(--text-muted);font-size:0.85rem;">${friendName} কে প্রথম message করুন!</div></div>`;
         return;
     }
-    container.innerHTML = messages.map(msg => {
+    const atBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 80;
+    let html = '', lastDate = '', lastSender = '';
+    messages.forEach((msg, i) => {
+        if (msg.unsent) return;
         const isMe = msg.fromUid === currentUser;
         const dp = isMe ? (appData.profile.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(appData.profile.name||'U')+'&background=0D8ABC&color=fff')) : friendDp;
-        const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-        return `<div style="display:flex;align-items:flex-end;gap:8px;${isMe?'flex-direction:row-reverse;':''}">
-            <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-            <div style="max-width:70%;${isMe?'text-align:right;':''}">
-                <div style="background:${isMe?'linear-gradient(135deg,var(--secondary),var(--primary))':'rgba(255,255,255,0.08)'};color:${isMe?'#fff':'var(--text-main)'};padding:10px 14px;border-radius:${isMe?'18px 18px 4px 18px':'18px 18px 18px 4px'};font-size:0.88rem;word-break:break-word;">${msg.text}</div>
-                <div style="font-size:0.65rem;color:var(--text-muted);margin-top:3px;">${time}</div>
+        const ts = msg.timestamp ? new Date(msg.timestamp) : new Date();
+        const dateStr = ts.toLocaleDateString('bn-BD', {weekday:'short',month:'short',day:'numeric'});
+        const timeStr = ts.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        const isNewDate = dateStr !== lastDate;
+        const nextMsg = messages[i+1];
+        const isLastInGroup = !nextMsg || nextMsg.fromUid !== msg.fromUid || msg.unsent;
+        if (isNewDate) {
+            lastDate = dateStr;
+            html += `<div style="text-align:center;margin:12px 0 6px;"><span style="background:rgba(255,255,255,0.07);color:var(--text-muted);font-size:0.68rem;padding:3px 12px;border-radius:20px;">${dateStr}</span></div>`;
+        }
+        lastSender = msg.fromUid;
+        const safeText = (msg.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const safeMsgText = (msg.text||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const safeId = (msg.id||'').replace(/'/g,'');
+        const reaction = msg.reaction ? `<div style="position:absolute;${isMe?'left:-4px':'right:-4px'};bottom:-14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:20px;padding:1px 6px;font-size:0.85rem;backdrop-filter:blur(10px);z-index:1;">${msg.reaction}</div>` : '';
+        const editedTag = msg.edited ? `<span style="font-size:0.58rem;color:rgba(255,255,255,0.55);margin-left:4px;font-style:italic;">edited</span>` : '';
+        html += `<div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:${isLastInGroup?'10':'3'}px;${isMe?'flex-direction:row-reverse;':''}">
+            ${isLastInGroup ? `<img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;cursor:pointer;" onclick="${!isMe&&safeId?`if(window._dashLbEntries&&window._dashLbEntries['${msg.fromUid||''}'])showUserProfile(window._dashLbEntries['${msg.fromUid||''}'])`:'void(0)'}">` : '<div style="width:28px;flex-shrink:0;"></div>'}
+            <div style="max-width:72%;${isMe?'text-align:right;':''}">
+                <div style="position:relative;display:inline-block;max-width:100%;" oncontextmenu="event.preventDefault();openMsgMenu('${safeId}','${safeMsgText}',${isMe})" ondblclick="openMsgMenu('${safeId}','${safeMsgText}',${isMe})">
+                    <div style="background:${isMe?'linear-gradient(135deg,var(--secondary),var(--primary))':'rgba(255,255,255,0.1)'};color:${isMe?'#fff':'var(--text-main)'};padding:9px 13px;border-radius:${isMe?'18px 18px 4px 18px':'18px 18px 18px 4px'};font-size:0.88rem;word-break:break-word;line-height:1.45;text-align:left;">${safeText}${editedTag}</div>
+                    ${reaction}
+                </div>
+                ${isLastInGroup ? `<div style="font-size:0.62rem;color:var(--text-muted);margin-top:${msg.reaction?'14':'3'}px;">${timeStr}</div>` : ''}
             </div>
         </div>`;
-    }).join('');
-    container.scrollTop = container.scrollHeight;
+    });
+    container.innerHTML = html;
+    if (atBottom) container.scrollTop = container.scrollHeight;
 }
 
 async function sendMessage() {
@@ -3646,14 +3761,15 @@ async function sendMessage() {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
-    input.value = '';
+    input.value = ''; input.style.height = 'auto';
     if (!window._fbSendMessage) { showToast('Firebase not ready','error'); return; }
     try {
         await window._fbSendMessage(currentChatUid, text);
-        // Update conversations cache
         if (!conversations[currentChatUid]) conversations[currentChatUid] = {};
         conversations[currentChatUid].lastMsg = text;
         conversations[currentChatUid].lastTimestamp = Date.now();
+        playSound();
+        renderInbox();
     } catch(e) { showToast('Message পাঠানো যায়নি','error'); input.value = text; }
 }
 
@@ -4071,12 +4187,49 @@ async function fbPushLeaderboardStats() {
 }
 window._fbPushLeaderboardStats = fbPushLeaderboardStats;
 
+/* ---- ONLINE PRESENCE ---- */
+window._onlineStatus = {}; window._lastSeen = {};
+async function fbUpdatePresence(uid, online) {
+    try { await setDoc(doc(firestore,'presence',uid),{online,lastSeen:Date.now(),uid},{ merge:true }); } catch(e){}
+}
+async function fbLoadPresence() {
+    try {
+        const snap = await getDocs(collection(firestore,'presence'));
+        snap.forEach(d=>{ const v=d.data(); window._onlineStatus[d.id]=!!v.online; window._lastSeen[d.id]=v.lastSeen||0; });
+    } catch(e){}
+}
+if(auth.currentUser){
+    fbUpdatePresence(auth.currentUser.uid, true);
+    setInterval(()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true); }, 25000);
+    document.addEventListener('visibilitychange',()=>{ if(!auth.currentUser) return; fbUpdatePresence(auth.currentUser.uid, document.visibilityState==='visible'); });
+    window.addEventListener('beforeunload',()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false); });
+    fbLoadPresence();
+    setInterval(fbLoadPresence, 45000);
+}
+
+/* ---- MESSAGE ACTIONS ---- */
+window._fbReactMsg = async function(msgId, reaction, friendUid) {
+    if(!msgId||!friendUid||!auth.currentUser) return;
+    const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
+    try { await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{reaction},{merge:true}); } catch(e){ showToast('React failed','error'); }
+};
+window._fbUnsendMsg = async function(msgId, friendUid) {
+    if(!msgId||!friendUid||!auth.currentUser) return;
+    const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
+    try { await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{unsent:true,text:'This message was unsent',reaction:null},{merge:true}); showToast('Message unsent','success'); } catch(e){ showToast('Unsend failed','error'); }
+};
+window._fbEditMsg = async function(msgId, newText, friendUid) {
+    if(!msgId||!friendUid||!auth.currentUser) return;
+    const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
+    try { await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{text:newText,edited:true},{merge:true}); showToast('Edited','success'); } catch(e){ showToast('Edit failed','error'); }
+};
+
 /* ---- LEADERBOARD: Load all users ---- */
 window._fbLoadLeaderboard = async function(tab) {
     try {
         const snap = await getDocs(collection(firestore, 'leaderboard'));
         let entries = [];
-        snap.forEach(d => entries.push(d.data()));
+        snap.forEach(d => { const data = d.data(); if (data && data.uid) entries.push(data); });
         const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'hours' : 'tasks';
         entries.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
         entries = entries.slice(0, 50);
@@ -4231,6 +4384,7 @@ window._fbSendMessage = async function(toUid, text) {
         lastMsg: text.length > 50 ? text.substring(0,50)+'...' : text,
         lastTimestamp: Date.now(), unread: 1
     });
+    if (typeof sendPushNotification === 'function') sendPushNotification(myName + ' sent a message', text.length > 80 ? text.substring(0,80)+'...' : text);
 };
 
 window._fbListenMessages = function(friendUid, callback) {
@@ -4274,6 +4428,7 @@ try {
                 const data = change.doc.data();
                 if (!data.read) {
                     addNotification(data.msg || 'নতুন notification', data.type || 'info');
+                    if (typeof sendPushNotification === 'function') sendPushNotification('StudyVault 🔔', data.msg || 'নতুন notification');
                     // Mark as read
                     updateDoc(change.doc.ref, { read: true }).catch(()=>{});
                 }
