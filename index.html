@@ -3739,13 +3739,19 @@ function closeChatPanel() {
     const layout = document.getElementById('inbox-layout');
     if (layout) {
         const cp = layout.querySelector('.conv-panel'); const ca = document.getElementById('chat-area');
-        if (cp) cp.style.display = 'flex';
-        if (ca) ca.style.display = 'none';
+        if (window.innerWidth <= 768) {
+            if (cp) cp.style.display = 'flex';
+            if (ca) ca.style.display = 'none';
+        } else {
+            if (cp) cp.style.display = 'flex';
+            if (ca) { ca.style.display = 'flex'; }
+        }
     }
     const chatInputArea = document.getElementById('chat-input-area');
     if (chatInputArea) chatInputArea.style.display = 'none';
     const chatHeader = document.getElementById('chat-header');
     if (chatHeader) chatHeader.innerHTML = '<span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>';
+    renderInbox();
 }
 
 function renderChatMessages(messages, friendName, friendDp) {
@@ -4386,7 +4392,12 @@ if(auth.currentUser){
 window._fbReactMsg = async function(msgId, reaction, friendUid) {
     if(!msgId||!friendUid||!auth.currentUser) return;
     const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
-    try { await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{reaction},{merge:true}); } catch(e){ showToast('React failed','error'); }
+    try {
+        const msgSnap = await getDoc(doc(firestore,'chats',chatId,'messages',msgId));
+        const currentReaction = msgSnap.exists() ? msgSnap.data().reaction : null;
+        const newReaction = currentReaction === reaction ? null : reaction;
+        await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{reaction: newReaction},{merge:true});
+    } catch(e){ showToast('React failed','error'); }
 };
 window._fbUnsendMsg = async function(msgId, friendUid) {
     if(!msgId||!friendUid||!auth.currentUser) return;
@@ -4574,7 +4585,6 @@ window._fbListenMessages = function(friendUid, callback) {
     const uid = auth.currentUser.uid;
     const chatId = getChatId(uid, friendUid);
     const msgsRef = collection(firestore, 'chats', chatId, 'messages');
-    // Mark messages as read
     const unsubscribe = onSnapshot(
         query(msgsRef),
         (snap) => {
@@ -4582,13 +4592,14 @@ window._fbListenMessages = function(friendUid, callback) {
             snap.forEach(d => messages.push({ id: d.id, ...d.data() }));
             messages.sort((a,b) => (a.timestamp||0)-(b.timestamp||0));
             callback(messages);
+            // Auto-refresh conversation list
+            setDoc(doc(firestore, 'users', uid, 'conversations', friendUid), {
+                unread: 0
+            }, { merge: true }).catch(()=>{});
+            renderInbox();
         },
         (err) => { console.warn('Message listener error:', err); }
     );
-    // Mark as read
-    setDoc(doc(firestore, 'users', uid, 'conversations', friendUid), {
-        unread: 0
-    }, { merge: true }).catch(()=>{});
     return unsubscribe;
 };
 
