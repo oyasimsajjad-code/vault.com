@@ -1200,7 +1200,27 @@
   </div>
   <div id="routine-list-container"></div>
 </section>
-        <!-- Friends Section -->
+        <!-- Group Study Section -->
+<section id="view-groupstudy" class="view-section">
+  <div class="section-header">
+    <h2 class="section-title"><i class="fa-solid fa-users-rectangle" style="color:var(--primary);margin-right:10px;"></i>Group Study</h2>
+  </div>
+  <div class="glass" style="padding:28px;text-align:center;margin-bottom:20px;">
+    <div style="font-size:3rem;margin-bottom:12px;">📚</div>
+    <h3 style="color:var(--text-main);margin-bottom:8px;font-family:var(--font-display);">Study Together</h3>
+    <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;">Create or join a study room to study with friends in real time.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="createGroupRoom()"><i class="fa-solid fa-plus"></i> Create Room</button>
+      <button class="btn" onclick="joinGroupRoom()"><i class="fa-solid fa-right-to-bracket"></i> Join Room</button>
+    </div>
+  </div>
+  <div class="glass" style="padding:20px;">
+    <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-door-open" style="color:var(--primary);margin-right:8px;"></i>Active Rooms</h3>
+    <div id="group-rooms-list"><p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:20px;">কোনো active room নেই। একটি room তৈরি করুন!</p></div>
+  </div>
+</section>
+
+<!-- Friends Section -->
 <section id="view-friends" class="view-section">
   <div class="section-header">
     <h2 class="section-title"><i class="fa-solid fa-user-group" style="color:var(--primary);margin-right:10px;"></i>Friends</h2>
@@ -1535,8 +1555,9 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
-        <div class="b-nav-item" onclick="switchView('friends',this)" style="position:relative;"><i class="fa-solid fa-user-group"></i>Friends<span id="bnav-friends-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;"></span></div>
         <div class="b-nav-item" onclick="switchView('inbox',this)" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
+        <div class="b-nav-item" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i>AI</div>
+        <div class="b-nav-item" onclick="switchView('friends',this)" style="position:relative;"><i class="fa-solid fa-user-group"></i>Friends<span id="bnav-friends-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;"></span></div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
     </nav>
 </div>
@@ -1681,7 +1702,7 @@ let appData = {
 };
 let db, charts = {};
 let navHistory = ['dashboard'], currentView = 'dashboard';
-let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','leaderboard','friends','inbox','ai','challenge','profile'];
+let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','leaderboard','groupstudy','friends','inbox','ai','challenge','profile'];
 
 const screens = {
     lock: document.getElementById('app-lock-screen'),
@@ -1893,7 +1914,7 @@ function updateGreeting() {
 }
 
 /* ---- NAVIGATION ---- */
-const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, friends:12, inbox:13, ai:14, challenge:15, profile:16 };
+const VIEW_INDEX = { dashboard:0, library:1, notes:2, todo:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, groupstudy:12, friends:13, inbox:14, ai:15, challenge:16, profile:17 };
 const BNAV_INDEX = { dashboard:0, library:1, leaderboard:2, todo:3, pomodoro:4 };
 
 function syncNavHighlight(viewId) {
@@ -3539,18 +3560,13 @@ async function searchInstitution(val) {
     clearTimeout(instSearchTimeout);
     instSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'claude-sonnet-4-20250514',
-                    max_tokens: 300,
-                    system: 'You are a Bangladesh school and college database. When given a search query, return ONLY a JSON array of matching Bangladesh school/college names (max 8 results). No explanation, no markdown, just raw JSON array like: ["School Name 1","School Name 2"]. Include schools, colleges, universities, madrasas, cadet colleges from all districts of Bangladesh.',
-                    messages: [{ role: 'user', content: `Search: "${val}"` }]
-                })
+            const data = await callClaudeAPI({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 300,
+                system: 'You are a Bangladesh school and college database. When given a search query, return ONLY a JSON array of matching Bangladesh school/college names (max 8 results). No explanation, no markdown, just raw JSON array like: ["School Name 1","School Name 2"]. Include schools, colleges, universities, madrasas, cadet colleges from all districts of Bangladesh.',
+                messages: [{ role: 'user', content: `Search: "${val}"` }]
             });
-            const data = await response.json();
-            const text = data.content?.[0]?.text || '[]';
+           const text = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '[]';
             const aiResults = JSON.parse(text.replace(/```json|```/g, '').trim());
 
             // Merge local + AI, remove duplicates
@@ -4258,6 +4274,37 @@ let aiXP = 0;
 let aiQueriestoday = 0;
 let aiXPHistory = [];
 const AI_MODEL = 'claude-sonnet-4-20250514';
+const AI_API_URL = 'https://api.anthropic.com/v1/messages';
+
+async function callClaudeAPI(payload) {
+    // Try direct first, fallback to allorigins proxy
+    const proxies = [
+        async () => {
+            const r = await fetch(AI_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+                body: JSON.stringify(payload)
+            });
+            if (!r.ok) throw new Error('status ' + r.status);
+            return r.json();
+        },
+        async () => {
+            const encoded = encodeURIComponent(JSON.stringify(payload));
+            const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(AI_API_URL)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ method: 'POST', headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' }, body: JSON.stringify(payload) })
+            });
+            if (!r.ok) throw new Error('proxy failed');
+            return r.json();
+        }
+    ];
+    let lastErr;
+    for (const attempt of proxies) {
+        try { return await attempt(); } catch(e) { lastErr = e; }
+    }
+    throw lastErr;
+}
 
 function switchAIMode(mode, btn) {
     document.querySelectorAll('.ai-panel').forEach(p => p.style.display = 'none');
@@ -4314,20 +4361,14 @@ async function sendAIMessage() {
     showAITyping();
     try {
         const systemPrompt = `You are a smart, friendly AI study assistant for Bangladeshi students (SSC/HSC/Medical Admission). ${subj ? 'The student is studying ' + subj + '.' : ''} Answer concisely in a mix of Bengali and English as appropriate. Use bullet points, bold key terms, and keep explanations exam-focused. If asked in Bangla, reply in Bangla.`;
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: AI_MODEL, max_tokens: 1000,
-                system: systemPrompt,
-                messages: aiChatHistory.slice(-8)
-            })
+        const data = await callClaudeAPI({
+            model: AI_MODEL, max_tokens: 1000,
+            system: systemPrompt,
+            messages: aiChatHistory.slice(-8)
         });
-        const data = await response.json();
         hideAITyping();
-        const reply = data.content?.[0]?.text || 'দুঃখিত, উত্তর দেওয়া সম্ভব হলো না।';
+        const reply = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : 'দুঃখিত, উত্তর দেওয়া সম্ভব হলো না।';
         aiChatHistory.push({ role: 'assistant', content: reply });
-        // Format reply
         const formatted = reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
         appendAIMessage('assistant', formatted);
         addAIXP(15, 'AI Chat');
@@ -4335,7 +4376,7 @@ async function sendAIMessage() {
         updateAIXPBar();
     } catch(e) {
         hideAITyping();
-        appendAIMessage('assistant', '<span style="color:var(--accent);">⚠️ Connection error. Please try again.</span>');
+        appendAIMessage('assistant', '<span style="color:var(--accent);">⚠️ ' + (e.message || 'Connection error') + '. Please check your internet and try again.</span>');
     }
 }
 
@@ -4349,17 +4390,12 @@ async function generateMCQs() {
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> তৈরি হচ্ছে...';
     area.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;"></i></div>';
     try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: AI_MODEL, max_tokens: 1000,
-                system: 'Generate exactly ' + count + ' MCQ questions for ' + subj + ' on the topic: ' + topic + '. Return ONLY a JSON array. Each object must have: {"q":"question","options":["A) ...","B) ...","C) ...","D) ..."],"answer":"A"}. No markdown, no explanation, raw JSON only.',
-                messages: [{ role: 'user', content: 'Generate ' + count + ' MCQs on: ' + topic }]
-            })
+        const data = await callClaudeAPI({
+            model: AI_MODEL, max_tokens: 1000,
+            system: 'Generate exactly ' + count + ' MCQ questions for ' + subj + ' on the topic: ' + topic + '. Return ONLY a JSON array. Each object must have: {"q":"question","options":["A) ...","B) ...","C) ...","D) ..."],"answer":"A"}. No markdown, no explanation, raw JSON only.',
+            messages: [{ role: 'user', content: 'Generate ' + count + ' MCQs on: ' + topic }]
         });
-        const data = await response.json();
-        const text = (data.content?.[0]?.text || '[]').replace(/```json|```/g, '').trim();
+        const text = ((data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '[]').replace(/```json|```/g, '').trim();
         let mcqs = [];
         try { mcqs = JSON.parse(text); } catch(pe) {
             const match = text.match(/\[[\s\S]*\]/);
@@ -4447,17 +4483,12 @@ async function explainTopic() {
     area.style.display = 'none';
     const levelMap = { simple:'সহজ ও সংক্ষিপ্তভাবে বাংলায়', detailed:'বিস্তারিত ও উদাহরণসহ', exam:'পরীক্ষামুখী key points দিয়ে', story:'মজার গল্পের মতো করে' };
     try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: AI_MODEL, max_tokens: 1000,
-                system: 'You are an expert tutor for Bangladeshi SSC/HSC students. Explain topics ' + levelMap[level] + '. Use bullet points and bold for key terms. Mix Bengali and English naturally.',
-                messages: [{ role: 'user', content: 'Explain: ' + topic }]
-            })
+        const data = await callClaudeAPI({
+            model: AI_MODEL, max_tokens: 1000,
+            system: 'You are an expert tutor for Bangladeshi SSC/HSC students. Explain topics ' + levelMap[level] + '. Use bullet points and bold for key terms. Mix Bengali and English naturally.',
+            messages: [{ role: 'user', content: 'Explain: ' + topic }]
         });
-        const data = await response.json();
-        const text = data.content?.[0]?.text || 'ব্যাখ্যা পাওয়া যায়নি।';
+        const text = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : 'ব্যাখ্যা পাওয়া যায়নি।';
         area.style.display = 'block';
         area.innerHTML = '<h3 style="color:var(--primary);margin-bottom:14px;font-family:var(--font-display);">' + topic + '</h3>' +
             text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
@@ -4484,17 +4515,12 @@ async function analyzeWeakTopics() {
     }).map(r => r.topic + ' (' + r.subject + ')');
     const completionRate = appData.stats.completedTasks ? Math.round((appData.stats.completedTasks / Math.max(appData.tasks.length, 1)) * 100) : 0;
     try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: AI_MODEL, max_tokens: 800,
-                system: 'You are an AI study coach for Bangladeshi students. Analyze study data and give personalized, actionable advice in a mix of Bengali and English. Be specific and encouraging.',
-                messages: [{ role: 'user', content: JSON.stringify({ studyHours: studyData, overdueRevisions: revTopics, taskCompletion: completionRate + '%', streakDays: appData.streak.current || 0 }) + '\n\nBased on this data, identify weak subjects, suggest a 7-day revision plan, and give 3 specific improvement tips. Format with clear sections.' }]
-            })
+        const data = await callClaudeAPI({
+            model: AI_MODEL, max_tokens: 800,
+            system: 'You are an AI study coach for Bangladeshi students. Analyze study data and give personalized, actionable advice in a mix of Bengali and English. Be specific and encouraging.',
+            messages: [{ role: 'user', content: JSON.stringify({ studyHours: studyData, overdueRevisions: revTopics, taskCompletion: completionRate + '%', streakDays: appData.streak.current || 0 }) + '\n\nBased on this data, identify weak subjects, suggest a 7-day revision plan, and give 3 specific improvement tips. Format with clear sections.' }]
         });
-        const data = await response.json();
-        const text = data.content?.[0]?.text || 'বিশ্লেষণ করা যায়নি।';
+        const text = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : 'বিশ্লেষণ করা যায়নি।';
         area.innerHTML = '<div class="glass" style="padding:20px;border-left:4px solid var(--warning);">' +
             text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/#{1,3} (.*)/g, '<h3 style="color:var(--primary);margin:14px 0 8px;">$1</h3>') +
             '</div>';
@@ -4646,12 +4672,14 @@ function renderDailyChallenge() {
     saveChallengeState(state);
     listEl.innerHTML = challenges.map(ch => {
         const done = state.completed.includes(ch.id);
+        const autoCheck = ch.type === 'auto' && ch.check && ch.check();
         return `<div class="challenge-item ${done ? 'done' : ''}" id="ch-item-${ch.id}">
             <div class="challenge-check ${done ? 'checked' : ''}" onclick="manualCompleteChallenge('${ch.id}',${ch.xp},'${ch.title.replace(/'/g,"\\'")}')"></div>
             <div style="font-size:1.4rem;flex-shrink:0;">${ch.icon}</div>
             <div style="flex:1;min-width:0;">
                 <div style="font-weight:600;color:var(--text-main);font-size:0.9rem;${done?'text-decoration:line-through;':''}">${ch.title}</div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${ch.desc}</div>
+                ${done && !autoCheck ? '<div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;opacity:0.7;">tap ✓ to undo</div>' : ''}
             </div>
             <div style="font-family:var(--font-display);font-weight:800;color:${done?'var(--success)':'var(--warning)'};font-size:0.9rem;flex-shrink:0;">+${ch.xp} XP</div>
         </div>`;
@@ -4661,13 +4689,41 @@ function renderDailyChallenge() {
 
 function manualCompleteChallenge(id, xp, title) {
     const state = loadChallengeState();
-    if (state.completed.includes(id)) return;
+    if (state.completed.includes(id)) {
+        // UNDO: remove from completed
+        state.completed = state.completed.filter(c => c !== id);
+        saveChallengeState(state);
+        // Deduct XP
+        if (appData.stats) {
+            appData.stats.aiXP = Math.max(0, (appData.stats.aiXP || 0) - xp);
+            appData.stats.aiXPHistory = (appData.stats.aiXPHistory || []).filter(h => h.reason !== 'Challenge: ' + title || h._undone);
+            appData.stats.aiXPHistory.unshift({ amount: -xp, reason: 'Undid: ' + title, time: new Date().toLocaleTimeString(), ts: Date.now(), _undone: true });
+            saveAppData();
+        }
+        showToast('Challenge undone ↩️', 'success');
+        updateAIXPBar();
+        renderDailyChallenge();
+        return;
+    }
     state.completed.push(id);
     saveChallengeState(state);
     addAIXP(xp, 'Challenge: ' + title);
     updateAIXPBar();
     showToast('+' + xp + ' XP earned! Challenge complete! ⚡', 'success');
     renderDailyChallenge();
+}
+
+/* ---- GROUP STUDY ---- */
+function createGroupRoom() {
+    const name = prompt('Room এর নাম দিন:');
+    if (!name || !name.trim()) return;
+    const subject = prompt('বিষয়:') || 'General';
+    showToast('Room তৈরি হচ্ছে... (Coming Soon)', 'success');
+}
+function joinGroupRoom() {
+    const code = prompt('Room code দিন:');
+    if (!code || !code.trim()) return;
+    showToast('Room খোঁজা হচ্ছে... (Coming Soon)', 'success');
 }
 
 /* ---- INIT ---- */
