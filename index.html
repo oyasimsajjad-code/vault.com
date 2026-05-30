@@ -5579,10 +5579,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
-await setPersistence(auth, browserLocalPersistence);
 const firestore = getFirestore(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
+// setPersistence non-blocking — don't await at top level
+setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
 
 /* ---- Sync indicator helpers ---- */
 function showSync() {
@@ -6161,7 +6162,7 @@ window._fbLoadFriendsList = async function() {
 /* ---- MESSAGING SYSTEM (Firestore) ---- */
 // onSnapshot already imported at top of module via named import
 // (using the getFirestore import block above - no extra import needed)
-const { onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').catch(() => ({ onSnapshot: () => () => {} }));
+const { onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
 
 function getChatId(uid1, uid2) {
     return [uid1, uid2].sort().join('_');
