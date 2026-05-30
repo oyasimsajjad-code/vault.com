@@ -4243,8 +4243,10 @@ async function sendMessage() {
     if (!input) return;
     const text = input.value.trim();
     if (!text) return;
-    input.value = ''; input.style.height = 'auto';
     if (!window._fbSendMessage) { showToast('Firebase not ready','error'); return; }
+    input.value = '';
+    input.style.height = 'auto';
+    input.dispatchEvent(new Event('input'));
     try {
         await window._fbSendMessage(currentChatUid, text);
         if (!conversations[currentChatUid]) conversations[currentChatUid] = {};
@@ -4252,7 +4254,10 @@ async function sendMessage() {
         conversations[currentChatUid].lastTimestamp = Date.now();
         playSound();
         renderInbox();
-    } catch(e) { showToast('Message পাঠানো যায়নি','error'); input.value = text; }
+    } catch(e) {
+        showToast('Message পাঠানো যায়নি — Firestore rules চেক করো','error');
+        console.error('Send error:', e);
+    }
 }
 
 /* ---- TIMEAGO HELPER ---- */
@@ -6029,6 +6034,33 @@ async function startMessageNotifListener(uid) {
 if (auth.currentUser) {
     startNotifListener(auth.currentUser.uid);
     startMessageNotifListener(auth.currentUser.uid);
+    // Deliver any pending push notifications from queue (when app was closed)
+    (async () => {
+        try {
+            const uid = auth.currentUser.uid;
+            const qSnap = await getDocs(
+                query(collection(firestore, 'push_queue'),
+                where('toUid', '==', uid),
+                where('delivered', '==', false))
+            );
+            for (const d of qSnap.docs) {
+                const data = d.data();
+                const age = Date.now() - (data.timestamp || 0);
+                if (age < 86400000) { // Only last 24 hours
+                    addNotification(
+                        (data.title || 'Notification') + (data.body ? ': ' + data.body : ''),
+                        data.type || 'info'
+                    );
+                    if (data.type === 'message') loadInboxBadge();
+                    if (data.type === 'friend_request' || data.type === 'friend_accepted') {
+                        loadFriendRequestsBadge();
+                    }
+                }
+                // Mark delivered
+                await updateDoc(d.ref, { delivered: true });
+            }
+        } catch(e) { console.warn('Push queue delivery error:', e); }
+    })();
 }
 
 /* ---- FCM: Send notification via Firestore trigger queue ---- */
