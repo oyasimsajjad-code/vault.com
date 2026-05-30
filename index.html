@@ -3449,9 +3449,19 @@ function showUserProfile(entry) {
     let onlineHtml = '';
     if (!isMe) {
         if (isOnline) {
-            onlineHtml = '<div style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;"></span><span style="font-size:0.75rem;color:var(--success);font-weight:600;">Active Now</span></div>';
+            onlineHtml = '<div style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span><span style="font-size:0.75rem;color:var(--success);font-weight:600;">Active Now</span></div>';
         } else if (lastSeenTs && lastSeenTs > 0) {
-            onlineHtml = '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Active ' + timeAgo(lastSeenTs) + ' ago</div>';
+            const diffMs = Date.now() - lastSeenTs;
+            const diffMins = Math.floor(diffMs / 60000);
+            let lastSeenText = '';
+            if (diffMins < 1) lastSeenText = 'just now';
+            else if (diffMins < 60) lastSeenText = diffMins + ' minutes ago';
+            else if (diffMins < 1440) lastSeenText = Math.floor(diffMins/60) + ' hours ago';
+            else if (diffMins < 10080) lastSeenText = Math.floor(diffMins/1440) + ' days ago';
+            else lastSeenText = 'a while ago';
+            onlineHtml = '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:#666;display:inline-block;"></span>Active ' + lastSeenText + '</div>';
+        } else {
+            onlineHtml = '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:#555;display:inline-block;"></span>Offline</div>';
         }
     }
     // Action buttons
@@ -4205,7 +4215,7 @@ function attachSwipeReply(container) {
                 <div style="height:60px;background:linear-gradient(135deg,rgba(112,0,255,0.3),rgba(0,240,255,0.2));position:relative;"></div>
                 <div style="padding:0 14px 14px;text-align:center;margin-top:-30px;">
                     <div style="position:relative;display:inline-block;">
-                        <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid var(--bg-base);cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries['${f.uid}'])showUserProfile(window._dashLbEntries['${f.uid}'])">
+                        <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid var(--bg-base);cursor:pointer;" onclick="showUserProfile(window._dashLbEntries&&window._dashLbEntries['${f.uid}']?window._dashLbEntries['${f.uid}']:{uid:'${f.uid}',name:'${resolvedName.replace(/'/g,"\\'")}',dp:'${dp.replace(/'/g,"\\'")}',streak:0,hours:0,tasks:0,institution:'${(f.institution||'').replace(/'/g,"\\'")}',class:'${(f.class||'').replace(/'/g,"\\'")}' })">
                         ${isOnline?'<span style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:var(--success);border:2px solid var(--bg-base);display:block;"></span>':''}
                     </div>
                     <div style="font-weight:700;color:var(--text-main);margin-top:6px;font-size:0.92rem;">${resolvedName}</div>
@@ -6004,20 +6014,34 @@ async function fbLoadPresence() {
         const snap = await getDocs(collection(firestore,'presence'));
         snap.forEach(d=>{
             const v=d.data();
-            // Hide online status from blocked users
             const blocked = typeof isUserBlocked==='function' && isUserBlocked(d.id);
             window._onlineStatus[d.id] = blocked ? false : !!v.online;
             window._lastSeen[d.id] = blocked ? 0 : (v.lastSeen||0);
         });
     } catch(e){}
 }
+
+// Realtime presence listener for friends only
+function startPresenceListener() {
+    if (!auth.currentUser) return;
+    // Poll every 30s for presence updates
+    fbLoadPresence();
+    setInterval(() => {
+        fbLoadPresence();
+    }, 30000);
+}
+
 if(auth.currentUser){
     fbUpdatePresence(auth.currentUser.uid, true);
     setInterval(()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true); }, 25000);
-    document.addEventListener('visibilitychange',()=>{ if(!auth.currentUser) return; fbUpdatePresence(auth.currentUser.uid, document.visibilityState==='visible'); });
+    document.addEventListener('visibilitychange',()=>{ 
+        if(!auth.currentUser) return; 
+        fbUpdatePresence(auth.currentUser.uid, document.visibilityState==='visible');
+        // Refresh presence when coming back to app
+        if(document.visibilityState==='visible') fbLoadPresence();
+    });
     window.addEventListener('beforeunload',()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false); });
-    fbLoadPresence();
-    setInterval(fbLoadPresence, 20000);
+    startPresenceListener();
 }
 
 /* ---- MESSAGE ACTIONS ---- */
