@@ -4208,7 +4208,6 @@ function attachSwipeReply(container) {
         : '<p style="color:var(--text-muted);font-size:0.85rem;grid-column:1/-1;text-align:center;padding:20px;">এখনো কোনো friend নেই। উপরে খুঁজুন!</p>';
     }
 }
-}
 
 // ---- Messaging System ----
 let conversations = {};
@@ -5749,6 +5748,7 @@ window._fbDeletePDF = fbDeletePDF;
 /* ---- Load PDFs from Firestore into IndexedDB ---- */
 async function syncPDFsFromCloud(uid) {
     try {
+        if (!db) { console.warn('DB not ready, skipping PDF sync'); return; }
         const snap = await getDocs(collection(firestore, 'users', uid, 'pdfs'));
         for (const d of snap.docs) {
             const pdfMeta = d.data();
