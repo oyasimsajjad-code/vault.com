@@ -6093,6 +6093,21 @@ try {
 
     // Save FCM token to Firestore
     window._fbSaveFCMToken = async function(token) {
+    if (!auth.currentUser || !token) return;
+    try {
+        await setDoc(
+            doc(firestore, 'fcmTokens', auth.currentUser.uid),
+            {
+                token,
+                uid: auth.currentUser.uid,
+                name: appData.profile.name || 'Anonymous',
+                device: navigator.userAgent.substring(0, 100),
+                updatedAt: Date.now(),
+                active: true
+            }
+        );
+    } catch(e) { console.warn('FCM token save error:', e); }
+};
         if (!auth.currentUser || !token) return;
         try {
             await setDoc(
@@ -6137,6 +6152,13 @@ window.switchView = function(viewId, navEl) {
     logEvent(analytics, 'page_view', { page_title: viewId });
 };
 
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(reg => console.log('SW registered:', reg.scope))
+    .catch(err => console.warn('SW error:', err));
+}
 </script>
 </body>
 </html>
