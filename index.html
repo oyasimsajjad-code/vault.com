@@ -3438,39 +3438,79 @@ function showUserProfile(entry) {
     if (existing) existing.remove();
     const isMe = entry.uid === currentUser;
     const dp = entry.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(entry.name || 'U') + '&background=0D8ABC&color=fff');
+    const isFriend = friendsList.some(f => f.uid === entry.uid);
+    const isSent = sentRequests.some(r => r.toUid === entry.uid);
+    const isIncoming = incomingRequests.some(r => r.fromUid === entry.uid);
+    const _isBlocked = typeof isUserBlocked === 'function' && isUserBlocked(entry.uid);
+    const _entryName = (entry.name || 'User').replace(/'/g, "\\'");
+    const isOnline = window._onlineStatus && window._onlineStatus[entry.uid];
+    const lastSeenTs = window._lastSeen && window._lastSeen[entry.uid];
+    // Online status text
+    let onlineHtml = '';
+    if (!isMe) {
+        if (isOnline) {
+            onlineHtml = '<div style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;"></span><span style="font-size:0.75rem;color:var(--success);font-weight:600;">Active Now</span></div>';
+        } else if (lastSeenTs && lastSeenTs > 0) {
+            onlineHtml = '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Active ' + timeAgo(lastSeenTs) + ' ago</div>';
+        }
+    }
+    // Action buttons
+    let actionButtons = '';
+    if (!isMe) {
+        if (isFriend) {
+            actionButtons = `
+                ${!_isBlocked ? `<button onclick="openChatWith('${entry.uid}');document.getElementById('user-profile-modal').remove();switchView('inbox',null);" style="flex:1;background:transparent;border:2px solid var(--primary);color:var(--primary);padding:11px 16px;border-radius:12px;cursor:pointer;font-weight:700;font-size:0.88rem;font-family:var(--font-main);display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.2s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='transparent'"><i class="fa-solid fa-envelope"></i> Message</button>` : ''}
+                <button onclick="removeFriend('${entry.uid}');document.getElementById('user-profile-modal').remove();" style="width:44px;height:44px;background:rgba(255,0,60,0.12);border:1px solid rgba(255,0,60,0.3);color:var(--accent);border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;" title="Remove Friend"><i class="fa-solid fa-user-minus"></i></button>
+                <button onclick="${_isBlocked ? `unblockUser('${entry.uid}','${_entryName}')` : `blockUser('${entry.uid}','${_entryName}')`};document.getElementById('user-profile-modal').remove();" style="width:44px;height:44px;background:${_isBlocked ? 'rgba(0,255,102,0.1)' : 'rgba(255,0,60,0.06)'};border:1px solid ${_isBlocked ? 'var(--success)' : 'rgba(255,0,60,0.2)'};color:${_isBlocked ? 'var(--success)' : 'var(--accent)'};border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;" title="${_isBlocked ? 'Unblock' : 'Block'}"><i class="fa-solid fa-${_isBlocked ? 'lock-open' : 'ban'}"></i></button>`;
+        } else if (isSent) {
+            actionButtons = `<button disabled style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-muted);padding:11px 16px;border-radius:12px;font-weight:600;font-size:0.88rem;font-family:var(--font-main);display:flex;align-items:center;justify-content:center;gap:7px;"><i class="fa-solid fa-clock"></i> Request Sent</button>`;
+        } else if (isIncoming) {
+            actionButtons = `<button onclick="acceptFriendRequest('${entry.uid}');document.getElementById('user-profile-modal').remove();" style="flex:1;background:linear-gradient(135deg,var(--secondary),var(--primary));border:none;color:#fff;padding:11px 16px;border-radius:12px;cursor:pointer;font-weight:700;font-size:0.88rem;font-family:var(--font-main);display:flex;align-items:center;justify-content:center;gap:7px;"><i class="fa-solid fa-check"></i> Accept Request</button>`;
+        } else {
+            actionButtons = `<button onclick="sendFriendRequest('${entry.uid}','${_entryName}');document.getElementById('user-profile-modal').remove();" style="flex:1;background:linear-gradient(135deg,var(--secondary),var(--primary));border:none;color:#fff;padding:11px 16px;border-radius:12px;cursor:pointer;font-weight:700;font-size:0.88rem;font-family:var(--font-main);display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'"><i class="fa-solid fa-user-plus"></i> Add Friend</button>`;
+        }
+    }
     const modal = document.createElement('div');
     modal.id = 'user-profile-modal';
     modal.style.cssText = 'position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);padding:20px;';
     modal.innerHTML = `
-        <div class="glass" style="max-width:400px;width:100%;padding:32px;border-radius:24px;position:relative;animation:fadeIn 0.3s ease;">
-            <button onclick="document.getElementById('user-profile-modal').remove()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:var(--text-main);font-size:1rem;">✕</button>
-            <div style="text-align:center;margin-bottom:20px;">
-                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:90px;height:90px;border-radius:50%;border:3px solid var(--primary);object-fit:cover;margin-bottom:12px;">
-                <h2 style="font-family:var(--font-display);color:var(--text-main);margin-bottom:4px;">${entry.name || 'Anonymous'}${isMe ? ' <span style="font-size:0.7rem;color:var(--primary);">(আপনি)</span>' : ''}</h2>
-                ${entry.class ? `<div style="display:inline-block;background:rgba(0,240,255,0.15);color:var(--primary);padding:3px 12px;border-radius:20px;font-size:0.82rem;margin-bottom:6px;">${entry.class}</div>` : ''}
-                ${entry.institution ? `<div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;"><i class="fa-solid fa-school" style="margin-right:6px;"></i>${entry.institution}</div>` : ''}
-                ${entry.bio ? `<p style="font-size:0.85rem;color:var(--text-secondary);font-style:italic;border-top:1px solid var(--glass-border);padding-top:12px;margin-top:8px;">"${entry.bio}"</p>` : ''}
-            </div>
-            <div id="profile-modal-actions" style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;"></div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;">
-                <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;">
-                    <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--warning);">${entry.streak || 0}</div>
-                    <div style="font-size:0.72rem;color:var(--text-muted);">🔥 Streak</div>
+        <div class="glass" style="max-width:400px;width:100%;border-radius:24px;position:relative;animation:fadeIn 0.3s ease;overflow:hidden;">
+            <div style="height:80px;background:linear-gradient(135deg,rgba(112,0,255,0.5),rgba(0,240,255,0.3));position:relative;"></div>
+            <button onclick="document.getElementById('user-profile-modal').remove()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.3);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);">✕</button>
+            <div style="padding:0 24px 24px;margin-top:-45px;">
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:14px;">
+                    <div style="position:relative;">
+                        <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:88px;height:88px;border-radius:50%;border:4px solid var(--bg-base);object-fit:cover;display:block;">
+                        ${!isMe ? `<span style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:${isOnline ? 'var(--success)' : '#666'};border:2px solid var(--bg-base);display:block;"></span>` : ''}
+                    </div>
+                    ${isMe ? `<div style="font-size:0.75rem;color:var(--primary);background:rgba(0,240,255,0.1);padding:4px 12px;border-radius:20px;border:1px solid rgba(0,240,255,0.2);">আপনি</div>` : ''}
                 </div>
-                <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;">
-                    <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--primary);">${entry.uid === currentUser ? parseFloat((entry.hours||0).toFixed(1)) : '🔒'}</div>
-                    <div style="font-size:0.72rem;color:var(--text-muted);">⏱ Hours</div>
+                <div style="margin-bottom:16px;">
+                    <h2 style="font-family:var(--font-display);color:var(--text-main);font-size:1.4rem;margin-bottom:4px;">${entry.name || 'Anonymous'}</h2>
+                    ${onlineHtml}
+                    ${entry.class ? `<div style="display:inline-block;background:rgba(0,240,255,0.15);color:var(--primary);padding:3px 12px;border-radius:20px;font-size:0.78rem;margin-top:6px;font-weight:600;">${entry.class}</div>` : ''}
+                    ${entry.institution ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-school" style="color:var(--primary);font-size:0.75rem;"></i>${entry.institution}</div>` : ''}
+                    ${entry.bio ? `<p style="font-size:0.82rem;color:var(--text-secondary);font-style:italic;border-top:1px solid var(--glass-border);padding-top:10px;margin-top:10px;">"${entry.bio}"</p>` : ''}
                 </div>
-                <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px;border-radius:12px;">
-                    <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--success);">${entry.tasks || 0}</div>
-                    <div style="font-size:0.72rem;color:var(--text-muted);">✅ Tasks</div>
+                ${!isMe && actionButtons ? `<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">${actionButtons}</div>` : ''}
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+                    <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px 8px;border-radius:12px;border:1px solid var(--glass-border);">
+                        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--warning);">${entry.streak || 0}</div>
+                        <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">🔥 Streak</div>
+                    </div>
+                    <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px 8px;border-radius:12px;border:1px solid var(--glass-border);">
+                        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--primary);">${isMe ? parseFloat(((appData.stats.studyMinutes||0)/60).toFixed(1)) : (isFriend ? parseFloat((entry.hours||0).toFixed(1)) : '🔒')}</div>
+                        <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">⏱ Hours</div>
+                    </div>
+                    <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px 8px;border-radius:12px;border:1px solid var(--glass-border);">
+                        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--success);">${entry.tasks || 0}</div>
+                        <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">✅ Tasks</div>
+                    </div>
                 </div>
             </div>
         </div>`;
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
-    // Load friend status
-    setTimeout(() => loadFriendStatus(entry.uid), 100);
 }
 
 /* ---- LEADERBOARD ---- */
@@ -3480,7 +3520,10 @@ function switchLeaderboardTab(tab) {
     currentLbTab = tab;
     ['streak','hours','tasks'].forEach(t => {
         const btn = document.getElementById('lb-btn-' + t);
-        if (btn) btn.classList.toggle('lb-tab-active', t === tab);
+        if (btn) {
+            btn.classList.remove('lb-tab-active');
+            if (t === tab) btn.classList.add('lb-tab-active');
+        }
     });
     loadLeaderboard();
 }
@@ -3999,37 +4042,7 @@ async function loadFriendRequestsBadge() {
 }
 
 async function loadFriendStatus(uid) {
-    const modal = document.getElementById('user-profile-modal');
-    if (!modal) return;
-    const actionDiv = modal.querySelector('#profile-modal-actions');
-    if (!actionDiv) return;
-    if (uid === currentUser) { actionDiv.innerHTML = ''; return; }
-    const isFriend = friendsList.some(f => f.uid === uid);
-    const isSent = sentRequests.some(r => r.toUid === uid);
-    const isIncoming = incomingRequests.some(r => r.fromUid === uid);
-    const _isBlocked = isUserBlocked(uid);
-    const _entryName = (window._dashLbEntries&&window._dashLbEntries[uid]&&window._dashLbEntries[uid].name) || entry.name || 'User';
-    if (isFriend) {
-        actionDiv.innerHTML = `
-            ${_isBlocked ? '' : `<button class="btn" style="flex:1;justify-content:center;border-color:var(--primary);color:var(--primary);" onclick="openChatWith('${uid}');document.getElementById('user-profile-modal').remove();switchView('inbox',null);">
-                <i class="fa-solid fa-envelope"></i> Message
-            </button>`}
-            <button class="btn btn-danger" style="padding:10px 16px;" onclick="removeFriend('${uid}');document.getElementById('user-profile-modal').remove();">
-                <i class="fa-solid fa-user-minus"></i>
-            </button>
-            <button class="btn" style="padding:10px 16px;border-color:${_isBlocked?'var(--success)':'rgba(255,0,60,0.4)'};color:${_isBlocked?'var(--success)':'var(--accent)'};" onclick="${_isBlocked?`unblockUser('${uid}','${_entryName.replace(/'/g,"\\'")}');`:`blockUser('${uid}','${_entryName.replace(/'/g,"\\'")}');`}document.getElementById('user-profile-modal').remove();">
-                <i class="fa-solid fa-${_isBlocked?'lock-open':'ban'}"></i> ${_isBlocked?'Unblock':'Block'}
-            </button>`;
-    } else if (isSent) {
-        actionDiv.innerHTML = `<button class="btn" style="flex:1;justify-content:center;opacity:0.6;" disabled><i class="fa-solid fa-clock"></i> Request Sent</button>`;
-    } else if (isIncoming) {
-        actionDiv.innerHTML = `<button class="btn" style="flex:1;justify-content:center;border-color:var(--success);color:var(--success);" onclick="acceptFriendRequest('${uid}');document.getElementById('user-profile-modal').remove();">
-            <i class="fa-solid fa-check"></i> Accept Request</button>`;
-    } else {
-        const entry = window._dashLbEntries?.[uid] || {};
-        actionDiv.innerHTML = `<button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="sendFriendRequest('${uid}','${(entry.name||'').replace(/'/g,"\\'")}');document.getElementById('user-profile-modal').remove();">
-            <i class="fa-solid fa-user-plus"></i> Add Friend</button>`;
-    }
+    // Deprecated - handled directly in showUserProfile
 }
 
 function loadNickname(uid) {
@@ -6004,7 +6017,7 @@ if(auth.currentUser){
     document.addEventListener('visibilitychange',()=>{ if(!auth.currentUser) return; fbUpdatePresence(auth.currentUser.uid, document.visibilityState==='visible'); });
     window.addEventListener('beforeunload',()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false); });
     fbLoadPresence();
-    setInterval(fbLoadPresence, 45000);
+    setInterval(fbLoadPresence, 20000);
 }
 
 /* ---- MESSAGE ACTIONS ---- */
