@@ -1614,6 +1614,10 @@
 <div class="swipe-hint" id="swipe-hint">← Swipe to navigate →</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// FCM VAPID KEY — replace with yours from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
+window.VAPID_KEY = 'BC_T44GZVe4-V1xhQQoFrEWQbVm75ohSpz670m93Ui-M73lZac8BVtgIboFIf8ofRlVV9ozutfosFHWtb6OyDmQ';
+</script>
 
 <!-- EXISTING APPLICATION LOGIC (unchanged) -->
 <script>
@@ -2011,12 +2015,62 @@ window.addEventListener('popstate', e => {
     }
 });
 
+let _taskReminderLastCheck = '';
 function updateClock() {
     const now = new Date();
     const el = document.getElementById('datetime-widget');
     if (el) el.innerText = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
     const del = document.getElementById('date-widget');
     if (del) del.innerText = now.toLocaleDateString([], { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+    // Task reminder check — runs once per minute at :00 seconds
+    const minuteKey = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    if (minuteKey !== _taskReminderLastCheck && now.getSeconds() < 3) {
+        _taskReminderLastCheck = minuteKey;
+        _checkTaskReminders(now);
+        _checkRevisionReminders(now);
+    }
+}
+
+function _checkTaskReminders(now) {
+    if (!appData.tasks) return;
+    const todayStr = now.toISOString().split('T')[0];
+    const pendingToday = appData.tasks.filter(t =>
+        !t.completed && t.date === todayStr
+    );
+    // Remind at 9 AM and 8 PM
+    const h = now.getHours(), m = now.getMinutes();
+    if ((h === 9 || h === 20) && m === 0 && pendingToday.length > 0) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+                new Notification('Task Reminder ✅', {
+                    body: `আপনার ${pendingToday.length}টি task বাকি আছে আজকে!`,
+                    icon: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=128',
+                    tag: 'task-reminder-' + todayStr + '-' + h,
+                    requireInteraction: false
+                });
+            } catch(ne) {}
+        }
+    }
+}
+
+function _checkRevisionReminders(now) {
+    if (!appData.revisionTopics) return;
+    const todayStr = now.toISOString().split('T')[0];
+    const dueToday = appData.revisionTopics.filter(r => r.nextRevision === todayStr);
+    // Remind at 10 AM
+    const h = now.getHours(), m = now.getMinutes();
+    if (h === 10 && m === 0 && dueToday.length > 0) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+                new Notification('Revision Reminder 🔄', {
+                    body: `${dueToday.length}টি topic আজ revise করার সময়!`,
+                    icon: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=128',
+                    tag: 'revision-reminder-' + todayStr,
+                    requireInteraction: false
+                });
+            } catch(ne) {}
+        }
+    }
 }
 
 /* ---- MOBILE ---- */
@@ -2609,6 +2663,17 @@ function timerTick() {
             showToast('Focus session complete! 🎉','success');
             document.getElementById('timer-status').innerText='Session done!';
             checkAchievements();
+            // Push notification for focus session
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification('Focus Session Complete! 🎉', {
+                        body: `You studied ${appData.timerSettings.focus || 25} minutes. Keep it up!`,
+                        icon: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=128',
+                        tag: 'focus-done-' + Date.now(),
+                        requireInteraction: false
+                    });
+                } catch(ne) {}
+            }
         } else {
             showToast('Break over! Back to work.','success');
             document.getElementById('timer-status').innerText='Break done!';
@@ -3170,15 +3235,27 @@ function showToast(msg,type='success') {
 }
 async function requestPushPermission() {
     if (!('Notification' in window)) return;
-    if (Notification.permission === 'default') {
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
-            showToast('Notifications চালু হয়েছে! 🔔', 'success');
-        } else if (perm === 'denied') {
-            showToast('Notifications blocked! Browser settings থেকে allow করুন।', 'error');
+    const perm = Notification.permission === 'default'
+        ? await Notification.requestPermission()
+        : Notification.permission;
+    if (perm === 'granted') {
+        showToast('Notifications চালু হয়েছে! 🔔', 'success');
+        await registerFCMToken();
+    } else if (perm === 'denied') {
+        showToast('Notifications blocked! Browser settings থেকে allow করুন।', 'error');
+    }
+}
+
+async function registerFCMToken() {
+    try {
+        if (!window._fbMessaging) return;
+        const { getToken } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js');
+        const token = await getToken(window._fbMessaging, { vapidKey: window.VAPID_KEY });
+        if (token && window._fbSaveFCMToken) {
+            await window._fbSaveFCMToken(token);
         }
-    } else if (Notification.permission === 'granted') {
-        // Already granted, good
+    } catch(e) {
+        console.warn('FCM token error:', e);
     }
 }
 function sendPushNotification(title, body) {
@@ -5656,6 +5733,13 @@ window._fbSendFriendRequest = async function(toUid, toName) {
     await setDoc(doc(firestore, 'users', uid, 'sentRequests', toUid), {
         toUid, toName: toName||'', timestamp: Date.now()
     });
+    // Send FCM notification to recipient
+    await _sendFCMNotificationToUser(toUid, {
+        title: myName + ' sent you a friend request! 👋',
+        body: 'Tap to view and accept',
+        type: 'friend_request',
+        fromUid: uid
+    });
 };
 
 window._fbAcceptFriendRequest = async function(fromUid) {
@@ -5680,6 +5764,13 @@ window._fbAcceptFriendRequest = async function(fromUid) {
     await setDoc(doc(firestore, 'users', fromUid, 'notifications', Date.now().toString()), {
         msg: myName + ' আপনার friend request accept করেছে! 🎉',
         type: 'friend_accepted', timestamp: Date.now(), read: false
+    });
+    // Send FCM notification to the original requester
+    await _sendFCMNotificationToUser(fromUid, {
+        title: myName + ' accepted your friend request! 🎉',
+        body: 'You are now friends on StudyVault',
+        type: 'friend_accepted',
+        fromUid: auth.currentUser.uid
     });
 };
 
@@ -5734,6 +5825,13 @@ window._fbSendMessage = async function(toUid, text) {
     const msgData = { id: msgId, fromUid: uid, toUid, text, timestamp: Date.now(), read: false };
     // Save message
     await setDoc(doc(firestore, 'chats', chatId, 'messages', msgId), msgData);
+    // Send FCM notification to recipient
+    await _sendFCMNotificationToUser(toUid, {
+        title: (appData.profile.name || 'Someone') + ' sent a message',
+        body: text.length > 100 ? text.substring(0, 100) + '...' : text,
+        type: 'message',
+        fromUid: uid
+    });
     // Update conversation metadata for both users
     const myName = appData.profile.name || 'Anonymous';
     const myDp = appData.profile.dp || '';
@@ -5852,21 +5950,41 @@ async function startNotifListener(uid) {
                 if (change.type === 'added') {
                     const data = change.doc.data();
                     if (!data.read) {
-                        addNotification(data.msg || 'নতুন notification', data.type || 'info');
-                        // Show browser notification regardless of app state
+                        // Support both old `msg` and new `title+body` format
+                        const displayMsg = data.title
+                            ? (data.title + (data.body ? ': ' + data.body : ''))
+                            : (data.msg || 'নতুন notification');
+                        addNotification(displayMsg, data.type || 'info');
+
+                        // Browser notification (foreground)
                         if ('Notification' in window && Notification.permission === 'granted') {
                             try {
-                                new Notification('StudyVault 🔔', {
-                                    body: data.msg || 'নতুন notification',
-                                    icon: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=64',
-                                    badge: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=32',
+                                const notifTitle = data.title || 'StudyVault 🔔';
+                                const notifBody = data.body || data.msg || '';
+                                new Notification(notifTitle, {
+                                    body: notifBody,
+                                    icon: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=128',
+                                    badge: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=64',
                                     tag: 'sv-notif-' + change.doc.id,
                                     requireInteraction: false,
                                     silent: false
                                 });
                             } catch(ne) { console.warn('Notification error:', ne); }
                         }
-                        updateDoc(change.doc.ref, { read: true }).catch(()=>{});
+
+                        // Trigger UI refreshes based on type
+                        if (data.type === 'message') loadInboxBadge();
+                        if (data.type === 'friend_request' || data.type === 'friend_accepted') {
+                            loadFriendRequestsBadge();
+                            if (currentView === 'friends') {
+                                loadFriendsList().then(renderFriendsSection);
+                            }
+                        }
+
+                        // Mark read after 2s
+                        setTimeout(() => {
+                            updateDoc(change.doc.ref, { read: true }).catch(()=>{});
+                        }, 2000);
                     }
                 }
             });
@@ -5911,6 +6029,73 @@ async function startMessageNotifListener(uid) {
 if (auth.currentUser) {
     startNotifListener(auth.currentUser.uid);
     startMessageNotifListener(auth.currentUser.uid);
+}
+
+/* ---- FCM: Send notification via Firestore trigger queue ---- */
+async function _sendFCMNotificationToUser(toUid, { title, body, type, fromUid }) {
+    if (!toUid || !auth.currentUser) return;
+    try {
+        // Write to Firestore notification queue — Cloud Function or client reads tokens and delivers
+        // Since we have no Cloud Functions, we write to user's notifications sub-collection
+        // AND we write a push_queue document that the recipient's app will pick up via onSnapshot
+        const notifId = Date.now().toString() + '_' + Math.random().toString(36).substr(2,4);
+        await setDoc(doc(firestore, 'users', toUid, 'notifications', notifId), {
+            title,
+            body,
+            type: type || 'general',
+            fromUid: fromUid || auth.currentUser.uid,
+            timestamp: Date.now(),
+            read: false
+        });
+    } catch(e) {
+        console.warn('FCM notification send error:', e);
+    }
+}
+
+/* ---- FCM Initialization ---- */
+let _fcmMessaging = null;
+try {
+    const { getMessaging, getToken, onMessage } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js');
+    _fcmMessaging = getMessaging(app);
+    window._fbMessaging = _fcmMessaging;
+
+    // Save FCM token to Firestore
+    window._fbSaveFCMToken = async function(token) {
+        if (!auth.currentUser || !token) return;
+        try {
+            await setDoc(
+                doc(firestore, 'users', auth.currentUser.uid, 'fcmTokens', token.substring(0, 100)),
+                {
+                    token,
+                    uid: auth.currentUser.uid,
+                    device: navigator.userAgent.substring(0, 100),
+                    updatedAt: Date.now(),
+                    active: true
+                }
+            );
+        } catch(e) { console.warn('FCM token save error:', e); }
+    };
+
+    // Foreground message handler
+    onMessage(_fcmMessaging, (payload) => {
+        const { title, body } = payload.notification || {};
+        const data = payload.data || {};
+        if (title) {
+            addNotification(title + (body ? ': ' + body : ''), data.type || 'info');
+            showToast(title, 'success');
+        }
+        // Refresh inbox badge on new message
+        if (data.type === 'message') {
+            loadInboxBadge();
+        }
+        // Refresh friend requests badge
+        if (data.type === 'friend_request' || data.type === 'friend_accepted') {
+            loadFriendRequestsBadge();
+        }
+    });
+
+} catch(fcmErr) {
+    console.warn('FCM init error:', fcmErr);
 }
 
 /* ---- Log page views on navigation ---- */
