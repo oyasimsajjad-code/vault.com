@@ -820,7 +820,7 @@
 <div class="bg-animated"></div>
 
 <!-- FIREBASE AUTH OVERLAY (replaces old auth-screen) -->
-<div id="firebase-auth-overlay" style="display:none;">
+<div id="firebase-auth-overlay" style="display:none;opacity:0;transition:opacity 0.4s ease;">
     <div class="fb-auth-card">
         <div class="fb-logo">
             <i class="fa-solid fa-cube fb-logo-icon"></i>
@@ -5515,7 +5515,16 @@ window.onload = async () => {
     updateClock(); setInterval(updateClock, 1000);
     setInterval(updateGreeting, 60000);
     initCharts();
-    setTimeout(() => { hideSplash(); }, 500);
+    // Fallback: if Firebase auth hasn't responded in 4 seconds, force show auth screen
+    setTimeout(() => {
+        hideSplash();
+        const authOverlay = document.getElementById('firebase-auth-overlay');
+        const mainApp = document.getElementById('main-app');
+        if (authOverlay && authOverlay.style.display === 'none' &&
+            mainApp && mainApp.classList.contains('hidden')) {
+            authOverlay.style.display = 'flex';
+        }
+    }, 4000);
 };
 </script>
 
@@ -5895,9 +5904,14 @@ onAuthStateChanged(auth, async (user) => {
         // 1. Load local cache first for speed
         loadAppData();
 
+        // Hide splash early so user sees something
+        hideSplash();
+
         // 2. Merge in cloud data (authoritative)
-        const cloudData = await fbLoadAppData(user.uid);
-        if (cloudData) mergeCloudData(cloudData);
+        try {
+            const cloudData = await fbLoadAppData(user.uid);
+            if (cloudData) mergeCloudData(cloudData);
+        } catch(e) { console.warn('Cloud load failed, using local data', e); }
         applyTheme(appData.settings.darkMode !== false);
 
         // 3. Set profile name from Firebase Auth if not set
@@ -5905,26 +5919,27 @@ onAuthStateChanged(auth, async (user) => {
             appData.profile.name = user.displayName;
         }
 
-        // 4. Sync PDF metadata from cloud
-        await syncPDFsFromCloud(user.uid);
+        // 4. Sync PDF metadata from cloud (non-blocking)
+        syncPDFsFromCloud(user.uid).catch(e => console.warn('PDF sync error:', e));
 
         // 5. Start app
         if (appData.settings.appLock && appData.settings.pin) {
+            document.getElementById('firebase-auth-overlay').style.display = 'none';
             document.getElementById('app-lock-screen').classList.remove('hidden');
         } else {
+            document.getElementById('firebase-auth-overlay').style.display = 'none';
             await startApp();
         }
 
         logEvent(analytics, 'session_start', { uid: user.uid });
-        setTimeout(() => hideSplash(), 500);
         setTimeout(() => initFCM(), 3000);
 
     } else {
         // Not logged in - show Firebase auth overlay
-        setTimeout(() => {
-            hideSplash();
-            document.getElementById('firebase-auth-overlay').style.display = 'flex';
-        }, 500);
+        hideSplash();
+        const _fbAuth0 = document.getElementById('firebase-auth-overlay');
+        _fbAuth0.style.display = 'flex';
+        setTimeout(() => { _fbAuth0.style.opacity = '1'; }, 30);
     }
 });
 
@@ -6144,7 +6159,9 @@ window._fbLoadFriendsList = async function() {
 };
 
 /* ---- MESSAGING SYSTEM (Firestore) ---- */
-const { onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+// onSnapshot already imported at top of module via named import
+// (using the getFirestore import block above - no extra import needed)
+const { onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').catch(() => ({ onSnapshot: () => () => {} }));
 
 function getChatId(uid1, uid2) {
     return [uid1, uid2].sort().join('_');
