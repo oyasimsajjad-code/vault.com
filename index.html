@@ -196,6 +196,7 @@
             background: linear-gradient(135deg, #050510 0%, #0a0a1a 50%, #050510 100%);
             display: flex; align-items: center; justify-content: center;
             animation: fadeIn 0.5s ease;
+            visibility: hidden;
         }
         .fb-auth-card {
             width: 100%; max-width: 440px; padding: 48px 40px;
@@ -820,7 +821,7 @@
 <div class="bg-animated"></div>
 
 <!-- FIREBASE AUTH OVERLAY (replaces old auth-screen) -->
-<div id="firebase-auth-overlay" style="display:none;opacity:0;transition:opacity 0.4s ease;">
+<div id="firebase-auth-overlay" style="display:flex;opacity:0;visibility:hidden;transition:opacity 0.4s ease;">
     <div class="fb-auth-card">
         <div class="fb-logo">
             <i class="fa-solid fa-cube fb-logo-icon"></i>
@@ -2071,7 +2072,10 @@ function saveAppData() {
 async function startApp() {
     screens.main.classList.remove('hidden');
     setTimeout(requestPushPermission, 3000);
-    document.getElementById('firebase-auth-overlay').style.display = 'none';
+    const _authOv = document.getElementById('firebase-auth-overlay');
+    _authOv.style.visibility = 'hidden';
+    _authOv.style.opacity = '0';
+    _authOv.style.display = 'none';
     applyTheme(appData.settings.darkMode !== false)
     updateProfileUI();
     renderTasks();
@@ -2286,12 +2290,7 @@ function setupSwipeGestures() {
             pulling = false; pullDist = 0;
             return;
         }
-        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-            const idx = viewOrder.indexOf(currentView);
-            if (dx < 0 && idx < viewOrder.length - 1) switchView(viewOrder[idx + 1], null);
-            else if (dx > 0 && idx > 0) switchView(viewOrder[idx - 1], null);
-            else if (dx > 0 && idx === 0) openMobileDrawer();
-        }
+        
     }, { passive:true });
 }
 
@@ -5517,12 +5516,6 @@ window.onload = async () => {
     // Fallback: if Firebase auth hasn't responded in 4 seconds, force show auth screen
     setTimeout(() => {
         hideSplash();
-        const authOverlay = document.getElementById('firebase-auth-overlay');
-        const mainApp = document.getElementById('main-app');
-        if (authOverlay && authOverlay.style.display === 'none' &&
-            mainApp && mainApp.classList.contains('hidden')) {
-            authOverlay.style.display = 'flex';
-        }
     }, 4000);
 };
 </script>
@@ -5887,7 +5880,10 @@ window._fbLogout = async function() {
     await signOut(auth);
     // 8. Hide app, show auth
     document.getElementById('main-app').classList.add('hidden');
-    document.getElementById('firebase-auth-overlay').style.display = 'flex';
+    const _lo = document.getElementById('firebase-auth-overlay');
+    _lo.style.visibility = 'visible';
+    _lo.style.display = 'flex';
+    setTimeout(() => { _lo.style.opacity = '1'; }, 30);
     showAuthTab('login');
     updateNotifBadge();
     showToast('Logged out successfully', 'success');
@@ -5933,12 +5929,29 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         logEvent(analytics, 'session_start', { uid: user.uid });
+
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+            for (const client of clientList) {
+                if (client.url && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow('/');
+            }
+        })
+    );
+});
         setTimeout(() => initFCM(), 3000);
 
     } else {
         // Not logged in - show Firebase auth overlay
         hideSplash();
         const _fbAuth0 = document.getElementById('firebase-auth-overlay');
+        _fbAuth0.style.visibility = 'visible';
         _fbAuth0.style.display = 'flex';
         setTimeout(() => { _fbAuth0.style.opacity = '1'; }, 30);
     }
@@ -6332,30 +6345,43 @@ async function startNotifListener(uid) {
 async function startMessageNotifListener(uid) {
     try {
         const convRef = collection(firestore, 'users', uid, 'conversations');
+        let _firstLoad = true;
         onSnapshot(convRef, (snap) => {
+            // প্রথমবার load এ notification দেখাবে না
+            if (_firstLoad) { _firstLoad = false; return; }
             snap.docChanges().forEach(change => {
                 if (change.type === 'modified' || change.type === 'added') {
                     const data = change.doc.data();
-                    if (data.unread > 0 && change.doc.id !== currentChatUid) {
-                        conversations[change.doc.id] = data;
-                        const unreadCount = Object.values(conversations).filter(c=>c.unread>0).length;
-                        updateInboxBadge(unreadCount);
-                        const senderName = data.name || 'কেউ';
-                        const lastMsg = data.lastMsg || 'নতুন message';
-                        addNotification(`📨 ${senderName}: ${lastMsg}`, 'info');
-                        if ('Notification' in window && Notification.permission === 'granted') {
-                            try {
-                                new Notification(`📨 ${senderName}`, {
-                                    body: lastMsg,
-                                    icon: data.dp || 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=64',
-                                    tag: 'sv-msg-' + change.doc.id,
-                                    requireInteraction: false
-                                });
-                            } catch(ne) {}
-                        }
-                        // Update inbox badge
-                        if (typeof loadInboxBadge === 'function') loadInboxBadge();
+                    if (!data || data.unread <= 0) return;
+                    if (change.doc.id === currentChatUid) return;
+                    conversations[change.doc.id] = data;
+                    const unreadCount = Object.values(conversations).filter(c=>c.unread>0).length;
+                    updateInboxBadge(unreadCount);
+                    const senderName = data.name || 'কেউ';
+                    const lastMsg = data.lastMsg || '📨 নতুন message';
+                    addNotification(`📨 ${senderName}: ${lastMsg}`, 'info');
+                    playSound();
+                    // Browser notification — app background এ থাকলেও কাজ করবে
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        try {
+                            const n = new Notification(`📨 ${senderName}`, {
+                                body: lastMsg,
+                                icon: data.dp || 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=64',
+                                badge: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=32',
+                                tag: 'sv-msg-' + change.doc.id,
+                                requireInteraction: false,
+                                silent: false,
+                                vibrate: [200, 100, 200]
+                            });
+                            n.onclick = () => {
+                                window.focus();
+                                n.close();
+                                if (typeof switchView === 'function') switchView('inbox', null);
+                                if (typeof openChatWith === 'function') openChatWith(change.doc.id);
+                            };
+                        } catch(ne) { console.warn('Notification error:', ne); }
                     }
+                    if (typeof loadInboxBadge === 'function') loadInboxBadge();
                 }
             });
         });
