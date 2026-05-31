@@ -269,7 +269,7 @@
         .input-group > i { position: absolute; right: 15px; top: 15px; color: var(--text-muted); cursor: pointer; z-index:1; }
         .auth-error { color: var(--accent); font-size: 0.85rem; margin-bottom: 12px; min-height: 18px; text-align: left; }
         /* MAIN LAYOUT */
-        #main-app { display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
+        #main-app { display: flex; flex-direction: row; height: 100vh; width: 100vw; overflow: hidden; max-width: 100vw; }
         #sidebar { width: 280px; padding: 24px; display: flex; flex-direction: column; border-right: 1px solid var(--glass-border); z-index: 100; background: var(--sidebar-bg); backdrop-filter: blur(10px); overflow-y: auto; }
         .brand { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
         .brand i { color: var(--primary); text-shadow: var(--primary-glow); }
@@ -287,7 +287,7 @@
         .streak-badge .streak-info { flex: 1; }
         .streak-badge .streak-num { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; color: var(--warning); }
         .streak-badge .streak-label { font-size: 0.72rem; color: var(--text-muted); }
-        #content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        #content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; min-width: 0; max-width: 100%; }
         header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); z-index: 10; gap: 12px; background: var(--header-bg); backdrop-filter: blur(10px); }
         .search-bar { position: relative; flex: 1; max-width: 400px; }
         .search-bar input { padding-left: 45px; border-radius: 30px; background: var(--input-bg); }
@@ -309,7 +309,7 @@
         .view-section { padding: 30px 40px; overflow-y: auto; flex: 1; min-height: 0; display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; }
         .view-section { padding: 30px 40px; overflow-y: auto; flex: 1; min-height: 0; display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; }
         #view-inbox { overflow: hidden !important; padding: 0 !important; flex: 1; min-height: 0; }
-        .view-section.active { display: flex; flex-direction: column; }
+        .view-section.active { display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
 #view-inbox.active { display: flex !important; }
         #view-inbox.active { display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; overflow: hidden !important; height: 100% !important; width: 100% !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -731,6 +731,49 @@
             .stat-info h3 { font-size: 2.4rem; }
             .stat-icon { width: 70px; height: 70px; font-size: 2rem; }
         }
+
+        /* ===== FULL DESKTOP LAYOUT FIXES ===== */
+        @media (min-width: 769px) {
+            html, body { height: 100%; overflow: hidden; }
+            #main-app { height: 100vh; max-height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+            #content-area { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+            #content-area > header { flex-shrink: 0; }
+            .view-section { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; display: none; flex-direction: column; }
+            .view-section.active { display: flex; }
+            #view-inbox { overflow: hidden !important; }
+            #main-app > nav#sidebar { flex-shrink: 0; height: 100vh; max-height: 100vh; overflow-y: auto; }
+            #main-app { flex-direction: row; }
+            #content-area { flex: 1; min-width: 0; }
+            .dash-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            .pdf-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+            .analytics-grid { grid-template-columns: 2fr 1fr; }
+            .todo-container { grid-template-columns: 1fr 350px; }
+            .settings-grid { grid-template-columns: 1fr 1fr; }
+            .notes-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+            .achievements-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+            .subject-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+        }
+
+        /* ===== FIX OVERFLOW CLIPPING ON ALL SCREENS ===== */
+        .view-section > * { max-width: 100%; }
+        .glass { min-width: 0; }
+        .pdf-grid, .dash-grid, .notes-grid, .achievements-grid, .subject-grid { width: 100%; }
+        .stat-card, .pdf-card, .note-card, .badge-card, .goal-card, .subj-card { min-width: 0; overflow: hidden; }
+        .stat-info h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .timer-container { width: 100%; max-width: 560px; margin-left: auto; margin-right: auto; }
+        #view-analytics { overflow-x: hidden; }
+        .chart-container canvas { max-width: 100%; height: auto !important; }
+        .section-header { width: 100%; min-width: 0; }
+        .section-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .greeting-banner { width: 100%; min-width: 0; box-sizing: border-box; }
+        .profile-header { width: 100%; min-width: 0; }
+        .settings-grid > .glass { min-width: 0; overflow: hidden; }
+        .todo-container > * { min-width: 0; overflow: hidden; }
+        #view-profile { overflow-x: hidden; }
+        .analytics-grid > * { min-width: 0; overflow: hidden; }
+        .rev-two-col > * { min-width: 0; }
+        .goals-two-col > * { min-width: 0; }
+        #view-groupfocus .timer-container { max-width: 480px; }
 
         /* ===== CHAT RESPONSIVE FIXES ===== */
         @media (min-width: 769px) {
@@ -1171,6 +1214,37 @@
                 </div>
                 <div class="timer-custom">
                     <h4><i class="fa-solid fa-sliders"></i> Custom Durations (minutes)</h4>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:10px 14px;background:rgba(0,240,255,0.06);border-radius:var(--radius-sm);border:1px solid rgba(0,240,255,0.15);">
+                        <div>
+                            <div style="font-weight:600;color:var(--text-main);font-size:0.88rem;"><i class="fa-solid fa-sun" style="color:var(--warning);margin-right:7px;"></i>Keep Screen Awake</div>
+                            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">Prevent display sleep during focus</div>
+                        </div>
+                        <label class="toggle-switch"><input type="checkbox" id="setting-wakelock" onchange="toggleWakeLockSetting()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:10px 14px;background:rgba(112,0,255,0.06);border-radius:var(--radius-sm);border:1px solid rgba(112,0,255,0.15);">
+                        <div>
+                            <div style="font-weight:600;color:var(--text-main);font-size:0.88rem;"><i class="fa-solid fa-rotate" style="color:var(--primary);margin-right:7px;"></i>Auto Cycle Mode</div>
+                            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">Automatically rotate focus/break cycles</div>
+                        </div>
+                        <label class="toggle-switch"><input type="checkbox" id="setting-autocycle" onchange="toggleAutoCycle()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div id="autocycle-config" style="display:none;background:rgba(0,0,0,0.18);padding:14px;border-radius:var(--radius-sm);margin-bottom:12px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                            <div><label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">Goal (hours)</label><input type="number" id="cycle-goal-hours" min="0.5" max="24" step="0.5" value="2" style="padding:7px 10px;font-size:0.85rem;"></div>
+                            <div><label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">Cycles before long break</label><input type="number" id="cycle-before-long" min="1" max="10" value="4" style="padding:7px 10px;font-size:0.85rem;"></div>
+                        </div>
+                        <div id="cycle-preview-info" style="font-size:0.78rem;color:var(--primary);padding:6px 10px;background:rgba(0,240,255,0.08);border-radius:6px;"></div>
+                    </div>
+                    <div id="autocycle-tracker" style="display:none;margin-bottom:12px;padding:12px 14px;background:rgba(0,0,0,0.2);border-radius:var(--radius-sm);border:1px solid var(--glass-border);">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+                            <span style="font-size:0.78rem;color:var(--text-muted);">Cycle <span id="cycle-current-num" style="color:var(--primary);font-weight:700;">1</span> of <span id="cycle-total-num" style="color:var(--text-main);">8</span></span>
+                            <span style="font-size:0.78rem;color:var(--text-muted);">Remaining: <span id="cycle-remaining-time" style="color:var(--warning);font-weight:700;">2h 0m</span></span>
+                        </div>
+                        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
+                            <div id="cycle-progress-fill" style="height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:10px;width:0%;transition:width 0.5s;"></div>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;" id="cycle-dots"></div>
+                    </div>
                     <div class="timer-custom-row">
                         <div class="timer-custom-item"><label>Focus</label><input type="number" id="custom-focus" min="1" max="120" value="25"></div>
                         <div class="timer-custom-item"><label>Short Break</label><input type="number" id="custom-short" min="1" max="60" value="5"></div>
@@ -1742,7 +1816,14 @@
                     </div>
                     <div class="toggle-switch-wrapper">
                         <span class="toggle-switch-label" data-i18n="soundEffects">Sound Effects</span>
-                        <label class="toggle-switch"><input type="checkbox" id="setting-sound" checked><span class="toggle-slider"></span></label>
+                        <label class="toggle-switch"><input type="checkbox" id="setting-sound" checked onchange="saveProfile()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div style="margin-bottom:14px;padding:10px 0;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                            <label style="font-size:0.78rem;color:var(--text-muted);">🔊 Sound Volume</label>
+                            <span id="volume-display" style="font-size:0.78rem;color:var(--primary);font-weight:600;">70%</span>
+                        </div>
+                        <input type="range" id="sound-volume" min="0" max="100" value="70" step="5" style="width:100%;" oninput="document.getElementById('volume-display').innerText=this.value+'%';appData.settings.soundVolume=parseInt(this.value);saveAppData();">
                     </div>
                     <div class="toggle-switch-wrapper">
                         <span class="toggle-switch-label">Dark Mode</span>
@@ -2107,6 +2188,10 @@ async function startApp() {
     if (!appData.stats.aiXP) appData.stats.aiXP = 0;
     if (!appData.stats.aiXPHistory) appData.stats.aiXPHistory = [];
    setTimeout(() => { updateAIXPBar(); updateXPDisplay(); }, 200);
+    const volEl = document.getElementById('sound-volume');
+    if (volEl) { volEl.value = appData.settings.soundVolume || 70; const vd = document.getElementById('volume-display'); if(vd) vd.innerText = (appData.settings.soundVolume || 70) + '%'; }
+    const wlCb = document.getElementById('setting-wakelock');
+    if (wlCb) wlCb.checked = !!appData.settings.keepScreenAwake;
     loadGroupRooms();
     renderGroupRooms();
 
@@ -2748,14 +2833,34 @@ let timerInt=null,timeLeft=25*60,isRunning=false,timerMode='focus',isFocusModeAc
 let modes={ focus:25*60, short:5*60, long:15*60 };
 
 function loadTimerSettings() {
-    const ts=appData.timerSettings||{};
-    modes.focus=(ts.focus||25)*60; modes.short=(ts.short||5)*60; modes.long=(ts.long||15)*60;
-    document.getElementById('custom-focus').value=ts.focus||25;
-    document.getElementById('custom-short').value=ts.short||5;
-    document.getElementById('custom-long').value=ts.long||15;
-    timeLeft=modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode],modes[timerMode]);
-    document.getElementById('session-count').innerText=appData.stats.focusSessions||0;
+    const ts = appData.timerSettings || {};
+    modes.focus = (ts.focus || 25) * 60; modes.short = (ts.short || 5) * 60; modes.long = (ts.long || 15) * 60;
+    document.getElementById('custom-focus').value = ts.focus || 25;
+    document.getElementById('custom-short').value = ts.short || 5;
+    document.getElementById('custom-long').value = ts.long || 15;
+    timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]);
+    document.getElementById('session-count').innerText = appData.stats.focusSessions || 0;
+    const wlCb = document.getElementById('setting-wakelock');
+    if (wlCb) wlCb.checked = !!appData.settings.keepScreenAwake;
+    if (!('wakeLock' in navigator) && wlCb) { wlCb.disabled = true; wlCb.parentElement.parentElement.style.opacity = '0.5'; }
 }
+let _wakeLock = null;
+async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+        _wakeLock = await navigator.wakeLock.request('screen');
+        _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+    } catch(e) { console.warn('Wake lock failed:', e.message); }
+}
+function releaseWakeLock() {
+    if (_wakeLock) { _wakeLock.release().catch(() => {}); _wakeLock = null; }
+}
+document.addEventListener('visibilitychange', async () => {
+    const keepAwake = appData.settings.keepScreenAwake;
+    if (keepAwake && document.visibilityState === 'visible' && isRunning && timerMode === 'focus') {
+        await requestWakeLock();
+    }
+});
 function applyCustomTimer() {
     const f=parseInt(document.getElementById('custom-focus').value)||25;
     const s=parseInt(document.getElementById('custom-short').value)||5;
@@ -2774,26 +2879,57 @@ function setTimerMode(mode,btn) {
     updateTimerDisplay(); setRing(modes[mode],modes[mode]);
     document.getElementById('timer-status').innerText=mode==='focus'?'Ready to focus':'Take a break';
 }
+function savePartialSession() {
+    if (!isRunning || timerMode !== 'focus') return;
+    const totalSecs = modes['focus'];
+    const elapsedSecs = totalSecs - timeLeft;
+    if (elapsedSecs < 30) return;
+    const elapsedMins = Math.round(elapsedSecs / 60);
+    if (elapsedMins < 1) return;
+    const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
+    appData.stats.studyMinutes = (appData.stats.studyMinutes || 0) + elapsedMins;
+    appData.stats.todayMinutes = (appData.stats.todayMinutes || 0) + elapsedMins;
+    if (!appData.stats.subjectHours) appData.stats.subjectHours = {};
+    appData.stats.subjectHours[subj] = (appData.stats.subjectHours[subj] || 0) + elapsedMins / 60;
+    const today = new Date().toISOString().split('T')[0];
+    if (!appData.stats.heatmap) appData.stats.heatmap = {};
+    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + elapsedMins / 60;
+    checkAndUpdateStreak(today);
+    saveAppData();
+    if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
+    showToast('Partial session saved: ' + elapsedMins + ' min recorded 📊', 'success');
+    _partialSaved = true;
+}
+let _partialSaved = false;
 function stopTimer() {
-    clearInterval(timerInt); timerInt=null; isRunning=false;
-    document.getElementById('play-icon').className='fa-solid fa-play';
-    document.getElementById('fm-play-icon').className='fa-solid fa-play';
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    _partialSaved = false;
+    clearInterval(timerInt); timerInt = null; isRunning = false;
+    document.getElementById('play-icon').className = 'fa-solid fa-play';
+    document.getElementById('fm-play-icon').className = 'fa-solid fa-play';
 }
 function toggleTimer() {
     if(isRunning){
         stopTimer(); document.getElementById('timer-status').innerText='Paused';
     } else {
-        if(timeLeft<=0){timeLeft=modes[timerMode];updateTimerDisplay();setRing(modes[timerMode],modes[timerMode]);}
-        isRunning=true;
-        document.getElementById('play-icon').className='fa-solid fa-pause';
-        document.getElementById('fm-play-icon').className='fa-solid fa-pause';
-        document.getElementById('timer-status').innerText=timerMode==='focus'?'Focusing...':'On break...';
-        timerInt=setInterval(timerTick,1000);
+        if (timeLeft <= 0) { timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]); }
+        isRunning = true;
+        _partialSaved = false;
+        document.getElementById('play-icon').className = 'fa-solid fa-pause';
+        document.getElementById('fm-play-icon').className = 'fa-solid fa-pause';
+        document.getElementById('timer-status').innerText = timerMode === 'focus' ? 'Focusing...' : 'On break...';
+        timerInt = setInterval(timerTick, 1000);
+        if (timerMode === 'focus' && appData.settings.keepScreenAwake) requestWakeLock();
     }
 }
 function resetTimer() {
-    stopTimer(); timeLeft=modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode],modes[timerMode]);
-    document.getElementById('timer-status').innerText=timerMode==='focus'?'Ready to focus':'Take a break';
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    _partialSaved = false;
+    clearInterval(timerInt); timerInt = null; isRunning = false;
+    document.getElementById('play-icon').className = 'fa-solid fa-play';
+    document.getElementById('fm-play-icon').className = 'fa-solid fa-play';
+    timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]);
+    document.getElementById('timer-status').innerText = timerMode === 'focus' ? 'Ready to focus' : 'Take a break';
 }
 function timerTick() {
     if(timeLeft>0){
@@ -2801,28 +2937,37 @@ function timerTick() {
     } else {
         stopTimer(); playSound();
         document.title="Study Vault | Time's up!";
-        if(timerMode==='focus'){
-            const subj=document.getElementById('timer-subject').value||'General';
-            const mins=appData.timerSettings.focus||25;
-            appData.stats.focusSessions=(appData.stats.focusSessions||0)+1;
-            appData.stats.studyMinutes=(appData.stats.studyMinutes||0)+mins;
-            const today=new Date().toISOString().split('T')[0];
-            appData.stats.todayMinutes=(appData.stats.todayMinutes||0)+mins;
-            if(!appData.stats.subjectHours) appData.stats.subjectHours={};
-            appData.stats.subjectHours[subj]=(appData.stats.subjectHours[subj]||0)+mins/60;
-            if(!appData.stats.heatmap) appData.stats.heatmap={};
-            appData.stats.heatmap[today]=(appData.stats.heatmap[today]||0)+mins/60;
+        if (timerMode === 'focus') {
+            _partialSaved = true;
+            const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
+            const mins = appData.timerSettings.focus || 25;
+            appData.stats.focusSessions = (appData.stats.focusSessions || 0) + 1;
+            appData.stats.studyMinutes = (appData.stats.studyMinutes || 0) + mins;
+            const today = new Date().toISOString().split('T')[0];
+            appData.stats.todayMinutes = (appData.stats.todayMinutes || 0) + mins;
+            if (!appData.stats.subjectHours) appData.stats.subjectHours = {};
+            appData.stats.subjectHours[subj] = (appData.stats.subjectHours[subj] || 0) + mins / 60;
+            if (!appData.stats.heatmap) appData.stats.heatmap = {};
+            appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins / 60;
             checkAndUpdateStreak(today);
             saveAppData();
-            document.getElementById('session-count').innerText=appData.stats.focusSessions;
-            showToast('Focus session complete! 🎉','success');
-            document.getElementById('timer-status').innerText='Session done!';
+            if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
+            document.getElementById('session-count').innerText = appData.stats.focusSessions;
+            playSessionCompleteSound();
+            showToast('Focus session complete! 🎉', 'success');
+            document.getElementById('timer-status').innerText = 'Session done!';
             checkAchievements();
+            _partialSaved = false;
+            if (autoCycleEnabled) startAutoCycleBreak();
         } else {
-            showToast('Break over! Back to work.','success');
-            document.getElementById('timer-status').innerText='Break done!';
+            playBreakEndSound();
+            showToast('Break over! Back to work. 💪', 'success');
+            document.getElementById('timer-status').innerText = 'Break done!';
+            releaseWakeLock();
+            if (autoCycleEnabled) handleAutoCycleBreakEnd();
         }
-        setRing(0,modes[timerMode]);
+        setRing(0, modes[timerMode]);
+        releaseWakeLock();
     }
 }
 function setRing(cur,total) {
@@ -2838,6 +2983,101 @@ function updateTimerDisplay() {
     if(isRunning) document.title=`(${ts}) Study Vault`;
     else document.title='Study Vault | Smart PDF Library';
 }
+function toggleWakeLockSetting() {
+    appData.settings.keepScreenAwake = document.getElementById('setting-wakelock').checked;
+    saveAppData();
+    if (!appData.settings.keepScreenAwake) releaseWakeLock();
+    showToast(appData.settings.keepScreenAwake ? 'Screen will stay awake during focus 🌞' : 'Screen wake lock disabled', 'success');
+}
+
+let autoCycleEnabled = false;
+let autoCycleData = { totalGoalMins: 120, cyclesDone: 0, totalCycles: 8, cyclesBeforeLong: 4, totalCompletedMins: 0 };
+
+function toggleAutoCycle() {
+    autoCycleEnabled = document.getElementById('setting-autocycle').checked;
+    const cfg = document.getElementById('autocycle-config');
+    const tracker = document.getElementById('autocycle-tracker');
+    if (cfg) cfg.style.display = autoCycleEnabled ? 'block' : 'none';
+    if (tracker) tracker.style.display = autoCycleEnabled ? 'block' : 'none';
+    if (autoCycleEnabled) { updateCyclePreview(); initAutoCycleData(); }
+}
+
+function updateCyclePreview() {
+    const goalHrs = parseFloat(document.getElementById('cycle-goal-hours').value) || 2;
+    const focusMins = parseInt(document.getElementById('custom-focus').value) || 25;
+    const shortMins = parseInt(document.getElementById('custom-short').value) || 5;
+    const longMins = parseInt(document.getElementById('custom-long').value) || 15;
+    const cyclesBefore = parseInt(document.getElementById('cycle-before-long').value) || 4;
+    const totalFocusMins = goalHrs * 60;
+    const cyclesNeeded = Math.ceil(totalFocusMins / focusMins);
+    const longBreaks = Math.floor(cyclesNeeded / cyclesBefore);
+    const shortBreaks = cyclesNeeded - longBreaks - 1;
+    const totalTime = totalFocusMins + longBreaks * longMins + shortBreaks * shortMins;
+    const previewEl = document.getElementById('cycle-preview-info');
+    if (previewEl) previewEl.innerText = cyclesNeeded + ' focus cycles · ~' + Math.round(totalTime / 60 * 10) / 10 + 'h total · ' + longBreaks + ' long breaks';
+}
+
+function initAutoCycleData() {
+    const goalHrs = parseFloat(document.getElementById('cycle-goal-hours').value) || 2;
+    const focusMins = parseInt(document.getElementById('custom-focus').value) || 25;
+    const cyclesBefore = parseInt(document.getElementById('cycle-before-long').value) || 4;
+    const totalCycles = Math.ceil(goalHrs * 60 / focusMins);
+    autoCycleData = { totalGoalMins: goalHrs * 60, cyclesDone: 0, totalCycles, cyclesBeforeLong: cyclesBefore, totalCompletedMins: 0 };
+    updateCycleTracker();
+}
+
+function updateCycleTracker() {
+    const cur = document.getElementById('cycle-current-num');
+    const tot = document.getElementById('cycle-total-num');
+    const rem = document.getElementById('cycle-remaining-time');
+    const fill = document.getElementById('cycle-progress-fill');
+    const dots = document.getElementById('cycle-dots');
+    if (cur) cur.innerText = autoCycleData.cyclesDone + 1;
+    if (tot) tot.innerText = autoCycleData.totalCycles;
+    const remainingMins = autoCycleData.totalGoalMins - autoCycleData.totalCompletedMins;
+    if (rem) rem.innerText = Math.floor(remainingMins / 60) + 'h ' + Math.round(remainingMins % 60) + 'm';
+    const pct = Math.min(100, Math.round(autoCycleData.totalCompletedMins / autoCycleData.totalGoalMins * 100));
+    if (fill) fill.style.width = pct + '%';
+    if (dots) {
+        dots.innerHTML = '';
+        for (let i = 0; i < Math.min(autoCycleData.totalCycles, 12); i++) {
+            const dot = document.createElement('div');
+            dot.style.cssText = 'width:14px;height:14px;border-radius:50%;flex-shrink:0;border:2px solid ' + (i < autoCycleData.cyclesDone ? 'var(--success)' : i === autoCycleData.cyclesDone ? 'var(--primary)' : 'var(--glass-border)') + ';background:' + (i < autoCycleData.cyclesDone ? 'var(--success)' : i === autoCycleData.cyclesDone ? 'rgba(0,240,255,0.3)' : 'transparent') + ';transition:all 0.3s;';
+            dots.appendChild(dot);
+        }
+    }
+}
+
+function startAutoCycleBreak() {
+    if (!autoCycleEnabled) return;
+    autoCycleData.cyclesDone++;
+    autoCycleData.totalCompletedMins += (appData.timerSettings.focus || 25);
+    updateCycleTracker();
+    if (autoCycleData.totalCompletedMins >= autoCycleData.totalGoalMins) {
+        showToast('🏆 Goal reached! All cycles complete!', 'success');
+        playSessionCompleteSound();
+        autoCycleEnabled = false;
+        const cb = document.getElementById('setting-autocycle'); if(cb) cb.checked = false;
+        toggleAutoCycle();
+        return;
+    }
+    const isLongBreak = autoCycleData.cyclesDone % autoCycleData.cyclesBeforeLong === 0;
+    setTimerMode(isLongBreak ? 'long' : 'short', null);
+    document.getElementById('timer-status').innerText = isLongBreak ? 'Long break — well earned! ☕' : 'Short break — stretch! 🧘';
+    playBreakStartSound();
+    showToast((isLongBreak ? '☕ Long break' : '🧘 Short break') + ' started! Relax.', 'success');
+    setTimeout(() => { if (autoCycleEnabled) toggleTimer(); }, 1500);
+}
+
+function handleAutoCycleBreakEnd() {
+    if (!autoCycleEnabled) return;
+    setTimerMode('focus', null);
+    document.getElementById('timer-status').innerText = 'Auto cycle — focusing...';
+    playFocusStartSound();
+    showToast('⚡ Focus cycle ' + (autoCycleData.cyclesDone + 1) + ' starting!', 'success');
+    setTimeout(() => { if (autoCycleEnabled) toggleTimer(); }, 1500);
+}
+
 function enterFocusMode() {
     isFocusModeActive=true;
     document.getElementById('focus-mode-screen').classList.remove('hidden');
@@ -2846,10 +3086,12 @@ function enterFocusMode() {
     if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
 }
 function exitFocusMode() {
-    isFocusModeActive=false;
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    isFocusModeActive = false;
     document.getElementById('focus-mode-screen').classList.add('hidden');
     stopAllSounds();
-    if(document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+    releaseWakeLock();
+    if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
 }
 
 /* ---- FOCUS SOUNDS ---- */
@@ -2892,6 +3134,69 @@ function stopAllSounds() {
     Object.keys(activeSoundNodes).forEach(k=>{try{activeSoundNodes[k].source.stop();}catch(e){}});
     activeSoundNodes={};
     document.querySelectorAll('.sound-btn').forEach(b=>b.classList.remove('active'));
+}
+
+function playSessionCompleteSound() {
+    if (appData.settings.sound === false) return;
+    const vol = getSoundVolume();
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const gain = ac.createGain();
+        gain.connect(ac.destination);
+        gain.gain.setValueAtTime(vol, ac.currentTime);
+        [[523, 0], [659, 0.18], [784, 0.36], [1047, 0.54]].forEach(([freq, when]) => {
+            const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
+            o.connect(gain); o.start(ac.currentTime + when); o.stop(ac.currentTime + when + 0.22);
+        });
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.9);
+    } catch(e) {}
+}
+
+function playBreakStartSound() {
+    if (appData.settings.sound === false) return;
+    const vol = getSoundVolume();
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const gain = ac.createGain();
+        gain.connect(ac.destination);
+        gain.gain.setValueAtTime(vol * 0.75, ac.currentTime);
+        [[440, 0], [349, 0.22]].forEach(([freq, when]) => {
+            const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
+            o.connect(gain); o.start(ac.currentTime + when); o.stop(ac.currentTime + when + 0.25);
+        });
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.7);
+    } catch(e) {}
+}
+
+function playBreakEndSound() {
+    if (appData.settings.sound === false) return;
+    const vol = getSoundVolume();
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const gain = ac.createGain();
+        gain.connect(ac.destination);
+        gain.gain.setValueAtTime(vol * 0.65, ac.currentTime);
+        [[349, 0], [440, 0.18], [523, 0.36]].forEach(([freq, when]) => {
+            const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = freq;
+            o.connect(gain); o.start(ac.currentTime + when); o.stop(ac.currentTime + when + 0.2);
+        });
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.7);
+    } catch(e) {}
+}
+
+function playFocusStartSound() {
+    if (appData.settings.sound === false) return;
+    const vol = getSoundVolume();
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const gain = ac.createGain();
+        gain.connect(ac.destination);
+        gain.gain.setValueAtTime(vol * 0.6, ac.currentTime);
+        const o = ac.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(440, ac.currentTime);
+        o.frequency.exponentialRampToValueAtTime(660, ac.currentTime + 0.3);
+        o.connect(gain); o.start(ac.currentTime); o.stop(ac.currentTime + 0.35);
+        gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.45);
+    } catch(e) {}
 }
 
 /* ---- STREAK ---- */
@@ -3402,9 +3707,24 @@ function sendPushNotification(title, body) {
         });
     } catch(e) {}
 }
+function getSoundVolume() {
+    return ((appData.settings.soundVolume !== undefined ? appData.settings.soundVolume : 70) / 100) * 0.12;
+}
 function playSound() {
-    if(appData.settings.sound===false) return;
-    try{const ac=new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator();const g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.setValueAtTime(800,ac.currentTime);o.frequency.exponentialRampToValueAtTime(1200,ac.currentTime+0.15);g.gain.setValueAtTime(0.08,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.15);o.start();o.stop(ac.currentTime+0.15);}catch(e){}
+    if (appData.settings.sound === false) return;
+    const vol = getSoundVolume();
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(800, ac.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1200, ac.currentTime + 0.15);
+        g.gain.setValueAtTime(vol, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
+        o.start(); o.stop(ac.currentTime + 0.15);
+    } catch(e) {}
 }
 
 /* ---- KEYBOARD SHORTCUTS ---- */
@@ -5528,6 +5848,18 @@ function loadGroupRooms() {
     // Start realtime Firebase listener (authoritative source)
     _startGFRoomsListener();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const cycleGoal = document.getElementById('cycle-goal-hours');
+    const cycleBefore = document.getElementById('cycle-before-long');
+    if (cycleGoal) cycleGoal.addEventListener('input', updateCyclePreview);
+    if (cycleBefore) cycleBefore.addEventListener('input', updateCyclePreview);
+    const volEl = document.getElementById('sound-volume');
+    if (volEl) {
+        volEl.value = appData.settings.soundVolume || 70;
+        document.getElementById('volume-display').innerText = (appData.settings.soundVolume || 70) + '%';
+    }
+});
 
 /* ---- INIT ---- */
 window.onload = async () => {
