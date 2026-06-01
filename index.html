@@ -2422,9 +2422,10 @@ const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revisi
 const BNAV_INDEX = { dashboard:0, library:1, leaderboard:2, todo:3, pomodoro:4 };
 
 const VIEW_ID_MAP = {
-    dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5,
-    analytics:6, goals:7, achievements:8, vault:9, routine:10,
-    leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16
+    dashboard:0, todo:1, notes:2, pomodoro:3, revision:4,
+    analytics:5, goals:6, achievements:7, vault:8, routine:9,
+    leaderboard:10, challenge:11, groupfocus:12, profile:13,
+    library:-1, friends:-1, inbox:-1
 };
 
 function syncNavHighlight(viewId) {
@@ -3078,23 +3079,7 @@ function applyCustomTimer() {
     appData.timerSettings={focus:f,short:s,long:l};
     modes.focus=f*60; modes.short=s*60; modes.long=l*60;
     // Auto-detect long session (>90 min) → enable Microsoft-style blocks
-    if(f > 90){
-        _msBlock.enabled = true;
-        _msBlock.totalMins = f;
-        _msBlock.blockFocus = 50;
-        _msBlock.blockBreak = 10;
-        _msBlock.blocksDone = 0;
-        _msBlock.totalBlocks = Math.ceil(f / 50);
-        _msBlock.completedMins = 0;
-        modes.focus = 50 * 60;
-        modes.short = 10 * 60;
-        timerMode = 'focus';
-        document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
-        document.getElementById('mode-btn-focus').classList.add('active');
-        showToast(`Long session split into ${_msBlock.totalBlocks} × 50-min blocks ⚡`, 'success');
-    } else {
-        _msBlock.enabled = false;
-    }
+    _msBlock.enabled = false;
     timeLeft=modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode],modes[timerMode]);
     saveAppData(); showToast('Timer settings saved!','success');
 }
