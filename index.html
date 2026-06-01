@@ -6834,6 +6834,19 @@ window._registerOneSignalUser = function(uid, name) {
             await OneSignal.login(uid);
             await OneSignal.User.addTag("uid", uid);
             await OneSignal.User.addTag("name", name || "User");
+            // Save subscription ID to Firestore so others can send notifications
+            setTimeout(async () => {
+                try {
+                    const subId = await OneSignal.User.PushSubscription.id;
+                    if (subId && window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
+                        const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+                        await setDoc(doc(window._fbFirestore, 'oneSignalTokens', uid), {
+                            subscriptionId: subId, uid, updatedAt: Date.now()
+                        });
+                        console.log("OneSignal subscription saved:", subId);
+                    }
+                } catch(e2) { console.warn("Token save error:", e2); }
+            }, 3000);
             console.log("OneSignal user linked:", uid);
         } catch(e) {
             console.warn("OneSignal register error:", e);
@@ -6842,15 +6855,31 @@ window._registerOneSignalUser = function(uid, name) {
 };
 
 window._sendPushToUser = async function(toUid, title, body) {
-    if (!window._fbFirestore) return;
     try {
-        const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-        await setDoc(
-            doc(window._fbFirestore, 'pendingNotifications', Date.now().toString()),
-            { toUid, title, body, timestamp: Date.now(), sent: false }
-        );
+        // Get recipient's OneSignal subscription ID from Firestore
+        if (!window._fbFirestore) return;
+        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const snap = await getDoc(doc(window._fbFirestore, 'oneSignalTokens', toUid));
+        if (!snap.exists()) return;
+        const onesignalId = snap.data().subscriptionId;
+        if (!onesignalId) return;
+        // Send via OneSignal REST API
+        await fetch('https://onesignal.com/api/v1/notifications', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic os_v2_app_e912442b-3a96-45f2-95a7-5ac233155ca4'
+            },
+            body: JSON.stringify({
+                app_id: 'e912442b-3a96-45f2-95a7-5ac233155ca4',
+                include_subscription_ids: [onesignalId],
+                headings: { en: title },
+                contents: { en: body },
+                android_channel_id: 'messages'
+            })
+        });
     } catch(e) {
-        console.warn("Push queue error:", e);
+        console.warn("Push send error:", e);
     }
 };
 </script>
