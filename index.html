@@ -552,6 +552,60 @@
         /* ── CREATOR BADGE & ADMIN ── */
         .creator-tick { color:#1877F2; font-size:0.85em; margin-left:4px; flex-shrink:0; }
         .creator-tick-lg { color:#1877F2; font-size:1.1rem; margin-left:6px; }
+
+        /* ── VERIFIED BADGE (Facebook-style blue checkmark) ── */
+        .verified-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 16px;
+          height: 16px;
+          background: #1877F2;
+          border-radius: 50%;
+          margin-left: 4px;
+          flex-shrink: 0;
+          vertical-align: middle;
+          box-shadow: 0 0 0 2px var(--bg-base);
+          position: relative;
+          top: -1px;
+        }
+        .verified-badge::after {
+          content: '';
+          display: block;
+          width: 9px;
+          height: 5px;
+          border-left: 2px solid #fff;
+          border-bottom: 2px solid #fff;
+          transform: rotate(-45deg) translateY(-1px);
+        }
+        .verified-badge-lg {
+          width: 20px;
+          height: 20px;
+          background: #1877F2;
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: 5px;
+          flex-shrink: 0;
+          box-shadow: 0 0 0 2px var(--bg-base), 0 2px 8px rgba(24,119,242,0.4);
+          vertical-align: middle;
+          position: relative;
+          top: -1px;
+        }
+        .verified-badge-lg::after {
+          content: '';
+          display: block;
+          width: 11px;
+          height: 6px;
+          border-left: 2.5px solid #fff;
+          border-bottom: 2.5px solid #fff;
+          transform: rotate(-45deg) translateY(-1px);
+        }
+        body.light-mode .verified-badge,
+        body.light-mode .verified-badge-lg {
+          box-shadow: 0 0 0 2px var(--bg-base), 0 1px 4px rgba(24,119,242,0.3);
+        }
         #admin-fab { position:fixed; bottom:90px; right:18px; z-index:4000; width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#1877F2,#00f0ff); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(24,119,242,0.5); font-size:1.3rem; color:#fff; transition:transform 0.2s,box-shadow 0.2s; }
         #admin-fab:hover { transform:scale(1.1); box-shadow:0 6px 28px rgba(24,119,242,0.7); }
         #admin-panel-modal { position:fixed; inset:0; z-index:7000; background:rgba(0,0,0,0.75); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); padding:16px; }
@@ -1841,6 +1895,69 @@
                 </div>
             </div>
         </section>
+    <!-- Admin Panel View -->
+        <section id="view-admin" class="view-section" style="display:none;">
+          <div class="section-header">
+            <h2 class="section-title" style="color:#1877F2;"><i class="fa-solid fa-crown" style="margin-right:10px;"></i>Admin Panel</h2>
+            <button class="btn btn-primary" onclick="loadAdminData()" style="border-color:#1877F2;background:linear-gradient(135deg,#1877F2,#00f0ff);"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          </div>
+          <!-- Stats Row -->
+          <div class="dash-grid" style="margin-bottom:20px;">
+            <div class="stat-card glass"><div class="stat-icon blue"><i class="fa-solid fa-users"></i></div><div class="stat-info"><h3 id="admin-total-users" style="color:var(--primary);">—</h3><p>Total Users</p></div></div>
+            <div class="stat-card glass"><div class="stat-icon purple"><i class="fa-solid fa-users-rectangle"></i></div><div class="stat-info"><h3 id="admin-total-groups" style="color:var(--secondary);">—</h3><p>Active Rooms</p></div></div>
+            <div class="stat-card glass"><div class="stat-icon orange"><i class="fa-solid fa-flag"></i></div><div class="stat-info"><h3 id="admin-total-reports" style="color:var(--warning);">—</h3><p>Reports</p></div></div>
+            <div class="stat-card glass"><div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><h3 id="admin-total-verified" style="color:var(--success);">—</h3><p>Verified Users</p></div></div>
+          </div>
+          <!-- Tab Bar -->
+          <div style="display:flex;background:rgba(0,0,0,0.2);border-radius:14px;padding:5px;gap:5px;margin-bottom:20px;flex-wrap:wrap;" class="glass">
+            <button class="admin-tab active" id="admin-tab-users" onclick="switchAdminTab('users',this)">👥 Users</button>
+            <button class="admin-tab" id="admin-tab-groups" onclick="switchAdminTab('groups',this)">🏠 Groups</button>
+            <button class="admin-tab" id="admin-tab-announce" onclick="switchAdminTab('announce',this)">📢 Announce</button>
+            <button class="admin-tab" id="admin-tab-reports" onclick="switchAdminTab('reports',this)">🚨 Reports</button>
+            <button class="admin-tab" id="admin-tab-banned" onclick="switchAdminTab('banned',this)">🚫 Banned</button>
+          </div>
+          <!-- Users Panel -->
+          <div id="admin-panel-users">
+            <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+              <input type="text" id="admin-user-search" placeholder="Search by name, institution..." style="flex:1;min-width:180px;" oninput="filterAdminUsers(this.value)">
+              <select id="admin-user-sort" onchange="filterAdminUsers(document.getElementById('admin-user-search').value)" style="width:150px;">
+                <option value="hours">Sort: Study Hours</option>
+                <option value="streak">Sort: Streak</option>
+                <option value="tasks">Sort: Tasks</option>
+                <option value="name">Sort: Name A-Z</option>
+              </select>
+            </div>
+            <div id="admin-users-list"></div>
+          </div>
+          <!-- Groups Panel -->
+          <div id="admin-panel-groups" style="display:none;">
+            <div id="admin-groups-list"></div>
+          </div>
+          <!-- Announcement Panel -->
+          <div id="admin-panel-announce" style="display:none;">
+            <div class="glass" style="padding:22px;margin-bottom:20px;">
+              <h3 style="margin-bottom:14px;color:var(--text-main);">📢 Send Announcement</h3>
+              <input type="text" id="admin-ann-title" placeholder="Announcement title..." style="margin-bottom:10px;">
+              <textarea id="admin-ann-body" rows="4" placeholder="Announcement message..." style="margin-bottom:10px;"></textarea>
+              <select id="admin-ann-type" style="margin-bottom:14px;">
+                <option value="info">📢 Info</option>
+                <option value="success">🎉 Success</option>
+                <option value="warning">⚠️ Warning</option>
+                <option value="critical">🚨 Critical</option>
+              </select>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="sendAdminAnnouncement()"><i class="fa-solid fa-paper-plane"></i> Send to All Users</button>
+            </div>
+          </div>
+          <!-- Reports Panel -->
+          <div id="admin-panel-reports" style="display:none;">
+            <div id="admin-reports-list"></div>
+          </div>
+          <!-- Banned Panel -->
+          <div id="admin-panel-banned" style="display:none;">
+            <div id="admin-banned-list"></div>
+          </div>
+        </section>
+
     </main>
 
     <!-- Mobile Bottom Nav -->
@@ -2045,9 +2162,21 @@ let appData = {
     timerSettings: { focus:25, short:5, long:15 },
     pdfProgress: {}, pdfAnnotations: {}, recentPDFs: [], earnedBadges: []
 };
-const CREATOR_UID = 'aoKaaZLi7xhkcASgXdlaSTuF06k2'; // Your Firebase UID
+const CREATOR_UID = 'aoKaaZLi7xhkcASgXdlaSTuF06k2';
+function isCreator() {
+  return currentUser === CREATOR_UID;
+}
 let db, charts = {};
 let navHistory = ['dashboard'], currentView = 'dashboard';
+// Global cache of verified UIDs (populated on app start)
+window._verifiedUsers = new Set(['aoKaaZLi7xhkcASgXdlaSTuF06k2']);
+// Returns HTML badge string if user is verified
+function getVerifiedBadge(uid, size) {
+  if (!uid || !window._verifiedUsers.has(uid)) return '';
+  return size === 'lg'
+    ? '<span class="verified-badge-lg" title="Verified"></span>'
+    : '<span class="verified-badge" title="Verified"></span>';
+}
 let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','leaderboard','friends','inbox','challenge','groupfocus','profile'];
 const screens = {
     lock: document.getElementById('app-lock-screen'),
@@ -2203,6 +2332,8 @@ function saveAppData() {
 async function startApp() {
     screens.main.classList.remove('hidden');
     setTimeout(requestPushPermission, 3000);
+    // Load verified users (non-blocking)
+    setTimeout(loadVerifiedUsers, 1000);
     const _authOv = document.getElementById('firebase-auth-overlay');
     _authOv.style.visibility = 'hidden';
     _authOv.style.opacity = '0';
@@ -2255,6 +2386,23 @@ async function startApp() {
 
 function getSidebarItem(i) { return document.querySelectorAll('#sidebar-nav-links .nav-item')[i]; }
 
+/* ---- Load all verified users from Firestore ---- */
+async function loadVerifiedUsers() {
+  try {
+    if (!window._fbFirestore) return;
+    // Always include creator
+    window._verifiedUsers = new Set(['aoKaaZLi7xhkcASgXdlaSTuF06k2']);
+    const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const snap = await getDocs(collection(window._fbFirestore, 'leaderboard'));
+    snap.forEach(d => {
+      const data = d.data();
+      if (data && (data.verified === true || data.role === 'admin')) {
+        window._verifiedUsers.add(d.id);
+      }
+    });
+  } catch(e) { console.warn('loadVerifiedUsers error:', e); }
+}
+
 /* ---- GREETING ---- */
 function updateGreeting() {
     const h = new Date().getHours();
@@ -2270,7 +2418,7 @@ function updateGreeting() {
 }
 
 /* ---- NAVIGATION ---- */
-const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16 };
+const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16, admin:17 };
 const BNAV_INDEX = { dashboard:0, library:1, leaderboard:2, todo:3, pomodoro:4 };
 
 function syncNavHighlight(viewId) {
@@ -3868,7 +4016,7 @@ function showUserProfile(entry) {
                     ${isMe ? `<div style="font-size:0.75rem;color:var(--primary);background:rgba(0,240,255,0.1);padding:4px 12px;border-radius:20px;border:1px solid rgba(0,240,255,0.2);">আপনি</div>` : ''}
                 </div>
                 <div style="margin-bottom:16px;">
-                    <h2 style="font-family:var(--font-display);color:var(--text-main);font-size:1.4rem;margin-bottom:4px;">${entry.name || 'Anonymous'}</h2>
+                    <h2 style="font-family:var(--font-display);color:var(--text-main);font-size:1.4rem;margin-bottom:4px;display:flex;align-items:center;flex-wrap:wrap;">${entry.name || 'Anonymous'}${getVerifiedBadge(entry.uid,'lg')}</h2>
                     ${onlineHtml}
                     ${entry.class ? `<div style="display:inline-block;background:rgba(0,240,255,0.15);color:var(--primary);padding:3px 12px;border-radius:20px;font-size:0.78rem;margin-top:6px;font-weight:600;">${entry.class}</div>` : ''}
                     ${entry.institution ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-school" style="color:var(--primary);font-size:0.75rem;"></i>${entry.institution}</div>` : ''}
@@ -3957,7 +4105,7 @@ function renderLeaderboard(entries, tab) {
         row.innerHTML = '<div class="lb-rank-num" style="color:' + rankColor + ';">' + rank + '</div>' +
             '<img class="lb-avatar" src="' + dp + '" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff\'">' +
             '<div style="flex:1;min-width:0;">' +
-            '<div class="lb-name">' + (entry.name || 'Anonymous') + (isMe ? ' <span style="font-size:0.7rem;color:var(--primary);">(আপনি)</span>' : '') + '</div>' +
+            '<div class="lb-name" style="display:flex;align-items:center;flex-wrap:wrap;">' + (entry.name || 'Anonymous') + getVerifiedBadge(entry.uid) + (isMe ? ' <span style="font-size:0.7rem;color:var(--primary);margin-left:4px;">(আপনি)</span>' : '') + '</div>' +
             '<div class="lb-score">' + scoreVal + ' ' + labels[tab] + '</div>' +
             '</div>' +
             '<div class="lb-badge">' + medal + '</div>';
@@ -4333,7 +4481,7 @@ async function searchUsersForFriend(query) {
                 return `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid var(--glass-border);cursor:pointer;" onclick="var e=window._friendSearchResults['${u.uid}'];if(e)showUserProfile(e)">
                     <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;pointer-events:none;">
                     <div style="flex:1;min-width:0;pointer-events:none;">
-                        <div style="font-weight:600;color:var(--text-main);">${u.name||'Anonymous'}</div>
+                        <div style="font-weight:600;color:var(--text-main);display:flex;align-items:center;gap:3px;">${u.name||'Anonymous'}${getVerifiedBadge(u.uid)}</div>
                         <div style="font-size:0.75rem;color:var(--text-muted);">${u.institution||u.class||'StudyVault User'}</div>
                     </div>
                     <div onclick="event.stopPropagation()">${actionBtn}</div>
@@ -4593,7 +4741,7 @@ function attachSwipeReply(container) {
                         <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid var(--bg-base);cursor:pointer;" onclick="showUserProfile(window._dashLbEntries&&window._dashLbEntries['${f.uid}']?window._dashLbEntries['${f.uid}']:{uid:'${f.uid}',name:'${resolvedName.replace(/'/g,"\\'")}',dp:'${dp.replace(/'/g,"\\'")}',streak:0,hours:0,tasks:0,institution:'${(f.institution||'').replace(/'/g,"\\'")}',class:'${(f.class||'').replace(/'/g,"\\'")}' })">
                         ${isOnline?'<span style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:var(--success);border:2px solid var(--bg-base);display:block;"></span>':''}
                     </div>
-                    <div style="font-weight:700;color:var(--text-main);margin-top:6px;font-size:0.92rem;">${resolvedName}</div>
+                    <div style="font-weight:700;color:var(--text-main);margin-top:6px;font-size:0.92rem;display:flex;align-items:center;gap:2px;">${resolvedName}${getVerifiedBadge(f.uid)}</div>
                     <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.institution||f.class||''}</div>
                     <div style="display:flex;gap:6px;">
                         <button style="flex:1;background:var(--primary);color:#000;border:none;padding:8px;border-radius:8px;cursor:pointer;font-weight:700;font-size:0.8rem;font-family:var(--font-main);display:flex;align-items:center;justify-content:center;gap:5px;" onclick="openChatWith('${f.uid}');switchView('inbox',null)"><i class="fa-solid fa-message"></i> Message</button>
@@ -4659,7 +4807,7 @@ async function renderInbox() {
             </div>
             <div style="flex:1;min-width:0;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div style="font-weight:${conv.unread>0?'700':'600'};font-size:0.88rem;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">${displayName}</div>
+                    <div style="font-weight:${conv.unread>0?'700':'600'};font-size:0.88rem;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;max-width:130px;display:flex;align-items:center;gap:2px;">${displayName}${getVerifiedBadge(uid)}</div>
                     <div style="font-size:0.62rem;color:var(--text-muted);flex-shrink:0;">${conv.lastTimestamp?timeAgo(conv.lastTimestamp):''}</div>
                 </div>
                 <div style="font-size:0.73rem;color:${conv.unread>0?'var(--text-secondary)':'var(--text-muted)'};font-weight:${conv.unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${conv.lastMsg||'...'}</div>
@@ -4727,8 +4875,8 @@ async function openChatWith(friendUid) {
             (isOnline ? '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>' : '') +
             '</div>' +
             '<div style="flex:1;min-width:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries[\'' + safeUid + '\'])showUserProfile(window._dashLbEntries[\'' + safeUid + '\'])">' +
-            '<div style="display:flex;align-items:center;gap:6px;">' +
-        '<div style="font-weight:700;color:var(--text-main);font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + getDisplayName(friendUid, name) + '</div>' +
+            '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+        '<div style="font-weight:700;color:var(--text-main);font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px;">' + getDisplayName(friendUid, name) + getVerifiedBadge(friendUid) + '</div>' +
         `<button onclick="openNicknameDialog('${friendUid}','${name.replace(/'/g,"\\'")}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;font-size:0.7rem;flex-shrink:0;" title="Set Nickname"><i class="fa-solid fa-pen-to-square"></i></button>` +
         '</div>' +
             '<div style="margin-top:1px;">' + statusHtml + '</div>' +
@@ -4866,7 +5014,7 @@ function renderChatMessages(messages, friendName, friendDp) {
         // Swipe-to-reply state
         const msgWrapId = 'msgw_' + safeId;
         html += `<div id="${msgWrapId}" style="display:flex;align-items:flex-end;gap:6px;margin-bottom:${isLastInGroup?'10':'3'}px;${isMe?'flex-direction:row-reverse;':''};touch-action:pan-y;user-select:none;transition:transform 0.2s ease;" data-msgid="${safeId}" data-msgtext="${safeMsgText}" data-isme="${isMe}" class="msg-swipe-row">
-            ${isLastInGroup ? `<img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;cursor:pointer;" onclick="${!isMe&&safeId?`if(window._dashLbEntries&&window._dashLbEntries['${msg.fromUid||''}'])showUserProfile(window._dashLbEntries['${msg.fromUid||''}'])`:'void(0)'}">` : '<div style="width:28px;flex-shrink:0;"></div>'}
+            ${isLastInGroup ? `<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;position:relative;"><img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;cursor:pointer;" onclick="${!isMe&&safeId?`if(window._dashLbEntries&&window._dashLbEntries['${msg.fromUid||''}'])showUserProfile(window._dashLbEntries['${msg.fromUid||''}'])`:'void(0)'}">${window._verifiedUsers&&window._verifiedUsers.has(msg.fromUid||'')?'<span style="position:absolute;bottom:-3px;right:-3px;width:12px;height:12px;background:#1877F2;border-radius:50%;border:1.5px solid var(--bg-base);display:flex;align-items:center;justify-content:center;font-size:0;"></span>':''}</div>` : '<div style="width:28px;flex-shrink:0;"></div>'}
             <div style="max-width:72%;${isMe?'text-align:right;':''}">
                 <div style="position:relative;display:inline-block;max-width:100%;" oncontextmenu="event.preventDefault();openMsgMenu('${safeId}','${safeMsgText}',${isMe})" ondblclick="openMsgMenu('${safeId}','${safeMsgText}',${isMe})">
                     ${msgContent}
@@ -5817,11 +5965,13 @@ function renderGFMembers(members) {
         const dp = m.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(m.name||'U')+'&background=0D8ABC&color=fff');
         const isOnline = window._onlineStatus && window._onlineStatus[m.uid];
         const isAdminMember = room && m.uid === room.admin;
+        const _isVerifiedMember = window._verifiedUsers && window._verifiedUsers.has(m.uid);
         return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;" onclick="_openGFMemberProfile('${m.uid}')" title="${m.name||'User'}${isAdminMember?' (Admin)':''}">
             <div style="position:relative;">
                 <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid ${isAdminMember?'var(--warning)':'var(--primary)'};transition:transform 0.18s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                 <span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:${isOnline?'var(--success)':'var(--text-muted)'};border:2px solid var(--bg-base);display:block;"></span>
                 ${isAdminMember ? '<span style="position:absolute;top:-4px;left:-4px;font-size:0.65rem;">👑</span>' : ''}
+                ${_isVerifiedMember ? '<span style="position:absolute;top:-3px;right:-3px;width:16px;height:16px;background:#1877F2;border-radius:50%;border:2px solid var(--bg-base);display:flex;align-items:center;justify-content:center;" title="Verified"></span>' : ''}
             </div>
             <span style="font-size:0.68rem;color:var(--text-muted);max-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.name||'User'}</span>
         </div>`;
@@ -5922,54 +6072,62 @@ let _allUsersCache = [];
 let _currentAdminTab = 'users';
 
 function switchAdminTab(tab, btn) {
-    _currentAdminTab = tab;
-    ['users','groups','reports','banned'].forEach(t => {
-        const panel = document.getElementById('admin-panel-' + t);
-        const tabBtn = document.getElementById('admin-tab-' + t);
-        if (panel) panel.style.display = t === tab ? 'block' : 'none';
-        if (tabBtn) tabBtn.classList.toggle('active', t === tab);
-    });
+  _currentAdminTab = tab;
+  ['users','groups','announce','reports','banned'].forEach(t => {
+    const panel = document.getElementById('admin-panel-' + t);
+    const tabBtn = document.getElementById('admin-tab-' + t);
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (tabBtn) tabBtn.classList.toggle('active', t === tab);
+  });
 }
 
 async function loadAdminData() {
-    if (!isCreator()) { showToast('Access Denied', 'error'); return; }
-    showToast('Admin data লোড হচ্ছে...', 'success');
-    if (window._fbFirestore) {
-        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(async ({ getDocs, collection, getDoc, doc }) => {
-            // Load all users
-            const snap = await getDocs(collection(window._fbFirestore, 'leaderboard'));
-            _allUsersCache = [];
-            snap.forEach(d => { if(d.data() && d.data().uid) _allUsersCache.push(d.data()); });
-            document.getElementById('admin-total-users').innerText = _allUsersCache.length;
-            filterAdminUsers('');
-
-            // Load active group rooms
-            const roomsSnap = await getDocs(collection(window._fbFirestore, 'groupRooms'));
-            let rooms = [];
-            roomsSnap.forEach(d => rooms.push(d.data()));
-            document.getElementById('admin-total-groups').innerText = rooms.length;
-            renderAdminGroups(rooms);
-
-            // Load reports
-            try {
-                const rSnap = await getDocs(collection(window._fbFirestore, 'reports'));
-                let reports = [];
-                rSnap.forEach(d => reports.push({ id: d.id, ...d.data() }));
-                document.getElementById('admin-total-reports').innerText = reports.length;
-                renderAdminReports(reports);
-            } catch(e) { document.getElementById('admin-total-reports').innerText = '0'; }
-
-            // Load banned users
-            try {
-                const bSnap = await getDocs(collection(window._fbFirestore, 'bannedUsers'));
-                let banned = [];
-                bSnap.forEach(d => banned.push({ id: d.id, ...d.data() }));
-                renderAdminBanned(banned);
-            } catch(e) {}
-
-            showToast('Admin data লোড হয়েছে ✓', 'success');
-        });
-    }
+  if (!isCreator()) { showToast('Access Denied 🚫', 'error'); return; }
+  showToast('Admin data লোড হচ্ছে...', 'success');
+  if (!window._fbFirestore) { showToast('Firebase not ready','error'); return; }
+  try {
+    const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    // Users (leaderboard)
+    const snap = await getDocs(collection(window._fbFirestore, 'leaderboard'));
+    _allUsersCache = [];
+    snap.forEach(d => { const v = d.data(); if (v && v.uid) _allUsersCache.push(v); });
+    const verifiedCount = _allUsersCache.filter(u => u.verified).length;
+    const el_u = document.getElementById('admin-total-users');
+    const el_v = document.getElementById('admin-total-verified');
+    if (el_u) el_u.innerText = _allUsersCache.length;
+    if (el_v) el_v.innerText = verifiedCount;
+    // Update verified cache
+    window._verifiedUsers = new Set(['aoKaaZLi7xhkcASgXdlaSTuF06k2']);
+    _allUsersCache.forEach(u => { if (u.verified || u.role === 'admin') window._verifiedUsers.add(u.uid); });
+    filterAdminUsers('');
+    // Group rooms
+    const roomsSnap = await getDocs(collection(window._fbFirestore, 'groupRooms'));
+    let rooms = [];
+    roomsSnap.forEach(d => rooms.push(d.data()));
+    const el_g = document.getElementById('admin-total-groups');
+    if (el_g) el_g.innerText = rooms.length;
+    renderAdminGroups(rooms);
+    // Reports
+    try {
+      const rSnap = await getDocs(collection(window._fbFirestore, 'reports'));
+      let reports = [];
+      rSnap.forEach(d => reports.push({ id: d.id, ...d.data() }));
+      const el_r = document.getElementById('admin-total-reports');
+      if (el_r) el_r.innerText = reports.length;
+      renderAdminReports(reports);
+    } catch(e) { const el_r = document.getElementById('admin-total-reports'); if(el_r) el_r.innerText = '0'; }
+    // Banned
+    try {
+      const bSnap = await getDocs(collection(window._fbFirestore, 'bannedUsers'));
+      let banned = [];
+      bSnap.forEach(d => banned.push({ id: d.id, ...d.data() }));
+      renderAdminBanned(banned);
+    } catch(e) {}
+    showToast('Admin data লোড হয়েছে ✓', 'success');
+  } catch(e) {
+    console.error('loadAdminData error:', e);
+    showToast('Load failed: ' + e.message, 'error');
+  }
 }
 
 function filterAdminUsers(query) {
@@ -6006,9 +6164,10 @@ function renderAdminUsers(users) {
                 ${isOnline?'<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-base);"></span>':''}
             </div>
             <div style="flex:1;min-width:0;">
-                <div style="font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:6px;">
-                    ${u.name||'Anonymous'}
+                <div style="font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                    ${u.name||'Anonymous'}${getVerifiedBadge(u.uid)}
                     ${isMe?'<span style="background:var(--warning);color:#000;font-size:0.62rem;padding:1px 7px;border-radius:10px;font-weight:800;">👑 YOU</span>':''}
+                    ${u.role==='admin'?'<span style="background:rgba(24,119,242,0.2);color:#1877F2;font-size:0.62rem;padding:1px 7px;border-radius:10px;font-weight:700;">ADMIN</span>':''}
                 </div>
                 <div style="font-size:0.73rem;color:var(--text-muted);">${u.institution||u.class||'—'}</div>
                 <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">🔥${u.streak||0} streak &nbsp;⏱${(u.hours||0).toFixed(1)}h &nbsp;✅${u.tasks||0} tasks</div>
@@ -6167,19 +6326,45 @@ async function adminDismissReport(reportId, btn) {
 }
 
 async function adminVerifyUser(uid, name, btn) {
-    if (!isCreator()) { showToast('Access Denied', 'error'); return; }
-    if (btn) { btn.disabled = true; }
-    if (window._fbFirestore) {
-        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(async ({ setDoc, doc }) => {
-            await setDoc(doc(window._fbFirestore, 'leaderboard', uid), { verified: true }, { merge: true });
-            await setDoc(doc(window._fbFirestore, 'users', uid, 'notifications', Date.now().toString()), {
-                msg: '✅ তোমার account verified হয়েছে! Profile-এ blue tick দেখাবে।',
-                type: 'verified', timestamp: Date.now(), read: false
-            });
-            showToast(name + ' verified হয়েছে ✓', 'success');
-            if (btn) { btn.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--primary);"></i>'; }
-        });
+  if (!isCreator()) { showToast('Access Denied 🚫', 'error'); return; }
+  if (btn) { btn.disabled = true; }
+  const isCurrentlyVerified = window._verifiedUsers && window._verifiedUsers.has(uid);
+  const action = isCurrentlyVerified ? 'unverify' : 'verify';
+  if (!confirm((isCurrentlyVerified ? 'Unverify' : 'Verify') + ' ' + name + '?')) {
+    if (btn) btn.disabled = false; return;
+  }
+  if (window._fbFirestore) {
+    const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    await setDoc(doc(window._fbFirestore, 'leaderboard', uid), {
+      verified: !isCurrentlyVerified,
+      role: isCurrentlyVerified ? 'user' : 'user'
+    }, { merge: true });
+    await setDoc(doc(window._fbFirestore, 'users', uid, 'notifications', Date.now().toString()), {
+      msg: isCurrentlyVerified
+        ? '❌ তোমার account verified status সরানো হয়েছে।'
+        : '✅ তোমার account verified হয়েছে! Profile-এ blue ✓ দেখাবে।',
+      type: isCurrentlyVerified ? 'unverified' : 'verified',
+      timestamp: Date.now(), read: false
+    });
+    // Update local cache
+    if (isCurrentlyVerified) {
+      window._verifiedUsers.delete(uid);
+    } else {
+      window._verifiedUsers = window._verifiedUsers || new Set();
+      window._verifiedUsers.add(uid);
     }
+    showToast(name + (isCurrentlyVerified ? ' unverified' : ' verified ✓'), 'success');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = isCurrentlyVerified
+        ? '<i class="fa-solid fa-circle-check"></i>'
+        : '<i class="fa-solid fa-circle-check" style="color:var(--primary);"></i>';
+    }
+    // Refresh user list
+    const cached = _allUsersCache.find(u => u.uid === uid);
+    if (cached) cached.verified = !isCurrentlyVerified;
+    filterAdminUsers(document.getElementById('admin-user-search')?.value || '');
+  }
 }
 
 async function adminMessageUser(toUid, name, btn) {
@@ -6234,13 +6419,66 @@ async function sendAdminAnnouncement() {
     }
 }
 
+function openAdminPanel() {
+  if (!isCreator()) { showToast('Access Denied 🚫', 'error'); return; }
+  switchView('admin', null);
+}
+function closeAdminPanel() {
+  const modal = document.getElementById('admin-panel-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
 /* ---- Show admin nav when creator logs in ---- */
 function showAdminNavIfCreator() {
-    if (!isCreator()) return;
-    const el1 = document.getElementById('admin-nav-item');
-    const el2 = document.getElementById('admin-nav-item-drawer');
-    if (el1) el1.style.display = 'flex';
-    if (el2) el2.style.display = 'flex';
+  if (!isCreator()) return;
+  // Sidebar admin nav item
+  const sidebarNav = document.getElementById('sidebar-nav-links');
+  if (sidebarNav && !document.getElementById('admin-nav-item')) {
+    const li = document.createElement('div');
+    li.className = 'nav-item';
+    li.id = 'admin-nav-item';
+    li.innerHTML = '<i class="fa-solid fa-crown" style="color:#1877F2;"></i> Admin Panel';
+    li.onclick = () => switchView('admin', li);
+    sidebarNav.appendChild(li);
+  }
+  // Drawer admin nav item
+  const drawerNav = document.getElementById('drawer-nav-links');
+  if (drawerNav && !document.getElementById('admin-nav-item-drawer')) {
+    const li2 = document.createElement('div');
+    li2.className = 'nav-item';
+    li2.id = 'admin-nav-item-drawer';
+    li2.innerHTML = '<i class="fa-solid fa-crown" style="color:#1877F2;"></i> Admin Panel';
+    li2.onclick = () => { switchView('admin', li2); closeMobileDrawer(); };
+    drawerNav.appendChild(li2);
+  }
+  // Show admin FAB
+  const fab = document.getElementById('admin-fab');
+  if (fab) fab.classList.remove('hidden');
+  // Auto-grant verified+admin to own leaderboard entry
+  _ensureAdminVerified();
+}
+
+async function _ensureAdminVerified() {
+  if (!window._fbFirestore || !window._fbAuth || !window._fbAuth.currentUser) return;
+  try {
+    const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const uid = window._fbAuth.currentUser.uid;
+    // Leaderboard: verified + admin role
+    await setDoc(doc(window._fbFirestore, 'leaderboard', uid), {
+      verified: true,
+      role: 'admin'
+    }, { merge: true });
+    // admins collection
+    await setDoc(doc(window._fbFirestore, 'admins', uid), {
+      uid,
+      role: 'admin',
+      verified: true,
+      email: window._fbAuth.currentUser.email || 'oyasimsajjad@gmail.com',
+      grantedAt: Date.now()
+    });
+    // Add to local verified cache
+    window._verifiedUsers.add(uid);
+  } catch(e) { console.warn('_ensureAdminVerified error:', e); }
 }
 
 /* ---- VIEW_INDEX update for admin ---- */
@@ -6681,6 +6919,21 @@ onAuthStateChanged(auth, async (user) => {
         // 4. Sync PDF metadata from cloud (non-blocking)
         syncPDFsFromCloud(user.uid).catch(e => console.warn('PDF sync error:', e));
 
+        // Auto-grant admin role to creator account
+        if (user.uid === 'aoKaaZLi7xhkcASgXdlaSTuF06k2') {
+          try {
+            await setDoc(doc(firestore, 'admins', user.uid), {
+              uid: user.uid, role: 'admin', verified: true,
+              email: user.email || 'oyasimsajjad@gmail.com',
+              grantedAt: Date.now()
+            });
+            await setDoc(doc(firestore, 'leaderboard', user.uid), {
+              verified: true, role: 'admin'
+            }, { merge: true });
+            window._verifiedUsers = window._verifiedUsers || new Set();
+            window._verifiedUsers.add(user.uid);
+          } catch(e) { console.warn('Admin auto-grant error:', e); }
+        }
         // 5. Start app
         if (appData.settings.appLock && appData.settings.pin) {
             document.getElementById('firebase-auth-overlay').style.display = 'none';
@@ -6843,7 +7096,7 @@ window._fbLoadDashLeaderboard = async function() {
                 <span style="font-size:1.2rem;min-width:28px;text-align:center;">${medals[i]}</span>
                 <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid ${isMe?'var(--primary)':'var(--glass-border)'};">
                 <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;font-size:0.88rem;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.name||'Anonymous'}${isMe?' <span style="color:var(--primary);font-size:0.7rem;">(আপনি)</span>':''}</div>
+                    <div style="font-weight:600;font-size:0.88rem;color:var(--text-main);display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${e.name||'Anonymous'}${getVerifiedBadge(e.uid)}${isMe?' <span style="color:var(--primary);font-size:0.7rem;">(আপনি)</span>':''}</div>
                 </div>
                 ${isMe ? `<div style="font-family:var(--font-display);font-weight:700;color:var(--primary);font-size:0.95rem;">${parseFloat((e.hours||0).toFixed(1))}h</div>` : ''}
             </div>`;
