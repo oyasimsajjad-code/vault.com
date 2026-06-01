@@ -1257,7 +1257,104 @@
         <section id="view-pomodoro" class="view-section">
             <div class="section-header">
                 <h2 class="section-title">Focus Timer</h2>
-                <button class="btn btn-primary" onclick="enterFocusMode()"><i class="fa-solid fa-expand"></i> Deep Focus Mode</button>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="btn" onclick="toggleFocusSettings()" title="Focus Settings" style="width:42px;height:42px;padding:0;justify-content:center;border-radius:50%;font-size:1.1rem;position:relative;" id="focus-settings-btn"><i class="fa-solid fa-gear"></i></button>
+                    <button class="btn btn-primary" onclick="enterFocusMode()"><i class="fa-solid fa-expand"></i> Deep Focus Mode</button>
+                </div>
+            </div>
+
+            <!-- Focus Settings Popup (Microsoft Style) -->
+            <div id="focus-settings-popup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:4000;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeFocusSettings()">
+                <div class="glass" style="width:100%;max-width:480px;border-radius:24px;padding:32px;position:relative;animation:fadeIn 0.25s ease;margin:20px;">
+                    <!-- Header -->
+                    <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;">
+                        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--secondary),var(--primary));display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;"><i class="fa-solid fa-circle-half-stroke" style="color:#fff;"></i></div>
+                        <div>
+                            <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--text-main);">Get ready to focus</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Customize your session before you begin</div>
+                        </div>
+                        <button onclick="closeFocusSettings()" style="margin-left:auto;background:rgba(255,255,255,0.1);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:var(--text-main);font-size:1rem;display:flex;align-items:center;justify-content:center;">✕</button>
+                    </div>
+
+                    <!-- Total Duration Picker -->
+                    <div style="background:rgba(0,0,0,0.25);border-radius:16px;padding:24px;margin-bottom:18px;text-align:center;border:1px solid var(--glass-border);">
+                        <div style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Total Focus Duration</div>
+                        <div style="display:flex;align-items:center;justify-content:center;gap:0;">
+                            <div style="background:rgba(0,0,0,0.3);border-radius:12px;overflow:hidden;border:1px solid var(--glass-border);">
+                                <button onclick="adjustFocusMins(5)" style="background:none;border:none;color:var(--text-main);width:60px;height:36px;cursor:pointer;font-size:1rem;transition:background 0.15s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='none'">▲</button>
+                                <div style="display:flex;align-items:baseline;justify-content:center;gap:4px;padding:4px 20px;">
+                                    <span id="fs-mins-display" style="font-family:var(--font-display);font-size:3rem;font-weight:800;color:var(--text-main);line-height:1;">25</span>
+                                    <span style="font-size:0.85rem;color:var(--text-muted);">mins</span>
+                                </div>
+                                <button onclick="adjustFocusMins(-5)" style="background:none;border:none;color:var(--text-main);width:60px;height:36px;cursor:pointer;font-size:1rem;transition:background 0.15s;" onmouseover="this.style.background='rgba(0,240,255,0.1)'" onmouseout="this.style.background='none'">▼</button>
+                            </div>
+                        </div>
+                        <div id="fs-breaks-info" style="margin-top:12px;font-size:0.82rem;color:var(--primary);font-weight:600;"></div>
+                    </div>
+
+                    <!-- Focus Period & Break Settings -->
+                    <div style="background:rgba(0,0,0,0.2);border-radius:14px;border:1px solid var(--glass-border);overflow:hidden;margin-bottom:18px;">
+                        <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--glass-border);">
+                            <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,240,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-stopwatch" style="color:var(--primary);font-size:0.9rem;"></i></div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600;color:var(--text-main);font-size:0.9rem;">Focus period</div>
+                                <div style="font-size:0.73rem;color:var(--text-muted);">Length of each focus block</div>
+                            </div>
+                            <select id="fs-focus-period" style="background:rgba(0,0,0,0.4);border:1px solid var(--glass-border);color:var(--text-main);padding:6px 10px;border-radius:8px;font-size:0.82rem;cursor:pointer;" onchange="updateBreaksInfo()">
+                                <option value="25">25 minutes</option>
+                                <option value="30">30 minutes</option>
+                                <option value="45">45 minutes</option>
+                                <option value="50">50 minutes</option>
+                                <option value="60">1 hour</option>
+                                <option value="90">1.5 hours</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;">
+                            <div style="width:36px;height:36px;border-radius:50%;background:rgba(112,0,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-mug-hot" style="color:var(--secondary);font-size:0.9rem;"></i></div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600;color:var(--text-main);font-size:0.9rem;">Break period</div>
+                                <div style="font-size:0.73rem;color:var(--text-muted);">Rest between focus blocks</div>
+                            </div>
+                            <select id="fs-break-period" style="background:rgba(0,0,0,0.4);border:1px solid var(--glass-border);color:var(--text-main);padding:6px 10px;border-radius:8px;font-size:0.82rem;cursor:pointer;" onchange="updateBreaksInfo()">
+                                <option value="5" selected>5 minutes</option>
+                                <option value="10">10 minutes</option>
+                                <option value="15">15 minutes</option>
+                                <option value="20">20 minutes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Skip Breaks Toggle -->
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;background:rgba(0,0,0,0.2);border-radius:12px;border:1px solid var(--glass-border);margin-bottom:20px;">
+                        <div style="flex:1;">
+                            <div style="font-weight:600;color:var(--text-main);font-size:0.9rem;">Skip breaks</div>
+                            <div style="font-size:0.73rem;color:var(--text-muted);">Run the full duration without breaks</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="fs-skip-breaks" onchange="updateBreaksInfo()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Subject Selector -->
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Studying subject</label>
+                        <select id="fs-subject" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);color:var(--text-main);padding:10px 14px;border-radius:10px;font-size:0.88rem;">
+                            <option value="">General</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Higher Math">Higher Math</option>
+                            <option value="Biology">Biology</option>
+                            <option value="ICT">ICT</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+
+                    <!-- Start Button -->
+                    <button onclick="applyFocusSettingsAndStart()" style="width:100%;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--secondary),var(--primary));color:#fff;font-weight:700;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--font-main);transition:all 0.25s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                        <i class="fa-solid fa-play"></i> Start focus session
+                    </button>
+                </div>
             </div>
             <div class="glass timer-container">
                 <div class="timer-modes">
@@ -4175,7 +4272,7 @@ function renderLeaderboard(entries, tab) {
         const meClass = isMe ? 'me' : '';
         const rankColor = rank <= 3 ? rankColors[i] : 'var(--text-muted)';
         const medal = medals[i] || '';
-        const scoreVal = tab === 'streak' ? (entry.streak || 0) : (entry.tasks || 0);
+        const scoreVal = tab === 'streak' ? (entry.streak || 0) : tab === 'hours' ? parseFloat((entry.hours || 0).toFixed(1)) : (entry.tasks || 0);
         const dp = entry.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(entry.name || 'U') + '&background=0D8ABC&color=fff');
         const row = document.createElement('div');
         row.className = 'lb-row ' + rankClass + ' ' + meClass;
@@ -4199,6 +4296,106 @@ function renderLeaderboard(entries, tab) {
             }
         }
     });
+}
+
+/* ---- FOCUS SETTINGS POPUP ---- */
+let _fsCurrentMins = 25;
+
+function toggleFocusSettings() {
+    const popup = document.getElementById('focus-settings-popup');
+    if (!popup) return;
+    const isOpen = popup.style.display === 'flex';
+    if (isOpen) {
+        closeFocusSettings();
+    } else {
+        _fsCurrentMins = (appData.timerSettings && appData.timerSettings.focus) || 25;
+        document.getElementById('fs-mins-display').innerText = _fsCurrentMins;
+        const fpSel = document.getElementById('fs-focus-period');
+        const bpSel = document.getElementById('fs-break-period');
+        const timerSubj = document.getElementById('timer-subject');
+        const fsSubj = document.getElementById('fs-subject');
+        if (fpSel && appData.timerSettings) fpSel.value = appData.timerSettings.focus || 25;
+        if (bpSel && appData.timerSettings) bpSel.value = appData.timerSettings.short || 5;
+        if (fsSubj && timerSubj) fsSubj.value = timerSubj.value || '';
+        document.getElementById('fs-skip-breaks').checked = false;
+        updateBreaksInfo();
+        popup.style.display = 'flex';
+    }
+}
+
+function closeFocusSettings() {
+    const popup = document.getElementById('focus-settings-popup');
+    if (popup) popup.style.display = 'none';
+}
+
+function adjustFocusMins(delta) {
+    _fsCurrentMins = Math.max(5, Math.min(300, _fsCurrentMins + delta));
+    document.getElementById('fs-mins-display').innerText = _fsCurrentMins;
+    updateBreaksInfo();
+}
+
+function updateBreaksInfo() {
+    const skipBreaks = document.getElementById('fs-skip-breaks').checked;
+    const focusPeriod = parseInt(document.getElementById('fs-focus-period').value) || 25;
+    const infoEl = document.getElementById('fs-breaks-info');
+    if (!infoEl) return;
+    if (skipBreaks || _fsCurrentMins <= focusPeriod) {
+        infoEl.innerText = 'No breaks — full focus session';
+        infoEl.style.color = 'var(--text-muted)';
+    } else {
+        const numBreaks = Math.floor(_fsCurrentMins / focusPeriod) - 1;
+        const breaksText = numBreaks > 0 ? `You'll have ${numBreaks} break${numBreaks > 1 ? 's' : ''}` : 'No breaks needed';
+        infoEl.innerText = breaksText;
+        infoEl.style.color = 'var(--primary)';
+    }
+}
+
+function applyFocusSettingsAndStart() {
+    const focusPeriod = parseInt(document.getElementById('fs-focus-period').value) || 25;
+    const breakPeriod = parseInt(document.getElementById('fs-break-period').value) || 5;
+    const skipBreaks = document.getElementById('fs-skip-breaks').checked;
+    const subject = document.getElementById('fs-subject').value;
+    const totalMins = _fsCurrentMins;
+    const timerSubj = document.getElementById('timer-subject');
+    if (timerSubj && subject) timerSubj.value = subject;
+    stopTimer();
+    if (skipBreaks || totalMins <= focusPeriod) {
+        appData.timerSettings = { focus: totalMins, short: breakPeriod, long: breakPeriod * 2 };
+        modes.focus = totalMins * 60;
+        modes.short = breakPeriod * 60;
+        modes.long = breakPeriod * 2 * 60;
+        _msBlock.enabled = false;
+    } else {
+        appData.timerSettings = { focus: focusPeriod, short: breakPeriod, long: breakPeriod * 2 };
+        modes.focus = focusPeriod * 60;
+        modes.short = breakPeriod * 60;
+        modes.long = breakPeriod * 2 * 60;
+        if (totalMins > focusPeriod) {
+            _msBlock.enabled = true;
+            _msBlock.totalMins = totalMins;
+            _msBlock.blockFocus = focusPeriod;
+            _msBlock.blockBreak = breakPeriod;
+            _msBlock.blocksDone = 0;
+            _msBlock.totalBlocks = Math.ceil(totalMins / focusPeriod);
+            _msBlock.completedMins = 0;
+            modes.focus = focusPeriod * 60;
+            showToast(`Session split into ${_msBlock.totalBlocks} × ${focusPeriod}-min blocks ⚡`, 'success');
+        }
+    }
+    timerMode = 'focus';
+    timeLeft = modes.focus;
+    updateTimerDisplay();
+    setRing(modes.focus, modes.focus);
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    const focusBtn = document.getElementById('mode-btn-focus');
+    if (focusBtn) focusBtn.classList.add('active');
+    document.getElementById('custom-focus').value = appData.timerSettings.focus;
+    document.getElementById('custom-short').value = appData.timerSettings.short;
+    document.getElementById('custom-long').value = appData.timerSettings.long;
+    saveAppData();
+    closeFocusSettings();
+    setTimeout(() => toggleTimer(), 400);
+    showToast(`Starting ${totalMins}-min session 🔥`, 'success');
 }
 
 /* ---- ROUTINE ---- */
@@ -7142,7 +7339,7 @@ window._fbLoadLeaderboard = async function(tab) {
         const snap = await getDocs(collection(firestore, 'leaderboard'));
         let entries = [];
         snap.forEach(d => { const data = d.data(); if (data && data.uid) entries.push(data); });
-        const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'streak' : 'tasks';
+        const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'hours' : 'tasks';
         entries.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
         entries = entries.slice(0, 50);
         renderLeaderboard(entries, tab);
