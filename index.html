@@ -1225,37 +1225,10 @@
                 </div>
                 <div class="timer-custom">
                     <h4><i class="fa-solid fa-sliders"></i> Custom Durations (minutes)</h4>
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:10px 14px;background:rgba(0,240,255,0.06);border-radius:var(--radius-sm);border:1px solid rgba(0,240,255,0.15);">
-                        <div>
-                            <div style="font-weight:600;color:var(--text-main);font-size:0.88rem;"><i class="fa-solid fa-sun" style="color:var(--warning);margin-right:7px;"></i>Keep Screen Awake</div>
-                            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">Prevent display sleep during focus</div>
-                        </div>
-                        <label class="toggle-switch"><input type="checkbox" id="setting-wakelock" onchange="toggleWakeLockSetting()"><span class="toggle-slider"></span></label>
-                    </div>
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:10px 14px;background:rgba(112,0,255,0.06);border-radius:var(--radius-sm);border:1px solid rgba(112,0,255,0.15);">
-                        <div>
-                            <div style="font-weight:600;color:var(--text-main);font-size:0.88rem;"><i class="fa-solid fa-rotate" style="color:var(--primary);margin-right:7px;"></i>Auto Cycle Mode</div>
-                            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">Automatically rotate focus/break cycles</div>
-                        </div>
-                        <label class="toggle-switch"><input type="checkbox" id="setting-autocycle" onchange="toggleAutoCycle()"><span class="toggle-slider"></span></label>
-                    </div>
-                    <div id="autocycle-config" style="display:none;background:rgba(0,0,0,0.18);padding:14px;border-radius:var(--radius-sm);margin-bottom:12px;">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                            <div><label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">Goal (hours)</label><input type="number" id="cycle-goal-hours" min="0.5" max="24" step="0.5" value="2" style="padding:7px 10px;font-size:0.85rem;"></div>
-                            <div><label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;">Cycles before long break</label><input type="number" id="cycle-before-long" min="1" max="10" value="4" style="padding:7px 10px;font-size:0.85rem;"></div>
-                        </div>
-                        <div id="cycle-preview-info" style="font-size:0.78rem;color:var(--primary);padding:6px 10px;background:rgba(0,240,255,0.08);border-radius:6px;"></div>
-                    </div>
-                    <div id="autocycle-tracker" style="display:none;margin-bottom:12px;padding:12px 14px;background:rgba(0,0,0,0.2);border-radius:var(--radius-sm);border:1px solid var(--glass-border);">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
-                            <span style="font-size:0.78rem;color:var(--text-muted);">Cycle <span id="cycle-current-num" style="color:var(--primary);font-weight:700;">1</span> of <span id="cycle-total-num" style="color:var(--text-main);">8</span></span>
-                            <span style="font-size:0.78rem;color:var(--text-muted);">Remaining: <span id="cycle-remaining-time" style="color:var(--warning);font-weight:700;">2h 0m</span></span>
-                        </div>
-                        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
-                            <div id="cycle-progress-fill" style="height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:10px;width:0%;transition:width 0.5s;"></div>
-                        </div>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;" id="cycle-dots"></div>
-                    </div>
+                    
+                    
+                    
+                    
                     <div class="timer-custom-row">
                         <div class="timer-custom-item"><label>Focus</label><input type="number" id="custom-focus" min="1" max="120" value="25"></div>
                         <div class="timer-custom-item"><label>Short Break</label><input type="number" id="custom-short" min="1" max="60" value="5"></div>
@@ -3318,9 +3291,10 @@ function renderHeatmap() {
     if(!container) return;
     container.innerHTML=''; monthsEl.innerHTML='';
     const heatmap=appData.stats.heatmap||{};
-    const today=new Date();
-    const cells=90,allDates=[];
-    for(let i=cells-1;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);allDates.push(d.toISOString().split('T')[0]);}
+    const allDates=[];
+    const hStart=new Date('2026-06-01');
+    const hEnd=new Date('2026-12-31');
+    for(let d=new Date(hStart);d<=hEnd;d.setDate(d.getDate()+1)){allDates.push(new Date(d).toISOString().split('T')[0]);}
     const months={};
     allDates.forEach(ds=>{const m=ds.substring(0,7);if(!months[m])months[m]=0;months[m]++;});
     Object.keys(months).forEach(m=>{const span=document.createElement('span');span.style.cssText=`width:${months[m]*17}px;overflow:hidden;white-space:nowrap;`;span.innerText=new Date(m+'-01').toLocaleString('default',{month:'short'});monthsEl.appendChild(span);});
@@ -4276,6 +4250,9 @@ async function searchUsersForFriend(query) {
                 ((e.name||'').toLowerCase().includes(q) || (e.institution||'').toLowerCase().includes(q))
             ).slice(0, 8);
             if (!matches.length) { resultsEl.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">কেউ পাওয়া যায়নি</p>'; return; }
+            // Store search results globally for profile card access
+            window._friendSearchResults = {};
+            matches.forEach(u => { window._friendSearchResults[u.uid] = u; });
             resultsEl.innerHTML = matches.map(u => {
                 const dp = u.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(u.name||'U')+'&background=0D8ABC&color=fff');
                 const isFriend = friendsList.some(f => f.uid === u.uid);
@@ -4286,13 +4263,13 @@ async function searchUsersForFriend(query) {
                 else if (isSent) actionBtn = '<span style="color:var(--text-muted);font-size:0.8rem;"><i class="fa-solid fa-clock"></i> Sent</span>';
                 else if (isIncoming) actionBtn = `<button class="btn" style="padding:6px 12px;font-size:0.8rem;border-color:var(--success);color:var(--success);" onclick="acceptFriendRequest('${u.uid}')"><i class="fa-solid fa-check"></i> Accept</button>`;
                 else actionBtn = `<button class="btn btn-primary" style="padding:6px 12px;font-size:0.8rem;" onclick="sendFriendRequest('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}')"><i class="fa-solid fa-user-plus"></i> Add</button>`;
-                return `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid var(--glass-border);">
-                    <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
-                    <div style="flex:1;min-width:0;">
+                return `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid var(--glass-border);cursor:pointer;" onclick="var e=window._friendSearchResults['${u.uid}'];if(e)showUserProfile(e)">
+                    <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;pointer-events:none;">
+                    <div style="flex:1;min-width:0;pointer-events:none;">
                         <div style="font-weight:600;color:var(--text-main);">${u.name||'Anonymous'}</div>
                         <div style="font-size:0.75rem;color:var(--text-muted);">${u.institution||u.class||'StudyVault User'}</div>
                     </div>
-                    ${actionBtn}
+                    <div onclick="event.stopPropagation()">${actionBtn}</div>
                 </div>`;
             }).join('');
         } catch(e) { resultsEl.innerHTML='<p style="color:var(--text-muted);">Search failed</p>'; }
