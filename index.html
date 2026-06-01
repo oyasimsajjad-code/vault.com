@@ -1070,9 +1070,9 @@
         <div class="nav-links" id="sidebar-nav-links">
             <div class="nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i> Dashboard</div>
             <div class="nav-item" onclick="switchView('todo',this)"><i class="fa-solid fa-list-check"></i> Task Manager</div>
-            <div class="nav-item" onclick="switchView('notes',this)"><i class="fa-solid fa-note-sticky"></i> Notes</div>
-            <div class="nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i> Timer</div>
-            <div class="nav-item" onclick="switchView('revision',this)"><i class="fa-solid fa-rotate"></i> Revision</div>
+            <div class="nav-item" id="snav-notes" onclick="switchView('notes',this)"><i class="fa-solid fa-note-sticky"></i> Notes</div>
+            <div class="nav-item" id="snav-pomodoro" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i> Timer</div>
+            <div class="nav-item" id="snav-revision" onclick="switchView('revision',this)"><i class="fa-solid fa-rotate"></i> Revision</div>
             <div class="nav-item" onclick="switchView('analytics',this)"><i class="fa-solid fa-chart-line"></i> Analytics</div>
             <div class="nav-item" onclick="switchView('goals',this)"><i class="fa-solid fa-bullseye"></i> Goals</div>
             <div class="nav-item" onclick="switchView('achievements',this)"><i class="fa-solid fa-trophy"></i> Achievements</div>
@@ -1354,7 +1354,7 @@
                 <div class="stat-card glass"><div class="stat-info"><p>Longest Streak</p><h3 id="stat-longest-streak" class="neon-text">0</h3></div></div>
             </div>
             <div class="glass chart-container" style="margin-bottom:24px;">
-                <h3 style="margin-bottom:8px;color:var(--text-main);">Study Heatmap (Last 90 Days)</h3>
+                <h3 style="margin-bottom:8px;color:var(--text-main);">Study Heatmap (Last 210 Days)</h3>
                 <div class="heatmap-months" id="heatmap-months"></div>
                 <div class="heatmap-grid" id="study-heatmap"></div>
                 <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:0.75rem;color:var(--text-muted);">
@@ -2418,18 +2418,24 @@ function updateGreeting() {
 }
 
 /* ---- NAVIGATION ---- */
-const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16, admin:17 };
+const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16 };
 const BNAV_INDEX = { dashboard:0, library:1, leaderboard:2, todo:3, pomodoro:4 };
+
+const VIEW_ID_MAP = {
+    dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5,
+    analytics:6, goals:7, achievements:8, vault:9, routine:10,
+    leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16
+};
 
 function syncNavHighlight(viewId) {
     document.querySelectorAll('#sidebar-nav-links .nav-item, #drawer-nav-links .nav-item').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('#bottom-nav .b-nav-item').forEach(el => el.classList.remove('active'));
-    const idx = VIEW_INDEX[viewId];
+    const idx = VIEW_ID_MAP[viewId];
     if (idx !== undefined) {
-        const si = document.querySelectorAll('#sidebar-nav-links .nav-item')[idx];
-        const di = document.querySelectorAll('#drawer-nav-links .nav-item')[idx];
-        if (si) si.classList.add('active');
-        if (di) di.classList.add('active');
+        const sidebarItems = document.querySelectorAll('#sidebar-nav-links .nav-item');
+        const drawerItems = document.querySelectorAll('#drawer-nav-links .nav-item');
+        if (sidebarItems[idx]) sidebarItems[idx].classList.add('active');
+        if (drawerItems[idx]) drawerItems[idx].classList.add('active');
     }
     const bi = BNAV_INDEX[viewId];
     if (bi !== undefined) {
@@ -3060,6 +3066,9 @@ document.addEventListener('visibilitychange', async () => {
         await requestWakeLock();
     }
 });
+// Microsoft-style auto-block config
+let _msBlock = { enabled: false, totalMins: 0, blockFocus: 50, blockBreak: 10, blocksDone: 0, totalBlocks: 0, completedMins: 0 };
+
 function applyCustomTimer() {
     const f=parseInt(document.getElementById('custom-focus').value)||25;
     const s=parseInt(document.getElementById('custom-short').value)||5;
@@ -3068,6 +3077,24 @@ function applyCustomTimer() {
     stopTimer();
     appData.timerSettings={focus:f,short:s,long:l};
     modes.focus=f*60; modes.short=s*60; modes.long=l*60;
+    // Auto-detect long session (>90 min) → enable Microsoft-style blocks
+    if(f > 90){
+        _msBlock.enabled = true;
+        _msBlock.totalMins = f;
+        _msBlock.blockFocus = 50;
+        _msBlock.blockBreak = 10;
+        _msBlock.blocksDone = 0;
+        _msBlock.totalBlocks = Math.ceil(f / 50);
+        _msBlock.completedMins = 0;
+        modes.focus = 50 * 60;
+        modes.short = 10 * 60;
+        timerMode = 'focus';
+        document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById('mode-btn-focus').classList.add('active');
+        showToast(`Long session split into ${_msBlock.totalBlocks} × 50-min blocks ⚡`, 'success');
+    } else {
+        _msBlock.enabled = false;
+    }
     timeLeft=modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode],modes[timerMode]);
     saveAppData(); showToast('Timer settings saved!','success');
 }
@@ -3121,9 +3148,22 @@ function toggleTimer() {
         if (timerMode === 'focus' && appData.settings.keepScreenAwake) requestWakeLock();
     }
 }
+function _startNextMsBlock() {
+    setTimerMode('focus', document.getElementById('mode-btn-focus'));
+    modes.focus = _msBlock.blockFocus * 60;
+    timeLeft = modes.focus;
+    updateTimerDisplay();
+    setRing(modes.focus, modes.focus);
+    document.getElementById('timer-status').innerText = `Block ${_msBlock.blocksDone + 1}/${_msBlock.totalBlocks} — focus!`;
+    setTimeout(() => toggleTimer(), 800);
+}
+
 function resetTimer() {
     if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
     _partialSaved = false;
+    _msBlock.enabled = false;
+    const skipBtn = document.getElementById('ms-skip-break-btn');
+    if (skipBtn) skipBtn.remove();
     clearInterval(timerInt); timerInt = null; isRunning = false;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
     document.getElementById('fm-play-icon').className = 'fa-solid fa-play';
@@ -3139,7 +3179,7 @@ function timerTick() {
         if (timerMode === 'focus') {
             _partialSaved = true;
             const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
-            const mins = appData.timerSettings.focus || 25;
+            const mins = _msBlock.enabled ? _msBlock.blockFocus : (appData.timerSettings.focus || 25);
             appData.stats.focusSessions = (appData.stats.focusSessions || 0) + 1;
             appData.stats.studyMinutes = (appData.stats.studyMinutes || 0) + mins;
             const today = new Date().toISOString().split('T')[0];
@@ -3153,17 +3193,55 @@ function timerTick() {
             if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
             document.getElementById('session-count').innerText = appData.stats.focusSessions;
             playSessionCompleteSound();
-            showToast('Focus session complete! 🎉', 'success');
-            document.getElementById('timer-status').innerText = 'Session done!';
+            // Microsoft-style block handling
+            if (_msBlock.enabled) {
+                _msBlock.blocksDone++;
+                _msBlock.completedMins += _msBlock.blockFocus;
+                const remaining = _msBlock.totalMins - _msBlock.completedMins;
+                if (remaining <= 0) {
+                    _msBlock.enabled = false;
+                    showToast(`All ${_msBlock.totalBlocks} blocks complete! Total ${_msBlock.totalMins} min done 🏆`, 'success');
+                    document.getElementById('timer-status').innerText = 'Full session complete! 🏆';
+                } else {
+                    showToast(`Block ${_msBlock.blocksDone}/${_msBlock.totalBlocks} done! ${remaining} min remaining. Break starting...`, 'success');
+                    document.getElementById('timer-status').innerText = `Block ${_msBlock.blocksDone} done — break time!`;
+                    setTimeout(() => {
+                        setTimerMode('short', document.getElementById('mode-btn-short'));
+                        document.getElementById('timer-status').innerText = 'Break — next block in 10 min';
+                        // Add skip break button
+                        let skipBtn = document.getElementById('ms-skip-break-btn');
+                        if (!skipBtn) {
+                            skipBtn = document.createElement('button');
+                            skipBtn.id = 'ms-skip-break-btn';
+                            skipBtn.className = 'btn';
+                            skipBtn.style.cssText = 'margin-top:12px;border-color:var(--warning);color:var(--warning);width:100%;justify-content:center;';
+                            skipBtn.innerHTML = '<i class="fa-solid fa-forward"></i> Skip Break — Start Next Block';
+                            skipBtn.onclick = () => { skipBtn.remove(); _startNextMsBlock(); };
+                            document.querySelector('.timer-controls').after(skipBtn);
+                        }
+                        toggleTimer();
+                    }, 800);
+                }
+            } else {
+                showToast('Focus session complete! 🎉', 'success');
+                document.getElementById('timer-status').innerText = 'Session done!';
+                if (autoCycleEnabled) startAutoCycleBreak();
+            }
             checkAchievements();
             _partialSaved = false;
-            if (autoCycleEnabled) startAutoCycleBreak();
         } else {
             playBreakEndSound();
-            showToast('Break over! Back to work. 💪', 'success');
-            document.getElementById('timer-status').innerText = 'Break done!';
-            releaseWakeLock();
-            if (autoCycleEnabled) handleAutoCycleBreakEnd();
+            const skipBtn = document.getElementById('ms-skip-break-btn');
+            if (skipBtn) skipBtn.remove();
+            if (_msBlock.enabled) {
+                showToast('Break over! Starting next block ⚡', 'success');
+                _startNextMsBlock();
+            } else {
+                showToast('Break over! Back to work. 💪', 'success');
+                document.getElementById('timer-status').innerText = 'Break done!';
+                releaseWakeLock();
+                if (autoCycleEnabled) handleAutoCycleBreakEnd();
+            }
         }
         setRing(0, modes[timerMode]);
         releaseWakeLock();
@@ -3507,12 +3585,13 @@ function renderHeatmap() {
     container.innerHTML=''; monthsEl.innerHTML='';
     const heatmap=appData.stats.heatmap||{};
     const allDates=[];
-    const hStart=new Date('2026-06-01');
-    const hEnd=new Date('2026-12-31');
+    const hEnd=new Date();
+    const hStart=new Date();
+    hStart.setDate(hEnd.getDate()-209); // Last 210 days (0..209 = 210 days)
     for(let d=new Date(hStart);d<=hEnd;d.setDate(d.getDate()+1)){allDates.push(new Date(d).toISOString().split('T')[0]);}
     const months={};
     allDates.forEach(ds=>{const m=ds.substring(0,7);if(!months[m])months[m]=0;months[m]++;});
-    Object.keys(months).forEach(m=>{const span=document.createElement('span');span.style.cssText=`width:${months[m]*17}px;overflow:hidden;white-space:nowrap;`;span.innerText=new Date(m+'-01').toLocaleString('default',{month:'short'});monthsEl.appendChild(span);});
+    Object.keys(months).sort().forEach(m=>{const span=document.createElement('span');span.style.cssText=`width:${months[m]*17}px;overflow:hidden;white-space:nowrap;font-size:0.7rem;color:var(--text-muted);`;span.innerText=new Date(m+'-01').toLocaleString('default',{month:'short'});monthsEl.appendChild(span);});
     allDates.forEach(ds=>{
         const val=heatmap[ds]||0;
         let cls='';
@@ -4029,7 +4108,7 @@ function showUserProfile(entry) {
                         <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">🔥 Streak</div>
                     </div>
                     <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px 8px;border-radius:12px;border:1px solid var(--glass-border);">
-                        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--primary);">${isMe ? parseFloat(((appData.stats.studyMinutes||0)/60).toFixed(1)) : (isFriend ? parseFloat((entry.hours||0).toFixed(1)) : '🔒')}</div>
+                        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--primary);">${isMe ? parseFloat(((appData.stats.studyMinutes||0)/60).toFixed(1)) : '🔒'}</div>
                         <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">⏱ Hours</div>
                     </div>
                     <div style="text-align:center;background:rgba(255,255,255,0.05);padding:12px 8px;border-radius:12px;border:1px solid var(--glass-border);">
@@ -4106,7 +4185,7 @@ function renderLeaderboard(entries, tab) {
             '<img class="lb-avatar" src="' + dp + '" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff\'">' +
             '<div style="flex:1;min-width:0;">' +
             '<div class="lb-name" style="display:flex;align-items:center;flex-wrap:wrap;">' + (entry.name || 'Anonymous') + getVerifiedBadge(entry.uid) + (isMe ? ' <span style="font-size:0.7rem;color:var(--primary);margin-left:4px;">(আপনি)</span>' : '') + '</div>' +
-            '<div class="lb-score">' + scoreVal + ' ' + labels[tab] + '</div>' +
+            '<div class="lb-score">' + (isMe ? scoreVal + ' ' + labels[tab] : (tab === 'hours' ? '🔒 private' : scoreVal + ' ' + labels[tab])) + '</div>' +
             '</div>' +
             '<div class="lb-badge">' + medal + '</div>';
         list.appendChild(row);
@@ -6987,7 +7066,6 @@ async function fbPushLeaderboardStats() {
             class: appData.profile.class || '',
             institution: appData.profile.institution || '',
             streak: appData.streak.current || 0,
-            hours: parseFloat(((appData.stats.studyMinutes || 0) / 60).toFixed(2)),
             tasks: appData.stats.completedTasks || 0,
             updatedAt: Date.now()
         };
@@ -7064,7 +7142,7 @@ window._fbLoadLeaderboard = async function(tab) {
         const snap = await getDocs(collection(firestore, 'leaderboard'));
         let entries = [];
         snap.forEach(d => { const data = d.data(); if (data && data.uid) entries.push(data); });
-        const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'hours' : 'tasks';
+        const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'streak' : 'tasks';
         entries.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
         entries = entries.slice(0, 50);
         renderLeaderboard(entries, tab);
