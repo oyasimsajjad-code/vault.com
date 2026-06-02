@@ -1731,13 +1731,22 @@
       <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;" id="gf-room-name">Room: —</div>
       <div id="gf-timer-display" style="font-family:var(--font-display);font-size:5rem;font-weight:800;color:var(--primary);text-shadow:var(--primary-glow);">25:00</div>
       <div style="color:var(--text-muted);margin-bottom:12px;" id="gf-status">Ready</div>
-      <!-- READY SYSTEM -->
-      <div style="margin-bottom:16px;display:flex;flex-direction:column;align-items:center;gap:10px;">
-        <div id="gf-ready-count" style="font-size:0.85rem;color:var(--text-muted);font-weight:600;"></div>
-        <button id="gf-ready-btn" class="btn" style="padding:10px 28px;border-color:var(--success);color:var(--success);font-weight:700;font-size:0.95rem;" onclick="toggleReadyStatus()">
-          <i class="fa-solid fa-check-circle"></i> READY
-        </button>
-        <button id="gf-start-btn" class="btn btn-primary" style="padding:10px 28px;display:none;font-weight:700;" onclick="ownerStartFocus()">
+      <!-- QUICK MESSAGES + START FOCUS -->
+      <div style="width:100%;max-width:480px;margin:0 auto 16px;">
+        <!-- Chat messages area -->
+        <div id="gf-chat-messages" style="background:rgba(0,0,0,0.25);border:1px solid var(--glass-border);border-radius:14px;padding:10px 12px;min-height:80px;max-height:160px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:6px;text-align:left;-webkit-overflow-scrolling:touch;">
+          <p style="color:var(--text-muted);font-size:0.75rem;text-align:center;padding:10px 0;">Quick messages appear here...</p>
+        </div>
+        <!-- Quick action buttons -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px;">
+          <button onclick="sendGFQuickMsg('ready')" style="background:rgba(0,255,102,0.1);border:1px solid rgba(0,255,102,0.3);color:var(--success);padding:6px 12px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);transition:all 0.2s;" onmouseover="this.style.background='rgba(0,255,102,0.2)'" onmouseout="this.style.background='rgba(0,255,102,0.1)'">✅ I'm Ready</button>
+          <button onclick="sendGFQuickMsg('wait')" style="background:rgba(255,204,0,0.1);border:1px solid rgba(255,204,0,0.3);color:var(--warning);padding:6px 12px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);transition:all 0.2s;" onmouseover="this.style.background='rgba(255,204,0,0.2)'" onmouseout="this.style.background='rgba(255,204,0,0.1)'">⏳ Give me 5 min</button>
+          <button onclick="sendGFQuickMsg('busy')" style="background:rgba(255,0,60,0.08);border:1px solid rgba(255,0,60,0.25);color:var(--accent);padding:6px 12px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);transition:all 0.2s;" onmouseover="this.style.background='rgba(255,0,60,0.15)'" onmouseout="this.style.background='rgba(255,0,60,0.08)'">🚫 Can't join</button>
+          <button onclick="sendGFQuickMsg('break')" style="background:rgba(0,240,255,0.08);border:1px solid rgba(0,240,255,0.22);color:var(--primary);padding:6px 12px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);transition:all 0.2s;" onmouseover="this.style.background='rgba(0,240,255,0.15)'" onmouseout="this.style.background='rgba(0,240,255,0.08)'">☕ Break?</button>
+          <button onclick="sendGFQuickMsg('next')" style="background:rgba(112,0,255,0.1);border:1px solid rgba(112,0,255,0.25);color:var(--secondary);padding:6px 12px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);transition:all 0.2s;" onmouseover="this.style.background='rgba(112,0,255,0.18)'" onmouseout="this.style.background='rgba(112,0,255,0.1)'">⚡ Next session</button>
+        </div>
+        <!-- Owner start button -->
+        <button id="gf-start-btn" class="btn btn-primary" style="padding:10px 28px;display:none;font-weight:700;width:100%;justify-content:center;" onclick="ownerStartFocus()">
           <i class="fa-solid fa-rocket"></i> Start Focus for All
         </button>
       </div>
@@ -1880,12 +1889,19 @@
                     </div>
                 </div>
                 <div class="glass" style="padding:22px;margin-bottom:20px;">
-                    <h3 style="margin-bottom:18px;border-bottom:1px solid var(--glass-border);padding-bottom:10px;color:var(--text-main);">Invite Friends</h3>
+                    <h3 style="margin-bottom:6px;border-bottom:1px solid var(--glass-border);padding-bottom:10px;color:var(--text-main);">Invite Friends</h3>
                     <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px;">Share StudyVault with your friends and study together!</p>
+                    <!-- Download link display -->
+                    <div style="background:rgba(0,240,255,0.06);border:1px solid rgba(0,240,255,0.15);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;overflow:hidden;">
+                        <i class="fa-solid fa-link" style="color:var(--primary);flex-shrink:0;font-size:0.85rem;"></i>
+                        <span style="font-size:0.72rem;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">github.com/oyasimsajjad-code/vault.com/releases</span>
+                        <button onclick="copyDownloadLink()" style="background:var(--primary);color:#000;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.72rem;font-weight:700;font-family:var(--font-main);flex-shrink:0;white-space:nowrap;">Copy</button>
+                    </div>
                     <div style="display:flex;flex-direction:column;gap:10px;">
                         <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="shareAppWhatsApp()"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</button>
                         <button class="btn" style="width:100%;justify-content:center;border-color:var(--primary);color:var(--primary);" onclick="shareAppMessenger()"><i class="fa-brands fa-facebook-messenger"></i> Share on Messenger</button>
                         <button class="btn" style="width:100%;justify-content:center;border-color:#1877F2;color:#1877F2;" onclick="shareAppFacebook()"><i class="fa-brands fa-facebook"></i> Share on Facebook</button>
+                        <button class="btn" style="width:100%;justify-content:center;" onclick="shareNative()"><i class="fa-solid fa-share-nodes"></i> Share App</button>
                         <button class="btn" style="width:100%;justify-content:center;" onclick="copyDownloadLink()"><i class="fa-solid fa-copy"></i> Copy Download Link</button>
                     </div>
                 </div>
@@ -5242,7 +5258,7 @@ async function openChatWith(friendUid) {
         '<div style="font-weight:700;color:var(--text-main);font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px;">' + getDisplayName(friendUid, name) + getVerifiedBadge(friendUid) + '</div>' +
         `<button onclick="openNicknameDialog('${friendUid}','${name.replace(/'/g,"\\'")}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;font-size:0.7rem;flex-shrink:0;" title="Set Nickname"><i class="fa-solid fa-pen-to-square"></i></button>` +
         '</div>' +
-            '<div style="margin-top:1px;">' + statusHtml + '</div>' +
+            '<div style="margin-top:1px;" data-status="1">' + statusHtml + '</div>' +
             '</div>';
     }
 
@@ -6130,10 +6146,15 @@ function joinGroupRoom(roomId) {
     renderGFMembers(room.members || []);
     renderGroupRooms();
     setGFRing(room.duration * 60, room.duration * 60);
+    _startGFChatListener(roomId);
+    // Show start btn for owner
+    const startBtn = document.getElementById('gf-start-btn');
+    if (startBtn) startBtn.style.display = room.admin === currentUser ? 'flex' : 'none';
 }
 
 function _localLeaveRoom() {
     if (gfRunning) { clearInterval(gfTimerInt); gfTimerInt = null; gfRunning = false; }
+    _stopGFChatListener();
     currentGroupRoom = null;
     document.getElementById('group-focus-active').classList.add('hidden');
     document.getElementById('gf-play-icon').className = 'fa-solid fa-play';
@@ -6401,40 +6422,88 @@ async function deleteGroupRoom(id) {
     showToast('Room মুছে গেছে', 'success');
 }
 
-/* ---- READY STATUS SYSTEM ---- */
-async function toggleReadyStatus() {
+/* ---- GROUP FOCUS QUICK MESSAGING ---- */
+const GF_QUICK_MESSAGES = {
+    ready: 'I\'m ready. Start focus for all! ✅',
+    wait: 'Give me 5 minutes. ⏳',
+    busy: 'I can\'t join right now. 🚫',
+    break: 'Break? ☕',
+    next: 'Ready for next session! ⚡'
+};
+
+let _gfChatListener = null;
+
+async function sendGFQuickMsg(type) {
     if (!currentGroupRoom) return;
     const room = groupRooms[currentGroupRoom];
     if (!room) return;
-    const ready = room.readyMembers || [];
-    const isReady = ready.includes(currentUser);
-    if (isReady) {
-        room.readyMembers = ready.filter(u => u !== currentUser);
-    } else {
-        room.readyMembers = [...ready, currentUser];
+    const myName = appData.profile.name || 'Anonymous';
+    const msgText = myName + ': ' + GF_QUICK_MESSAGES[type];
+    const msgId = Date.now().toString() + '_' + Math.random().toString(36).substr(2,4);
+    const msgData = {
+        id: msgId,
+        fromUid: currentUser,
+        fromName: myName,
+        text: msgText,
+        type: type,
+        timestamp: Date.now()
+    };
+    if (window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
+        try {
+            const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+            await setDoc(doc(window._fbFirestore, 'groupRooms', currentGroupRoom, 'chat', msgId), msgData);
+        } catch(e) { console.warn('GF quick msg error:', e); }
     }
-    await _fbSaveRoom(room);
-    updateReadyUI(room);
+    playSound();
+}
+
+function _startGFChatListener(roomId) {
+    if (_gfChatListener) { try { _gfChatListener(); } catch(e){} _gfChatListener = null; }
+    if (!window._fbFirestore || !window._fbAuth || !window._fbAuth.currentUser) return;
+    import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ collection, onSnapshot, query, orderBy }) => {
+        const ref = collection(window._fbFirestore, 'groupRooms', roomId, 'chat');
+        _gfChatListener = onSnapshot(query(ref, orderBy('timestamp', 'asc')), (snap) => {
+            const msgs = [];
+            snap.forEach(d => msgs.push(d.data()));
+            renderGFChatMessages(msgs);
+        }, (err) => { console.warn('GF chat listener error:', err); });
+    });
+}
+
+function _stopGFChatListener() {
+    if (_gfChatListener) { try { _gfChatListener(); } catch(e){} _gfChatListener = null; }
+}
+
+function renderGFChatMessages(msgs) {
+    const container = document.getElementById('gf-chat-messages');
+    if (!container) return;
+    if (!msgs || !msgs.length) {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.75rem;text-align:center;padding:10px 0;">Quick messages appear here...</p>';
+        return;
+    }
+    const typeColors = {
+        ready: 'var(--success)', wait: 'var(--warning)', busy: 'var(--accent)',
+        break: 'var(--primary)', next: 'var(--secondary)'
+    };
+    container.innerHTML = msgs.slice(-20).map(m => {
+        const isMe = m.fromUid === currentUser;
+        const color = typeColors[m.type] || 'var(--primary)';
+        const ts = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+        return `<div style="display:flex;${isMe?'flex-direction:row-reverse;':''}align-items:flex-end;gap:6px;">
+            <div style="max-width:85%;background:${isMe?'rgba(0,240,255,0.1)':'rgba(255,255,255,0.05)'};border:1px solid ${isMe?color:'var(--glass-border)'};border-radius:${isMe?'14px 14px 4px 14px':'14px 14px 14px 4px'};padding:7px 11px;">
+                <div style="font-size:0.78rem;color:${isMe?color:'var(--text-main)'};word-break:break-word;line-height:1.4;">${m.text}</div>
+                <div style="font-size:0.58rem;color:var(--text-muted);margin-top:2px;text-align:right;">${ts}</div>
+            </div>
+        </div>`;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
 }
 
 function updateReadyUI(room) {
     if (!room) return;
-    const ready = room.readyMembers || [];
-    const total = (room.members || []).length;
-    const isReady = ready.includes(currentUser);
     const isOwner = room.admin === currentUser;
-    const readyCountEl = document.getElementById('gf-ready-count');
-    const readyBtn = document.getElementById('gf-ready-btn');
     const startBtn = document.getElementById('gf-start-btn');
-    if (readyCountEl) readyCountEl.innerText = ready.length + '/' + total + ' Ready';
-    if (readyBtn) {
-        readyBtn.style.borderColor = isReady ? 'var(--success)' : 'rgba(255,255,255,0.2)';
-        readyBtn.style.color = isReady ? '#000' : 'var(--success)';
-        readyBtn.style.background = isReady ? 'var(--success)' : 'transparent';
-        readyBtn.innerHTML = isReady ? '<i class="fa-solid fa-check-circle"></i> READY ✓' : '<i class="fa-solid fa-check-circle"></i> READY';
-    }
-    // Show Start button only to owner
-    if (startBtn) startBtn.style.display = isOwner ? 'inline-flex' : 'none';
+    if (startBtn) startBtn.style.display = isOwner ? 'flex' : 'none';
 }
 
 async function ownerStartFocus() {
@@ -6449,12 +6518,34 @@ async function ownerStartFocus() {
     _syncStartTimer(startTime, room.duration);
 }
 
+function _showGroupFocusStartModal(duration) {
+    const existing = document.getElementById('gf-start-modal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'gf-start-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);animation:fadeIn 0.3s ease;';
+    modal.innerHTML = `<div class="glass" style="padding:40px 36px;border-radius:24px;text-align:center;max-width:340px;width:90%;border:1px solid rgba(0,240,255,0.3);box-shadow:0 0 60px rgba(0,240,255,0.15);animation:fadeIn 0.3s ease;">
+        <div style="font-size:3.5rem;margin-bottom:12px;animation:splashPulse 1s ease-in-out infinite alternate;">🚀</div>
+        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--primary);margin-bottom:8px;">Group Focus Started!</div>
+        <div style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;">${duration} minute session · All members synced</div>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:center;margin-bottom:20px;">
+            <span style="width:9px;height:9px;border-radius:50%;background:var(--success);animation:aiTyping 1.2s infinite;display:inline-block;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:var(--success);animation:aiTyping 1.2s infinite 0.2s;display:inline-block;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:var(--success);animation:aiTyping 1.2s infinite 0.4s;display:inline-block;"></span>
+        </div>
+        <button onclick="document.getElementById('gf-start-modal').remove()" class="btn btn-primary" style="width:100%;justify-content:center;">Let's Go! 💪</button>
+    </div>`;
+    document.body.appendChild(modal);
+    setTimeout(() => { const m = document.getElementById('gf-start-modal'); if (m) m.remove(); }, 4000);
+}
+
 function _syncStartTimer(startTime, duration) {
     const now = Date.now();
     const delay = Math.max(0, startTime - now);
     setTimeout(() => {
         const room = groupRooms[currentGroupRoom];
         if (!room) return;
+        _showGroupFocusStartModal(duration || 25);
         gfTimeLeft = (duration || 25) * 60;
         gfRunning = true;
         document.getElementById('gf-play-icon').className = 'fa-solid fa-pause';
@@ -6964,7 +7055,7 @@ setTimeout(() => {
 /* ---- PROFILE SHARE CARD ---- */
 function _buildProfileCardHTML(forExport) {
     const name = appData.profile.name || 'Student';
-    const dp = appData.profile.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=0D8ABC&color=fff&size=128');
+    const dp = appData.profile.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=7000ff&color=fff&size=256');
     const goal = appData.profile.goal || appData.goals.exam || 'StudyVault User';
     const institution = appData.profile.institution || '';
     const studyClass = appData.profile.class || '';
@@ -6973,74 +7064,181 @@ function _buildProfileCardHTML(forExport) {
     const sessions = appData.stats.focusSessions || 0;
     const tasks = appData.stats.completedTasks || 0;
     const isVerified = window._verifiedUsers && window._verifiedUsers.has(currentUser);
-    // Top subject
     const sh = appData.stats.totalSubjectHours || {};
     let topSubject = 'General';
     let topHrs = 0;
     Object.entries(sh).forEach(([s,h]) => { if (h > topHrs) { topHrs = h; topSubject = s; } });
-    // Earned badges count
     const badgeCount = (appData.earnedBadges || []).length;
     const isDark = !document.body.classList.contains('light-mode');
-    const bg = isDark ? 'linear-gradient(135deg,#050510,#0a0a1a)' : 'linear-gradient(135deg,#eef2fb,#e4eaf7)';
-    const cardBg = isDark ? 'rgba(20,20,35,0.95)' : 'rgba(255,255,255,0.95)';
-    const textColor = isDark ? '#fff' : '#0d1117';
-    const mutedColor = isDark ? '#8b90a0' : '#5a6580';
-    const borderColor = isDark ? 'rgba(0,240,255,0.3)' : 'rgba(0,95,163,0.3)';
-    const accentColor = isDark ? '#00f0ff' : '#005fa3';
-    const purpleColor = isDark ? '#7000ff' : '#5500cc';
-    return `<div id="profile-share-card-inner" style="width:400px;border-radius:24px;overflow:hidden;font-family:'Outfit',sans-serif;background:${bg};padding:2px;box-shadow:0 0 40px rgba(0,240,255,0.2);">
-        <div style="background:${cardBg};border-radius:22px;overflow:hidden;">
-            <!-- Header gradient -->
-            <div style="height:90px;background:linear-gradient(135deg,${purpleColor},${accentColor});position:relative;display:flex;align-items:flex-end;padding:0 24px 0;">
-                <div style="position:absolute;top:0;left:0;right:0;bottom:0;opacity:0.15;background:url('data:image/svg+xml,...');"></div>
-            </div>
-            <!-- Avatar -->
-            <div style="display:flex;align-items:flex-end;gap:14px;padding:0 24px;margin-top:-42px;position:relative;z-index:2;">
-                <div style="position:relative;">
-                    <img src="${dp}" crossorigin="anonymous" style="width:84px;height:84px;border-radius:50%;object-fit:cover;border:4px solid ${accentColor};background:#0a0a1a;display:block;" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff&size=128'">
-                    ${isVerified ? `<div style="position:absolute;bottom:2px;right:2px;width:22px;height:22px;background:#1877F2;border-radius:50%;border:3px solid ${isDark?'#050510':'#fff'};display:flex;align-items:center;justify-content:center;">
-                        <svg width="10" height="7" viewBox="0 0 10 7"><path d="M1 3.5L4 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                    </div>` : ''}
-                </div>
-                <div style="padding-bottom:12px;">
-                    <div style="font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:800;color:${textColor};display:flex;align-items:center;gap:6px;">${name}</div>
-                    <div style="font-size:0.82rem;color:${accentColor};font-weight:600;">${goal}</div>
-                    ${institution ? `<div style="font-size:0.72rem;color:${mutedColor};margin-top:2px;">${institution}${studyClass ? ' • ' + studyClass : ''}</div>` : ''}
-                </div>
-            </div>
-            <!-- Stats grid -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:18px 24px 10px;">
-                <div style="text-align:center;background:rgba(0,240,255,0.07);border:1px solid rgba(0,240,255,0.15);border-radius:12px;padding:12px 8px;">
-                    <div style="font-size:1.4rem;font-weight:800;color:${accentColor};font-family:'Space Grotesk',sans-serif;">${totalHrs}h</div>
-                    <div style="font-size:0.65rem;color:${mutedColor};margin-top:2px;">Study Hours</div>
-                </div>
-                <div style="text-align:center;background:rgba(255,204,0,0.07);border:1px solid rgba(255,204,0,0.2);border-radius:12px;padding:12px 8px;">
-                    <div style="font-size:1.4rem;font-weight:800;color:#ffcc00;font-family:'Space Grotesk',sans-serif;">🔥${streak}</div>
-                    <div style="font-size:0.65rem;color:${mutedColor};margin-top:2px;">Day Streak</div>
-                </div>
-                <div style="text-align:center;background:rgba(0,255,102,0.07);border:1px solid rgba(0,255,102,0.15);border-radius:12px;padding:12px 8px;">
-                    <div style="font-size:1.4rem;font-weight:800;color:#00ff66;font-family:'Space Grotesk',sans-serif;">${sessions}</div>
-                    <div style="font-size:0.65rem;color:${mutedColor};margin-top:2px;">Focus Sessions</div>
-                </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 24px 16px;">
-                <div style="text-align:center;background:rgba(112,0,255,0.07);border:1px solid rgba(112,0,255,0.2);border-radius:12px;padding:10px 8px;">
-                    <div style="font-size:1.2rem;font-weight:800;color:${purpleColor};font-family:'Space Grotesk',sans-serif;">✅ ${tasks}</div>
-                    <div style="font-size:0.65rem;color:${mutedColor};margin-top:2px;">Tasks Done</div>
-                </div>
-                <div style="text-align:center;background:rgba(255,165,0,0.07);border:1px solid rgba(255,165,0,0.2);border-radius:12px;padding:10px 8px;">
-                    <div style="font-size:1.2rem;font-weight:800;color:#ff9800;font-family:'Space Grotesk',sans-serif;">📚 ${topSubject}</div>
-                    <div style="font-size:0.65rem;color:${mutedColor};margin-top:2px;">Top Subject</div>
-                </div>
-            </div>
-            ${badgeCount > 0 ? `<div style="padding:0 24px 16px;"><div style="font-size:0.72rem;color:${mutedColor};margin-bottom:6px;">🏅 ${badgeCount} Achievement${badgeCount>1?'s':''} Earned</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${(appData.earnedBadges||[]).slice(0,8).map(id=>{const b=ACHIEVEMENTS.find(a=>a.id===id);return b?`<span style="background:rgba(255,204,0,0.12);border:1px solid rgba(255,204,0,0.3);border-radius:20px;padding:2px 8px;font-size:0.7rem;color:#ffcc00;">${b.icon} ${b.name}</span>`:''}).join('')}</div></div>` : ''}
-            <!-- Footer -->
-            <div style="padding:12px 24px;border-top:1px solid ${borderColor};display:flex;justify-content:space-between;align-items:center;">
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:0.9rem;font-weight:700;background:linear-gradient(135deg,${purpleColor},${accentColor});-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">StudyVault</div>
-                <div style="font-size:0.65rem;color:${mutedColor};">Neural Learning OS</div>
-            </div>
+
+    // Color palette
+    const outerBg = isDark
+        ? 'linear-gradient(145deg,#0d0d1f 0%,#12102a 50%,#0a0a18 100%)'
+        : 'linear-gradient(145deg,#f0f4ff 0%,#e8eeff 50%,#f5f3ff 100%)';
+    const cardBg = isDark
+        ? 'linear-gradient(160deg,rgba(18,16,40,0.98) 0%,rgba(14,12,32,0.98) 100%)'
+        : 'linear-gradient(160deg,rgba(255,255,255,0.98) 0%,rgba(248,246,255,0.98) 100%)';
+    const headerBg = isDark
+        ? 'linear-gradient(135deg,#1a0535 0%,#0d1f3c 50%,#051025 100%)'
+        : 'linear-gradient(135deg,#3d0080 0%,#0050a8 60%,#001f5c 100%)';
+    const textColor = isDark ? '#f0f0ff' : '#0d0d24';
+    const subTextColor = isDark ? '#a8aac8' : '#4a4870';
+    const mutedColor = isDark ? '#666880' : '#8885a8';
+    const dividerColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,80,0.07)';
+    const accentColor = isDark ? '#22d4f5' : '#0070c0';
+    const purpleColor = isDark ? '#a855f7' : '#6d28d9';
+    const glowColor = isDark ? 'rgba(34,212,245,0.15)' : 'rgba(109,40,217,0.12)';
+
+    // Stat card bg
+    const sBlue = isDark ? 'rgba(34,212,245,0.08)' : 'rgba(0,112,192,0.07)';
+    const sBlueBorder = isDark ? 'rgba(34,212,245,0.2)' : 'rgba(0,112,192,0.2)';
+    const sGold = isDark ? 'rgba(251,191,36,0.08)' : 'rgba(180,130,0,0.07)';
+    const sGoldBorder = isDark ? 'rgba(251,191,36,0.22)' : 'rgba(180,130,0,0.2)';
+    const sGreen = isDark ? 'rgba(52,211,153,0.08)' : 'rgba(0,160,80,0.07)';
+    const sGreenBorder = isDark ? 'rgba(52,211,153,0.22)' : 'rgba(0,160,80,0.2)';
+    const sPurple = isDark ? 'rgba(168,85,247,0.08)' : 'rgba(109,40,217,0.07)';
+    const sPurpleBorder = isDark ? 'rgba(168,85,247,0.22)' : 'rgba(109,40,217,0.2)';
+    const sOrange = isDark ? 'rgba(251,146,60,0.08)' : 'rgba(180,80,0,0.07)';
+    const sOrangeBorder = isDark ? 'rgba(251,146,60,0.22)' : 'rgba(180,80,0,0.2)';
+
+    const goldVal = isDark ? '#fbbf24' : '#b45309';
+    const greenVal = isDark ? '#34d399' : '#047857';
+    const purpleVal = isDark ? '#a855f7' : '#6d28d9';
+    const orangeVal = isDark ? '#fb923c' : '#b44500';
+
+    // Avatar border ring
+    const avatarRing = isDark
+        ? 'linear-gradient(135deg,#22d4f5,#a855f7)'
+        : 'linear-gradient(135deg,#0070c0,#6d28d9)';
+
+    // Badge chip colors
+    const chipBg = isDark ? 'rgba(251,191,36,0.1)' : 'rgba(180,130,0,0.08)';
+    const chipBorder = isDark ? 'rgba(251,191,36,0.25)' : 'rgba(180,130,0,0.22)';
+    const chipText = isDark ? '#fbbf24' : '#92400e';
+
+    // Footer gradient text
+    const footerGrad = isDark
+        ? 'linear-gradient(90deg,#22d4f5,#a855f7)'
+        : 'linear-gradient(90deg,#0070c0,#6d28d9)';
+
+    return `<div id="profile-share-card-inner" style="width:420px;border-radius:28px;overflow:hidden;font-family:'Outfit',sans-serif;background:${outerBg};padding:3px;box-shadow:0 0 0 1px rgba(255,255,255,0.06),0 24px 64px rgba(0,0,0,0.5),0 0 80px ${glowColor};">
+  <div style="background:${cardBg};border-radius:26px;overflow:hidden;position:relative;">
+
+    <!-- HEADER BANNER -->
+    <div style="height:110px;background:${headerBg};position:relative;overflow:hidden;">
+      <!-- Geometric decorations -->
+      <div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.25),transparent 70%);pointer-events:none;"></div>
+      <div style="position:absolute;bottom:-40px;left:-20px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,rgba(34,212,245,0.18),transparent 70%);pointer-events:none;"></div>
+      <div style="position:absolute;top:18px;left:24px;display:flex;flex-direction:column;gap:3px;">
+        <div style="display:flex;gap:5px;">
+          <div style="width:28px;height:3px;border-radius:2px;background:rgba(255,255,255,0.5);"></div>
+          <div style="width:18px;height:3px;border-radius:2px;background:rgba(255,255,255,0.25);"></div>
+          <div style="width:10px;height:3px;border-radius:2px;background:rgba(255,255,255,0.12);"></div>
         </div>
-    </div>`;
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-top:4px;">StudyVault</div>
+      </div>
+      <!-- Top-right badge -->
+      <div style="position:absolute;top:16px;right:20px;background:rgba(255,255,255,0.12);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:5px 12px;display:flex;align-items:center;gap:5px;">
+        <span style="font-size:0.6rem;display:inline-block;width:6px;height:6px;border-radius:50%;background:#34d399;flex-shrink:0;box-shadow:0 0 6px rgba(52,211,153,0.8);"></span>
+        <span style="font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:0.5px;">ACTIVE</span>
+      </div>
+    </div>
+
+    <!-- AVATAR + NAME ROW -->
+    <div style="padding:0 24px;position:relative;z-index:2;">
+      <div style="display:flex;align-items:flex-end;gap:16px;margin-top:-44px;padding-bottom:0;">
+
+        <!-- Avatar with gradient ring -->
+        <div style="flex-shrink:0;position:relative;">
+          <div style="width:88px;height:88px;border-radius:50%;background:${avatarRing};padding:3px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+            <img src="${dp}" crossorigin="anonymous" style="width:82px;height:82px;border-radius:50%;object-fit:cover;display:block;background:${isDark?'#14103a':'#e8e4ff'};" onerror="this.src='https://ui-avatars.com/api/?name=U&background=7000ff&color=fff&size=256'">
+          </div>
+          ${isVerified ? `<div style="position:absolute;bottom:3px;right:3px;width:22px;height:22px;background:#1877F2;border-radius:50%;border:2.5px solid ${isDark?'#0e0c20':'#fff'};display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(24,119,242,0.5);">
+            <svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>` : ''}
+        </div>
+
+        <!-- Name + meta -->
+        <div style="padding-bottom:10px;flex:1;min-width:0;overflow:hidden;">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:800;color:${textColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:6px;">${name}</div>
+          <div style="font-size:0.78rem;font-weight:600;color:${accentColor};margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${goal}</div>
+          ${institution || studyClass ? `<div style="font-size:0.7rem;color:${subTextColor};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${mutedColor};flex-shrink:0;"></span>${[institution,studyClass].filter(Boolean).join(' · ')}</div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div style="height:1px;background:${dividerColor};margin:14px 24px 0;"></div>
+
+    <!-- STAT GRID (3 cols) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px 24px 0;">
+      <div style="background:${sBlue};border:1px solid ${sBlueBorder};border-radius:14px;padding:14px 8px;text-align:center;position:relative;overflow:hidden;">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:800;color:${accentColor};line-height:1;">${totalHrs}<span style="font-size:0.75rem;font-weight:600;opacity:0.75;">h</span></div>
+        <div style="font-size:0.62rem;font-weight:600;color:${mutedColor};margin-top:5px;text-transform:uppercase;letter-spacing:0.5px;">Study Time</div>
+      </div>
+      <div style="background:${sGold};border:1px solid ${sGoldBorder};border-radius:14px;padding:14px 8px;text-align:center;position:relative;overflow:hidden;">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:800;color:${goldVal};line-height:1;">${streak}<span style="font-size:0.85rem;margin-left:1px;">🔥</span></div>
+        <div style="font-size:0.62rem;font-weight:600;color:${mutedColor};margin-top:5px;text-transform:uppercase;letter-spacing:0.5px;">Streak</div>
+      </div>
+      <div style="background:${sGreen};border:1px solid ${sGreenBorder};border-radius:14px;padding:14px 8px;text-align:center;position:relative;overflow:hidden;">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:800;color:${greenVal};line-height:1;">${sessions}</div>
+        <div style="font-size:0.62rem;font-weight:600;color:${mutedColor};margin-top:5px;text-transform:uppercase;letter-spacing:0.5px;">Sessions</div>
+      </div>
+    </div>
+
+    <!-- STAT GRID (2 cols) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 24px 0;">
+      <div style="background:${sPurple};border:1px solid ${sPurpleBorder};border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:10px;background:${isDark?'rgba(168,85,247,0.15)':'rgba(109,40,217,0.1)'};display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">✅</div>
+        <div style="min-width:0;">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:1.15rem;font-weight:800;color:${purpleVal};line-height:1;">${tasks}</div>
+          <div style="font-size:0.6rem;font-weight:600;color:${mutedColor};margin-top:3px;text-transform:uppercase;letter-spacing:0.4px;">Tasks Done</div>
+        </div>
+      </div>
+      <div style="background:${sOrange};border:1px solid ${sOrangeBorder};border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;overflow:hidden;">
+        <div style="width:34px;height:34px;border-radius:10px;background:${isDark?'rgba(251,146,60,0.15)':'rgba(180,80,0,0.1)'};display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">📚</div>
+        <div style="min-width:0;overflow:hidden;">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:800;color:${orangeVal};line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${topSubject}</div>
+          <div style="font-size:0.6rem;font-weight:600;color:${mutedColor};margin-top:3px;text-transform:uppercase;letter-spacing:0.4px;">Top Subject</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACHIEVEMENTS SECTION -->
+    ${badgeCount > 0 ? `
+    <div style="padding:14px 24px 0;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <span style="font-size:0.62rem;font-weight:700;color:${mutedColor};text-transform:uppercase;letter-spacing:1px;">Achievements</span>
+        <span style="background:${chipBg};border:1px solid ${chipBorder};border-radius:20px;padding:1px 7px;font-size:0.6rem;font-weight:700;color:${chipText};">${badgeCount}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">
+        ${(appData.earnedBadges||[]).slice(0,6).map(id=>{const b=ACHIEVEMENTS.find(a=>a.id===id);return b?`<div style="display:inline-flex;align-items:center;gap:4px;background:${chipBg};border:1px solid ${chipBorder};border-radius:20px;padding:4px 9px;">
+          <span style="font-size:0.78rem;">${b.icon}</span>
+          <span style="font-size:0.65rem;font-weight:600;color:${chipText};white-space:nowrap;">${b.name}</span>
+        </div>`:''}).join('')}
+        ${badgeCount > 6 ? `<div style="display:inline-flex;align-items:center;background:${chipBg};border:1px solid ${chipBorder};border-radius:20px;padding:4px 9px;"><span style="font-size:0.65rem;font-weight:700;color:${chipText};">+${badgeCount-6} more</span></div>` : ''}
+      </div>
+    </div>` : ''}
+
+    <!-- FOOTER -->
+    <div style="margin:16px 24px 0;padding:12px 0 20px;border-top:1px solid ${dividerColor};display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:26px;height:26px;border-radius:8px;background:${footerGrad};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1.5" fill="white" opacity="0.9"/><rect x="9" y="2" width="5" height="5" rx="1.5" fill="white" opacity="0.6"/><rect x="2" y="9" width="5" height="5" rx="1.5" fill="white" opacity="0.6"/><rect x="9" y="9" width="5" height="5" rx="1.5" fill="white" opacity="0.9"/></svg>
+        </div>
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:0.82rem;font-weight:800;background:${footerGrad};-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1;">StudyVault</div>
+          <div style="font-size:0.58rem;font-weight:500;color:${mutedColor};letter-spacing:0.8px;text-transform:uppercase;line-height:1;margin-top:1px;">Neural Learning OS</div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:0.62rem;color:${mutedColor};font-weight:500;">${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        <div style="font-size:0.58rem;color:${mutedColor};opacity:0.7;margin-top:1px;">studyvault.app</div>
+      </div>
+    </div>
+
+  </div>
+</div>`;
 }
 
 function openProfileShareCard() {
@@ -7141,7 +7339,6 @@ function copyDownloadLink() {
     navigator.clipboard.writeText(APK_LINK).then(() => {
         showToast('Download link copied! 🔗', 'success');
     }).catch(() => {
-        // fallback
         const ta = document.createElement('textarea');
         ta.value = APK_LINK;
         document.body.appendChild(ta);
@@ -7150,6 +7347,31 @@ function copyDownloadLink() {
         document.body.removeChild(ta);
         showToast('Link copied!', 'success');
     });
+}
+
+async function shareNative() {
+    const shareData = {
+        title: 'StudyVault — Neural Learning OS',
+        text: getShareText(),
+        url: APK_LINK
+    };
+    if (navigator.share) {
+        try {
+            await navigator.share(shareData);
+            showToast('App shared! 🎉', 'success');
+        } catch(e) {
+            if (e.name !== 'AbortError') {
+                navigator.clipboard.writeText(getShareText()).then(() => showToast('Share text copied! 📋', 'success'));
+            }
+        }
+    } else {
+        navigator.clipboard.writeText(getShareText()).then(() => showToast('Share text copied! 📋', 'success')).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = getShareText();
+            document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+            showToast('Share text copied!', 'success');
+        });
+    }
 }
 
 /* ---- INIT ---- */
@@ -7590,6 +7812,8 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         logEvent(analytics, 'session_start', { uid: user.uid });
+        // Init presence after app starts
+        setTimeout(() => { if (auth.currentUser) _initPresenceSystem(auth.currentUser.uid); }, 1500);
 
 self.addEventListener('notificationclick', event => {
     event.notification.close();
@@ -7681,91 +7905,138 @@ async function fbPushLeaderboardStats() {
 }
 window._fbPushLeaderboardStats = fbPushLeaderboardStats;
 
-/* ---- REALTIME ONLINE PRESENCE ---- */
+/* ---- REALTIME ONLINE PRESENCE (FIXED) ---- */
 window._onlineStatus = {}; window._lastSeen = {};
 let _presenceListener = null;
+let _presenceHeartbeatInterval = null;
 
-async function fbUpdatePresence(uid, online) {
+// Use sendBeacon for reliable offline marking on tab close
+function _markOfflineBeacon(uid) {
     if (!uid) return;
     try {
+        // Best-effort beacon on unload — Firestore REST API
+        const projectId = 'studyvault-1102b';
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/presence/${uid}`;
+        const data = JSON.stringify({ fields: { online: { booleanValue: false }, lastSeen: { integerValue: Date.now().toString() }, uid: { stringValue: uid } } });
+        navigator.sendBeacon && navigator.sendBeacon(url, new Blob([data], { type: 'application/json' }));
+    } catch(e) {}
+}
+
+async function fbUpdatePresence(uid, online) {
+    if (!uid || !auth.currentUser) return;
+    try {
         await setDoc(doc(firestore, 'presence', uid), {
-            online,
+            online: !!online,
             lastSeen: Date.now(),
             uid
         }, { merge: true });
-    } catch(e) { console.warn('Presence update error:', e.code); }
+    } catch(e) { console.warn('Presence update error:', e.code || e.message); }
 }
 
-// Realtime onSnapshot listener — instant updates, no polling
+// Realtime onSnapshot listener — instant updates across all users
 function startPresenceListener() {
-    if (!auth.currentUser || _presenceListener) return;
+    if (!auth.currentUser) return;
+    if (_presenceListener) { try { _presenceListener(); } catch(e){} _presenceListener = null; }
     const presRef = collection(firestore, 'presence');
     _presenceListener = onSnapshot(presRef, (snap) => {
+        const now = Date.now();
         snap.forEach(d => {
             const v = d.data();
-            if (!v) return;
+            if (!v || !d.id) return;
             const blocked = typeof isUserBlocked === 'function' && isUserBlocked(d.id);
-            if (blocked) {
-                window._onlineStatus[d.id] = false;
-                window._lastSeen[d.id] = 0;
-                return;
-            }
-            // Consider online if lastSeen within 35 seconds
-            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 35000;
+            if (blocked) { window._onlineStatus[d.id] = false; window._lastSeen[d.id] = 0; return; }
+            // Online = explicitly online AND heartbeat within 40 seconds
+            const lastSeen = typeof v.lastSeen === 'number' ? v.lastSeen : 0;
+            const isRecent = lastSeen > 0 && (now - lastSeen) < 40000;
             window._onlineStatus[d.id] = !!(v.online && isRecent);
-            window._lastSeen[d.id] = v.lastSeen || 0;
+            window._lastSeen[d.id] = lastSeen;
         });
-        // Refresh inbox/friends UI if open
-        if (currentView === 'inbox') renderInbox();
-        if (currentView === 'friends') renderFriendsSection();
-        // Refresh chat header status without re-rendering messages
+        // Refresh UI
+        if (typeof currentView !== 'undefined') {
+            if (currentView === 'inbox') renderInbox();
+            if (currentView === 'friends') renderFriendsSection();
+        }
+        // Update chat header status indicator in-place
         if (currentChatUid) {
             const chatHeader = document.getElementById('chat-header');
-            if (chatHeader && currentChatUid) {
-                const isOnline = window._onlineStatus[currentChatUid];
-                const lastSeenTs = window._lastSeen[currentChatUid];
-                const statusEl = chatHeader.querySelector('[data-status]');
-                if (statusEl) {
+            if (chatHeader) {
+                const statusSpans = chatHeader.querySelectorAll('[data-status]');
+                statusSpans.forEach(el => {
+                    const isOnline = window._onlineStatus[currentChatUid];
+                    const lastSeenTs = window._lastSeen[currentChatUid];
                     if (isOnline) {
-                        statusEl.innerHTML = '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>';
-                    } else if (lastSeenTs) {
-                        statusEl.innerHTML = '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>';
+                        el.innerHTML = '<span style="color:var(--success);font-size:0.7rem;display:inline-flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active now</span>';
+                    } else if (lastSeenTs && lastSeenTs > 0) {
+                        el.innerHTML = '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>';
+                    } else {
+                        el.innerHTML = '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>';
                     }
-                }
+                });
             }
         }
     }, (err) => {
-        console.warn('Presence listener error:', err.code);
+        console.warn('Presence listener error:', err.code || err.message);
         _presenceListener = null;
+        // Auto-retry after 5s
+        setTimeout(() => { if (auth.currentUser) startPresenceListener(); }, 5000);
     });
 }
 
-if (auth.currentUser) {
-    // Set online immediately
-    fbUpdatePresence(auth.currentUser.uid, true);
-    // Heartbeat every 25s to stay "online"
-    const _presenceHeartbeat = setInterval(() => {
-        if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true);
-        else clearInterval(_presenceHeartbeat);
-    }, 25000);
-    // App visibility changes
-    document.addEventListener('visibilitychange', () => {
+function _initPresenceSystem(uid) {
+    if (!uid) return;
+    // Mark online immediately
+    fbUpdatePresence(uid, true);
+
+    // Clear any existing heartbeat
+    if (_presenceHeartbeatInterval) clearInterval(_presenceHeartbeatInterval);
+    // Heartbeat every 20s (shorter = more reliable "Active now")
+    _presenceHeartbeatInterval = setInterval(() => {
+        if (auth.currentUser && document.visibilityState !== 'hidden') {
+            fbUpdatePresence(auth.currentUser.uid, true);
+        }
+    }, 20000);
+
+    // Visibility change: immediate update
+    const _onVisChange = () => {
         if (!auth.currentUser) return;
-        const online = document.visibilityState === 'visible';
-        fbUpdatePresence(auth.currentUser.uid, online);
-    });
-    // Tab/window close
-    window.addEventListener('beforeunload', () => {
-        if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false);
-    });
-    // Mobile app background detection
-    window.addEventListener('pagehide', () => {
-        if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false);
-    });
-    window.addEventListener('pageshow', () => {
+        const isVisible = document.visibilityState === 'visible';
+        fbUpdatePresence(auth.currentUser.uid, isVisible);
+    };
+    document.removeEventListener('visibilitychange', _onVisChange);
+    document.addEventListener('visibilitychange', _onVisChange);
+
+    // Focus/blur: browser window focus
+    const _onFocus = () => { if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true); };
+    const _onBlur = () => { if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false); };
+    window.removeEventListener('focus', _onFocus);
+    window.removeEventListener('blur', _onBlur);
+    window.addEventListener('focus', _onFocus);
+    window.addEventListener('blur', _onBlur);
+
+    // Tab/window close — use both beforeunload + pagehide for mobile
+    const _onUnload = () => {
+        if (auth.currentUser) {
+            _markOfflineBeacon(auth.currentUser.uid);
+            // Also try setDoc (may not complete but attempt it)
+            fbUpdatePresence(auth.currentUser.uid, false).catch(()=>{});
+        }
+    };
+    window.removeEventListener('beforeunload', _onUnload);
+    window.removeEventListener('pagehide', _onUnload);
+    window.addEventListener('beforeunload', _onUnload);
+    window.addEventListener('pagehide', _onUnload);
+
+    // Page show (back button / tab reactivation)
+    window.addEventListener('pageshow', (e) => {
         if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true);
     });
+
+    // Start realtime listener
     startPresenceListener();
+}
+
+if (auth.currentUser) {
+    _initPresenceSystem(auth.currentUser.uid);
 }
 
 /* ---- MESSAGE ACTIONS ---- */
