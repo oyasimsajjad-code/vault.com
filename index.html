@@ -1292,6 +1292,8 @@
                         <option value="Higher Math">Higher Math</option>
                         <option value="Biology">Biology</option>
                         <option value="ICT">ICT</option>
+                        <option value="English">English</option>
+                        <option value="Bangla">Bangla</option>
                         <option value="Others">Others</option>
                     </select>
                 </div>
@@ -2023,8 +2025,8 @@
 
 <div id="toast-container"></div>
 <div class="swipe-hint" id="swipe-hint">← Swipe to navigate →</div>
-<!-- ADMIN FAB — only shown to creator -->
-<button id="admin-fab" class="hidden" onclick="openAdminPanel()" title="Admin Panel">👑</button>
+<!-- ADMIN FAB — hidden -->
+<button id="admin-fab" class="hidden" onclick="openAdminPanel()" title="Admin Panel" style="display:none!important;">👑</button>
 <!-- ADMIN PANEL MODAL -->
 <div id="admin-panel-modal" class="hidden">
   <div class="admin-panel-box">
@@ -3804,48 +3806,43 @@ function renderHeatmap() {
 }
 function renderSubjectAnalytics() {
     const grid=document.getElementById('subject-analytics-grid'); if(!grid) return;
-    const subjects=['Physics','Chemistry','Higher Math','Biology','ICT','General','Others','Bangla','English'];
-    const colors=['#00f0ff','#ff6b35','#7000ff','#00ff66','#ffcc00','#ff003c','#8b90a0','#00bcd4','#ff9800'];
-    // Daily subject hours (resets every 24h)
+    const subjects=['Physics','Chemistry','Higher Math','Biology','ICT','English','Bangla','Others'];
+    const colors=['#00f0ff','#ff6b35','#7000ff','#00ff66','#ffcc00','#ff9800','#00bcd4','#8b90a0'];
     const today = new Date().toISOString().split('T')[0];
     const dailyHours = (appData.stats.subjectHoursDate === today) ? (appData.stats.subjectHours||{}) : {};
-    // Total accumulated subject hours (never resets)
     const totalHours = appData.stats.totalSubjectHours || {};
     const maxDaily = Math.max(...subjects.map(s=>dailyHours[s]||0), 0.01);
     const maxTotal = Math.max(...subjects.map(s=>totalHours[s]||0), 0.01);
+
+    // TODAY header
     grid.innerHTML = '<div style="grid-column:1/-1;margin-bottom:10px;"><h3 style="color:var(--text-muted);font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;"><i class="fa-solid fa-calendar-day" style="margin-right:6px;color:var(--primary);"></i>Today\'s Subject Hours</h3></div>';
+
+    // Always render all 8 subject cards for Today
     subjects.forEach((s,i)=>{
         const h=parseFloat((dailyHours[s]||0).toFixed(3));
-        if(h===0 && (totalHours[s]||0)===0) return;
-        const pct = Math.round((h/maxDaily)*100);
+        const pct = maxDaily > 0 ? Math.round((h/maxDaily)*100) : 0;
         const d=document.createElement('div');
         d.className='subj-card';
         d.innerHTML=`<h4 style="color:var(--text-main);display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>${s}</h4><div class="subj-bar"><div class="subj-fill" style="width:${pct}%;background:${colors[i]};"></div></div><div class="subj-time">${h>0?h.toFixed(2)+'h today':'0h today'}</div>`;
         grid.appendChild(d);
     });
-    // Total section
+
+    // ALL TIME header
     const totalDivHeader = document.createElement('div');
     totalDivHeader.style.cssText = 'grid-column:1/-1;margin:16px 0 10px;border-top:1px solid var(--glass-border);padding-top:16px;';
     totalDivHeader.innerHTML = '<h3 style="color:var(--text-muted);font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;"><i class="fa-solid fa-infinity" style="margin-right:6px;color:var(--warning);"></i>Total Subject Hours (All Time)</h3>';
     grid.appendChild(totalDivHeader);
-    let hasTotal = false;
+
+    // Always render all 8 subject cards for All Time
     subjects.forEach((s,i)=>{
         const h=parseFloat((totalHours[s]||0).toFixed(3));
-        if(h===0) return;
-        hasTotal = true;
-        const pct = Math.round((h/maxTotal)*100);
+        const pct = maxTotal > 0 ? Math.round((h/maxTotal)*100) : 0;
         const d=document.createElement('div');
         d.className='subj-card';
         d.style.cssText='border-color:rgba(255,204,0,0.2);';
-        d.innerHTML=`<h4 style="color:var(--text-main);display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>${s}</h4><div class="subj-bar"><div class="subj-fill" style="width:${pct}%;background:linear-gradient(90deg,${colors[i]},var(--warning));"></div></div><div class="subj-time" style="color:var(--warning);font-weight:600;">${h.toFixed(2)}h total</div>`;
+        d.innerHTML=`<h4 style="color:var(--text-main);display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>${s}</h4><div class="subj-bar"><div class="subj-fill" style="width:${pct}%;background:linear-gradient(90deg,${colors[i]},var(--warning));"></div></div><div class="subj-time" style="color:var(--warning);font-weight:600;">${h>0?h.toFixed(2)+'h total':'0h total'}</div>`;
         grid.appendChild(d);
     });
-    if(!hasTotal){
-        const empty=document.createElement('div');
-        empty.style.cssText='grid-column:1/-1;color:var(--text-muted);font-size:0.85rem;text-align:center;padding:10px;';
-        empty.innerText='No total study data yet. Start focusing!';
-        grid.appendChild(empty);
-    }
 }
 function updateDashboardStats() {
     const totalMins = appData.stats.studyMinutes || 0;
