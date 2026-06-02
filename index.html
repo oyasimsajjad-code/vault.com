@@ -141,7 +141,13 @@
         body.light-mode .pdf-progress-bar { background: rgba(0,0,80,0.08); }
         body.light-mode .pdf-subject { background: rgba(85,0,204,0.12); }
         body.light-mode .pdf-date { color: var(--text-muted); }
-        body.light-mode .heatmap-cell { background: rgba(0,0,80,0.06); }
+        body.light-mode .heatmap-cell { background: rgba(0,0,120,0.08); border: 1px solid rgba(0,0,120,0.06); }
+        body.light-mode .heatmap-cell.h1 { background: rgba(0,95,163,0.2); }
+        body.light-mode .heatmap-cell.h2 { background: rgba(0,95,163,0.42); }
+        body.light-mode .heatmap-cell.h3 { background: rgba(0,95,163,0.65); }
+        body.light-mode .heatmap-cell.h4 { background: rgba(0,95,163,0.88); box-shadow: 0 0 6px rgba(0,95,163,0.5); }
+        body.light-mode .heatmap-months { color: var(--text-muted) !important; }
+        body.light-mode .heatmap-tooltip { background: rgba(255,255,255,0.97); color: var(--text-main); border: 1px solid var(--glass-border); }
         body.light-mode .sound-btn { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); color: #fff; }
         body.light-mode .sound-btn.active { background: var(--primary); border-color: var(--primary); }
         body.light-mode .auth-box { background: rgba(255,255,255,0.92); }
@@ -403,7 +409,8 @@
         .sound-btn.active { background: var(--primary); border-color: var(--primary); color: #000 !important; }
         .sound-btn:hover { background: rgba(255,255,255,0.2); }
         .chart-container { background: rgba(0,0,0,0.2); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin-bottom: 30px; }
-        body.light-mode .chart-container { background: rgba(255,255,255,0.6); }
+        body.light-mode .chart-container { background: rgba(255,255,255,0.82); border-color: rgba(0,0,120,0.12); }
+        .heatmap-grid { min-height: 100px; }
         .analytics-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
         .heatmap-grid { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 14px; }
         .heatmap-cell { width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.06); transition: transform 0.2s; cursor: pointer; position: relative; }
@@ -2155,7 +2162,7 @@ function applyLang() {
 let appData = {
     tasks: [], notes: [], revisionTopics: [],
     goals: { daily:0, weekly:0, monthly:0, exam:'' },
-    stats: { studyMinutes:0, focusSessions:0, completedTasks:0, subjectHours:{}, heatmap:{}, todayMinutes:0, lastStudyDate:'' },
+    stats: { studyMinutes:0, focusSessions:0, completedTasks:0, subjectHours:{}, subjectHoursDate:'', totalSubjectHours:{}, heatmap:{}, todayMinutes:0, lastStudyDate:'', dailySessions:0, dailySessionsDate:'' },
     streak: { current:0, longest:0, lastDate:'' },
     profile: { name:'Student', bio:'', goal:'', dp:'' },
     settings: { appLock:false, pin:'', sound:true, darkMode:true, vaultPassword:'112233', language:'en' },
@@ -2303,7 +2310,7 @@ function loadAppData() {
             appData.notes = p.notes || [];
             appData.revisionTopics = p.revisionTopics || [];
             appData.goals = Object.assign({ daily:0, weekly:0, monthly:0, exam:'' }, p.goals || {});
-            appData.stats = Object.assign({ studyMinutes:0, focusSessions:0, completedTasks:0, subjectHours:{}, heatmap:{}, todayMinutes:0, lastStudyDate:'' }, p.stats || {});
+            appData.stats = Object.assign({ studyMinutes:0, focusSessions:0, completedTasks:0, subjectHours:{}, subjectHoursDate:'', totalSubjectHours:{}, heatmap:{}, todayMinutes:0, lastStudyDate:'', dailySessions:0, dailySessionsDate:'' }, p.stats || {});
             appData.streak = Object.assign({ current:0, longest:0, lastDate:'' }, p.streak || {});
             appData.profile = Object.assign({ name:'Student', bio:'', goal:'', dp:'' }, p.profile || {});
             appData.settings = Object.assign({ appLock:false, pin:'', sound:true, darkMode:true, vaultPassword:'112233' }, p.settings || {});
@@ -3045,7 +3052,9 @@ function loadTimerSettings() {
     document.getElementById('custom-short').value = ts.short || 5;
     document.getElementById('custom-long').value = ts.long || 15;
     timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]);
-    document.getElementById('session-count').innerText = appData.stats.focusSessions || 0;
+    const _today = new Date().toISOString().split('T')[0];
+    const _dailySess = (appData.stats.dailySessionsDate === _today) ? (appData.stats.dailySessions || 0) : 0;
+    document.getElementById('session-count').innerText = _dailySess;
     const wlCb = document.getElementById('setting-wakelock');
     if (wlCb) wlCb.checked = !!appData.settings.keepScreenAwake;
     if (!('wakeLock' in navigator) && wlCb) { wlCb.disabled = true; wlCb.parentElement.parentElement.style.opacity = '0.5'; }
@@ -3090,6 +3099,24 @@ function setTimerMode(mode,btn) {
     updateTimerDisplay(); setRing(modes[mode],modes[mode]);
     document.getElementById('timer-status').innerText=mode==='focus'?'Ready to focus':'Take a break';
 }
+function _recordStudyTime(mins, subj) {
+    const today = new Date().toISOString().split('T')[0];
+    if (!appData.stats.subjectHoursDate) appData.stats.subjectHoursDate = today;
+    if (appData.stats.subjectHoursDate !== today) {
+        appData.stats.subjectHours = {};
+        appData.stats.subjectHoursDate = today;
+    }
+    if (!appData.stats.subjectHours) appData.stats.subjectHours = {};
+    if (!appData.stats.totalSubjectHours) appData.stats.totalSubjectHours = {};
+    appData.stats.studyMinutes = (appData.stats.studyMinutes || 0) + mins;
+    appData.stats.todayMinutes = (appData.stats.todayMinutes || 0) + mins;
+    appData.stats.subjectHours[subj] = (appData.stats.subjectHours[subj] || 0) + mins / 60;
+    appData.stats.totalSubjectHours[subj] = (appData.stats.totalSubjectHours[subj] || 0) + mins / 60;
+    if (!appData.stats.heatmap) appData.stats.heatmap = {};
+    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins / 60;
+    checkAndUpdateStreak(today);
+}
+
 function savePartialSession() {
     if (!isRunning || timerMode !== 'focus') return;
     const totalSecs = modes['focus'];
@@ -3098,14 +3125,7 @@ function savePartialSession() {
     const elapsedMins = Math.round(elapsedSecs / 60);
     if (elapsedMins < 1) return;
     const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
-    appData.stats.studyMinutes = (appData.stats.studyMinutes || 0) + elapsedMins;
-    appData.stats.todayMinutes = (appData.stats.todayMinutes || 0) + elapsedMins;
-    if (!appData.stats.subjectHours) appData.stats.subjectHours = {};
-    appData.stats.subjectHours[subj] = (appData.stats.subjectHours[subj] || 0) + elapsedMins / 60;
-    const today = new Date().toISOString().split('T')[0];
-    if (!appData.stats.heatmap) appData.stats.heatmap = {};
-    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + elapsedMins / 60;
-    checkAndUpdateStreak(today);
+    _recordStudyTime(elapsedMins, subj);
     saveAppData();
     if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
     showToast('Partial session saved: ' + elapsedMins + ' min recorded 📊', 'success');
@@ -3165,15 +3185,13 @@ function timerTick() {
             _partialSaved = true;
             const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
             const mins = _msBlock.enabled ? _msBlock.blockFocus : (appData.timerSettings.focus || 25);
-            appData.stats.focusSessions = (appData.stats.focusSessions || 0) + 1;
-            appData.stats.studyMinutes = (appData.stats.studyMinutes || 0) + mins;
             const today = new Date().toISOString().split('T')[0];
-            appData.stats.todayMinutes = (appData.stats.todayMinutes || 0) + mins;
-            if (!appData.stats.subjectHours) appData.stats.subjectHours = {};
-            appData.stats.subjectHours[subj] = (appData.stats.subjectHours[subj] || 0) + mins / 60;
-            if (!appData.stats.heatmap) appData.stats.heatmap = {};
-            appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins / 60;
-            checkAndUpdateStreak(today);
+            // Daily sessions counter
+            if (!appData.stats.dailySessionsDate) appData.stats.dailySessionsDate = today;
+            if (appData.stats.dailySessionsDate !== today) { appData.stats.dailySessions = 0; appData.stats.dailySessionsDate = today; }
+            appData.stats.focusSessions = (appData.stats.focusSessions || 0) + 1;
+            appData.stats.dailySessions = (appData.stats.dailySessions || 0) + 1;
+            _recordStudyTime(mins, subj);
             saveAppData();
             if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
             document.getElementById('session-count').innerText = appData.stats.focusSessions;
@@ -3467,16 +3485,60 @@ function checkAndUpdateStreak(todayStr) {
     // Reset todayMinutes if new day
     if(appData.stats.lastStudyDate && appData.stats.lastStudyDate !== today) {
         appData.stats.todayMinutes = 0;
+        // Reset daily subject hours on new day
+        appData.stats.subjectHoursDate = appData.stats.subjectHoursDate || today;
+        if(appData.stats.subjectHoursDate !== today){
+            appData.stats.subjectHours = {};
+            appData.stats.subjectHoursDate = today;
+        }
+        // Reset daily sessions on new day
+        appData.stats.dailySessionsDate = appData.stats.dailySessionsDate || today;
+        if(appData.stats.dailySessionsDate !== today){
+            appData.stats.dailySessions = 0;
+            appData.stats.dailySessionsDate = today;
+        }
     }
+    // Init daily tracking dates
+    if(!appData.stats.subjectHoursDate) appData.stats.subjectHoursDate = today;
+    if(!appData.stats.dailySessionsDate) appData.stats.dailySessionsDate = today;
     appData.stats.lastStudyDate = today;
-    if(appData.streak.lastDate===today) return;
-    const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
-    const yesterdayStr=yesterday.toISOString().split('T')[0];
-    if(appData.streak.lastDate===yesterdayStr) appData.streak.current=(appData.streak.current||0)+1;
-    else if(!appData.streak.lastDate||appData.streak.lastDate<yesterdayStr) appData.streak.current=1;
-    appData.streak.longest=Math.max(appData.streak.longest||0,appData.streak.current);
-    appData.streak.lastDate=today;
-    saveAppData(); updateStreakUI();
+    if(appData.streak.lastDate===today) {
+        // Already recorded today — just update longest
+        appData.streak.longest = Math.max(appData.streak.longest || 0, appData.streak.current || 0);
+        updateStreakUI();
+        return;
+    }
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const lastDate = appData.streak.lastDate || '';
+    if (lastDate === yesterdayStr) {
+        // Consecutive day
+        appData.streak.current = (appData.streak.current || 0) + 1;
+    } else if (!lastDate || lastDate < yesterdayStr) {
+        // Gap detected or first ever — verify via heatmap
+        const heatmap = appData.stats.heatmap || {};
+        let consecutive = 0;
+        const check = new Date();
+        check.setDate(check.getDate() - 1);
+        // Count backwards from yesterday
+        for (let i = 0; i < 365; i++) {
+            const ds = check.toISOString().split('T')[0];
+            if ((heatmap[ds] || 0) > 0) {
+                consecutive++;
+                check.setDate(check.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        // Today also counts
+        appData.streak.current = consecutive + 1;
+    }
+    appData.streak.longest = Math.max(appData.streak.longest || 0, appData.streak.current);
+    appData.streak.lastDate = today;
+    saveAppData();
+    updateStreakUI();
+    if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
 }
 function updateStreakUI() {
     const s=appData.streak.current||0;
@@ -3536,32 +3598,161 @@ function getChartColors() {
         primary: isDark ? '#00f0ff' : '#005fa3',
     };
 }
+function getWeeklyHoursData() {
+    const heatmap = appData.stats.heatmap || {};
+    const result = [0,0,0,0,0,0,0];
+    const today = new Date();
+    // Find Monday of current week
+    const dayOfWeek = today.getDay(); // 0=Sun
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + mondayOffset + i);
+        const ds = d.toISOString().split('T')[0];
+        result[i] = parseFloat((heatmap[ds] || 0).toFixed(2));
+    }
+    return result;
+}
+
+function getTaskDistributionData() {
+    const tasks = appData.tasks || [];
+    const now = new Date();
+    const completed = tasks.filter(t => t.completed).length;
+    const pending = tasks.filter(t => !t.completed && (!t.date || t.date === 'No Date' || new Date(t.date) >= now)).length;
+    const overdue = tasks.filter(t => !t.completed && t.date && t.date !== 'No Date' && new Date(t.date) < now).length;
+    return {
+        completed: completed || 0,
+        pending: pending || 0,
+        overdue: overdue || 0,
+        total: tasks.length || 0
+    };
+}
+
 function initCharts() {
     const cc = getChartColors();
     Chart.defaults.color = cc.text;
     Chart.defaults.font.family = "'Outfit', sans-serif";
-    const dashChartEl = document.getElementById('dash-chart'); const c1 = dashChartEl ? dashChartEl.getContext('2d') : null; if(!c1) { charts.dash = null; }
-    const c2=document.getElementById('weekly-chart').getContext('2d');
-    const c3=document.getElementById('task-chart').getContext('2d');
-    if(c1) charts.dash=new Chart(c1,{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Study Hours',data:[0,0,0,0,0,0,0],borderColor:cc.primary,tension:0.4,fill:true,backgroundColor:'rgba(0,240,255,0.08)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:cc.grid}}}}});
-    charts.weekly=new Chart(c2,{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Hours',data:[0,0,0,0,0,0,0],backgroundColor:cc.border,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}}}});
-    charts.task=new Chart(c3,{type:'doughnut',data:{labels:['Completed','Pending'],datasets:[{data:[1,1],backgroundColor:['#00ff66','rgba(255,255,255,0.1)'],borderWidth:0}]},options:{responsive:true,cutout:'80%'}});
+    const dashChartEl = document.getElementById('dash-chart');
+    const c1 = dashChartEl ? dashChartEl.getContext('2d') : null;
+    if(!c1) { charts.dash = null; }
+    const weeklyEl = document.getElementById('weekly-chart');
+    const taskEl = document.getElementById('task-chart');
+    if (!weeklyEl || !taskEl) return;
+    const c2 = weeklyEl.getContext('2d');
+    const c3 = taskEl.getContext('2d');
+    const weeklyData = getWeeklyHoursData();
+    const taskData = getTaskDistributionData();
+    const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    if(c1) {
+        charts.dash = new Chart(c1, {
+            type:'line',
+            data:{
+                labels: dayLabels,
+                datasets:[{
+                    label:'Study Hours',
+                    data: weeklyData,
+                    borderColor: cc.primary,
+                    tension:0.4, fill:true,
+                    backgroundColor:'rgba(0,240,255,0.08)',
+                    pointBackgroundColor: cc.primary,
+                    pointRadius: 4
+                }]
+            },
+            options:{
+                responsive:true,
+                plugins:{legend:{display:false}},
+                scales:{
+                    x:{grid:{display:false}, ticks:{color:cc.text}},
+                    y:{grid:{color:cc.grid}, ticks:{color:cc.text}, beginAtZero:true}
+                }
+            }
+        });
+    }
+    charts.weekly = new Chart(c2, {
+        type:'bar',
+        data:{
+            labels: dayLabels,
+            datasets:[{
+                label:'Study Hours',
+                data: weeklyData,
+                backgroundColor: weeklyData.map(v => v > 0 ? cc.border : 'rgba(255,255,255,0.06)'),
+                borderRadius: 5,
+                borderSkipped: false
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    callbacks:{
+                        label: ctx => ' ' + (ctx.raw||0).toFixed(2) + 'h'
+                    }
+                }
+            },
+            scales:{
+                x:{grid:{display:false}, ticks:{color:cc.text}},
+                y:{grid:{color:cc.grid}, ticks:{color:cc.text}, beginAtZero:true,
+                   ticks:{callback: v => v.toFixed(1)+'h'}}
+            }
+        }
+    });
+    const tCompleted = taskData.completed || 0;
+    const tPending = taskData.pending || 0;
+    const tOverdue = taskData.overdue || 0;
+    const hasData = (tCompleted + tPending + tOverdue) > 0;
+    charts.task = new Chart(c3, {
+        type:'doughnut',
+        data:{
+            labels:['Completed','Pending','Overdue'],
+            datasets:[{
+                data: hasData ? [tCompleted, tPending, tOverdue] : [1,0,0],
+                backgroundColor:['#00ff66','rgba(0,240,255,0.5)','#ff003c'],
+                borderWidth: 2,
+                borderColor: 'transparent'
+            }]
+        },
+        options:{
+            responsive:true,
+            cutout:'70%',
+            plugins:{
+                legend:{
+                    display:true,
+                    position:'bottom',
+                    labels:{ color: cc.text, padding:10, font:{size:11} }
+                },
+                tooltip:{
+                    callbacks:{
+                        label: ctx => ' ' + ctx.label + ': ' + (ctx.raw||0) + ' tasks'
+                    }
+                }
+            }
+        }
+    });
 }
 function updateCharts() {
-    if(!charts.dash) return;
     const cc = getChartColors();
-    const h=parseFloat(((appData.stats.studyMinutes||0)/60).toFixed(2));
-    const d=[0,0,0,0,0,0,h];
-    charts.dash.data.datasets[0].data=d;
-    charts.dash.data.datasets[0].borderColor=cc.primary;
-    charts.dash.options.scales.y.grid.color=cc.grid;
-    charts.dash.update();
-    charts.weekly.data.datasets[0].data=d;
-    charts.weekly.data.datasets[0].backgroundColor=cc.border;
-    charts.weekly.update();
-    const comp=appData.stats.completedTasks||0;
-    const pend=(appData.tasks||[]).filter(t=>!t.completed).length;
-    charts.task.data.datasets[0].data=[comp,(pend===0&&comp===0)?1:pend]; charts.task.update();
+    const weeklyData = getWeeklyHoursData();
+    const taskData = getTaskDistributionData();
+    if(charts.dash) {
+        charts.dash.data.datasets[0].data = weeklyData;
+        charts.dash.data.datasets[0].borderColor = cc.primary;
+        if(charts.dash.options.scales && charts.dash.options.scales.y) charts.dash.options.scales.y.grid.color = cc.grid;
+        charts.dash.update('none');
+    }
+    if(charts.weekly) {
+        charts.weekly.data.datasets[0].data = weeklyData;
+        charts.weekly.data.datasets[0].backgroundColor = weeklyData.map(v => v > 0 ? cc.border : 'rgba(255,255,255,0.06)');
+        charts.weekly.update('none');
+    }
+    if(charts.task) {
+        const tC = taskData.completed || 0;
+        const tP = taskData.pending || 0;
+        const tO = taskData.overdue || 0;
+        const hasData = (tC + tP + tO) > 0;
+        charts.task.data.datasets[0].data = hasData ? [tC, tP, tO] : [1, 0, 0];
+        charts.task.update('none');
+    }
 }
 function renderHeatmap() {
     const container=document.getElementById('study-heatmap');
@@ -3570,55 +3761,113 @@ function renderHeatmap() {
     container.innerHTML=''; monthsEl.innerHTML='';
     const heatmap=appData.stats.heatmap||{};
     const allDates=[];
-    const hEnd=new Date();
     const hStart=new Date('2026-06-01');
     const hFixedEnd=new Date('2026-12-31');
     for(let d=new Date(hStart);d<=hFixedEnd;d.setDate(d.getDate()+1)){allDates.push(new Date(d).toISOString().split('T')[0]);}
     const months={};
     allDates.forEach(ds=>{const m=ds.substring(0,7);if(!months[m])months[m]=0;months[m]++;});
-    Object.keys(months).sort().forEach(m=>{const span=document.createElement('span');span.style.cssText=`width:${months[m]*17}px;overflow:hidden;white-space:nowrap;font-size:0.7rem;color:var(--text-muted);`;span.innerText=new Date(m+'-01').toLocaleString('default',{month:'short'});monthsEl.appendChild(span);});
+    // Month labels
+    Object.keys(months).sort().forEach(m=>{
+        const span=document.createElement('span');
+        const colCount=months[m];
+        span.style.cssText=`width:${colCount*17}px;overflow:hidden;white-space:nowrap;font-size:0.7rem;color:var(--text-muted);display:inline-block;`;
+        span.innerText=new Date(m+'-01').toLocaleString('default',{month:'short'});
+        monthsEl.appendChild(span);
+    });
+    // Determine max for scaling
+    const vals=Object.values(heatmap).filter(v=>v>0);
+    const maxVal=vals.length>0?Math.max(...vals):1;
     allDates.forEach(ds=>{
         const val=heatmap[ds]||0;
         let cls='';
-        if(val>4) cls='h4';
-        else if(val>2) cls='h3';
-        else if(val>1) cls='h2';
-        else if(val>0) cls='h1';
+        if(val>0){
+            const ratio=val/maxVal;
+            if(ratio>=0.75) cls='h4';
+            else if(ratio>=0.50) cls='h3';
+            else if(ratio>=0.25) cls='h2';
+            else cls='h1';
+        }
         const cell=document.createElement('div');
-        cell.className='heatmap-cell '+cls;
-        cell.innerHTML=`<div class="heatmap-tooltip">${ds}: ${val.toFixed(1)}h</div>`;
+        cell.className='heatmap-cell'+(cls?' '+cls:'');
+        cell.style.display='inline-block';
+        const today=new Date().toISOString().split('T')[0];
+        if(ds===today) cell.style.outline='2px solid var(--primary)';
+        const tooltip=document.createElement('div');
+        tooltip.className='heatmap-tooltip';
+        tooltip.innerText=ds+': '+(val>0?val.toFixed(2)+'h':'No study');
+        cell.appendChild(tooltip);
         container.appendChild(cell);
     });
+    // Legend update for light mode
+    const legendCells=document.querySelectorAll('#view-analytics .heatmap-grid ~ div div');
+    legendCells.forEach(lc=>{if(lc.style.background&&lc.style.background.includes('rgba'))lc.style.opacity='1';});
 }
 function renderSubjectAnalytics() {
     const grid=document.getElementById('subject-analytics-grid'); if(!grid) return;
-    const subjects=['Physics','Chemistry','Higher Math','Biology','ICT','General','Others'];
-    const colors=['#00f0ff','#ff6b35','#7000ff','#00ff66','#ffcc00','#ff003c','#8b90a0'];
-    const hours=appData.stats.subjectHours||{};
-    const maxH=Math.max(...subjects.map(s=>hours[s]||0),0.1);
-    grid.innerHTML='';
+    const subjects=['Physics','Chemistry','Higher Math','Biology','ICT','General','Others','Bangla','English'];
+    const colors=['#00f0ff','#ff6b35','#7000ff','#00ff66','#ffcc00','#ff003c','#8b90a0','#00bcd4','#ff9800'];
+    // Daily subject hours (resets every 24h)
+    const today = new Date().toISOString().split('T')[0];
+    const dailyHours = (appData.stats.subjectHoursDate === today) ? (appData.stats.subjectHours||{}) : {};
+    // Total accumulated subject hours (never resets)
+    const totalHours = appData.stats.totalSubjectHours || {};
+    const maxDaily = Math.max(...subjects.map(s=>dailyHours[s]||0), 0.01);
+    const maxTotal = Math.max(...subjects.map(s=>totalHours[s]||0), 0.01);
+    grid.innerHTML = '<div style="grid-column:1/-1;margin-bottom:10px;"><h3 style="color:var(--text-muted);font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;"><i class="fa-solid fa-calendar-day" style="margin-right:6px;color:var(--primary);"></i>Today\'s Subject Hours</h3></div>';
     subjects.forEach((s,i)=>{
-        const h=hours[s]||0;
-        const pct=Math.round((h/maxH)*100);
+        const h=parseFloat((dailyHours[s]||0).toFixed(3));
+        if(h===0 && (totalHours[s]||0)===0) return;
+        const pct = Math.round((h/maxDaily)*100);
         const d=document.createElement('div');
         d.className='subj-card';
-        d.innerHTML=`<h4>${s}</h4><div class="subj-bar"><div class="subj-fill" style="width:${pct}%;background:${colors[i]};"></div></div><div class="subj-time">${h.toFixed(1)}h</div>`;
+        d.innerHTML=`<h4 style="color:var(--text-main);display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>${s}</h4><div class="subj-bar"><div class="subj-fill" style="width:${pct}%;background:${colors[i]};"></div></div><div class="subj-time">${h>0?h.toFixed(2)+'h today':'0h today'}</div>`;
         grid.appendChild(d);
     });
+    // Total section
+    const totalDivHeader = document.createElement('div');
+    totalDivHeader.style.cssText = 'grid-column:1/-1;margin:16px 0 10px;border-top:1px solid var(--glass-border);padding-top:16px;';
+    totalDivHeader.innerHTML = '<h3 style="color:var(--text-muted);font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;"><i class="fa-solid fa-infinity" style="margin-right:6px;color:var(--warning);"></i>Total Subject Hours (All Time)</h3>';
+    grid.appendChild(totalDivHeader);
+    let hasTotal = false;
+    subjects.forEach((s,i)=>{
+        const h=parseFloat((totalHours[s]||0).toFixed(3));
+        if(h===0) return;
+        hasTotal = true;
+        const pct = Math.round((h/maxTotal)*100);
+        const d=document.createElement('div');
+        d.className='subj-card';
+        d.style.cssText='border-color:rgba(255,204,0,0.2);';
+        d.innerHTML=`<h4 style="color:var(--text-main);display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>${s}</h4><div class="subj-bar"><div class="subj-fill" style="width:${pct}%;background:linear-gradient(90deg,${colors[i]},var(--warning));"></div></div><div class="subj-time" style="color:var(--warning);font-weight:600;">${h.toFixed(2)}h total</div>`;
+        grid.appendChild(d);
+    });
+    if(!hasTotal){
+        const empty=document.createElement('div');
+        empty.style.cssText='grid-column:1/-1;color:var(--text-muted);font-size:0.85rem;text-align:center;padding:10px;';
+        empty.innerText='No total study data yet. Start focusing!';
+        grid.appendChild(empty);
+    }
 }
 function updateDashboardStats() {
-    const h=Math.floor((appData.stats.studyMinutes||0)/60);
-    const m=(appData.stats.studyMinutes||0)%60;
-    document.getElementById('dash-focus-hours').innerText=`${h}h`;
-    document.getElementById('session-count').innerText=appData.stats.focusSessions||0;
-    document.getElementById('stat-total-time').innerText=`${h}h ${m}m`;
-    document.getElementById('stat-sessions').innerText=appData.stats.focusSessions||0;
-    const comp=appData.stats.completedTasks||0;
-    const pend=(appData.tasks||[]).filter(t=>!t.completed).length;
-    const rate=(comp+pend)===0?0:Math.round(comp/(comp+pend)*100);
-    document.getElementById('stat-task-rate').innerText=rate+'%';
-    document.getElementById('stat-longest-streak').innerText=(appData.streak.longest||0)+' days';
-    updateStreakUI(); updateGoalUI();
+    const totalMins = appData.stats.studyMinutes || 0;
+    const h = Math.floor(totalMins / 60);
+    const m = Math.round(totalMins % 60);
+    document.getElementById('dash-focus-hours').innerText = h + 'h';
+    // Daily sessions display
+    const today = new Date().toISOString().split('T')[0];
+    const dailySessions = (appData.stats.dailySessionsDate === today) ? (appData.stats.dailySessions || 0) : 0;
+    const sessionEl = document.getElementById('session-count');
+    if (sessionEl) sessionEl.innerText = dailySessions;
+    document.getElementById('stat-total-time').innerText = h + 'h ' + m + 'm';
+    document.getElementById('stat-sessions').innerText = appData.stats.focusSessions || 0;
+    // Real task stats
+    const taskData = getTaskDistributionData();
+    const total = taskData.total || 0;
+    const completed = taskData.completed || 0;
+    const rate = total === 0 ? 0 : Math.round((completed / total) * 100);
+    document.getElementById('stat-task-rate').innerText = rate + '%';
+    document.getElementById('stat-longest-streak').innerText = (appData.streak.longest || 0) + ' days';
+    updateStreakUI();
+    updateGoalUI();
 }
 
 /* ---- GOALS ---- */
@@ -4160,7 +4409,7 @@ function renderLeaderboard(entries, tab) {
         const meClass = isMe ? 'me' : '';
         const rankColor = rank <= 3 ? rankColors[i] : 'var(--text-muted)';
         const medal = medals[i] || '';
-        const scoreVal = tab === 'streak' ? (entry.streak || 0) : (entry.tasks || 0);
+        const scoreVal = tab === 'streak' ? (parseInt(entry.streak) || 0) : tab === 'hours' ? parseFloat((entry.hours || 0).toFixed(1)) : (parseInt(entry.tasks) || 0);
         const dp = entry.dp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(entry.name || 'U') + '&background=0D8ABC&color=fff');
         const row = document.createElement('div');
         row.className = 'lb-row ' + rankClass + ' ' + meClass;
@@ -4170,7 +4419,7 @@ function renderLeaderboard(entries, tab) {
             '<img class="lb-avatar" src="' + dp + '" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff\'">' +
             '<div style="flex:1;min-width:0;">' +
             '<div class="lb-name" style="display:flex;align-items:center;flex-wrap:wrap;">' + (entry.name || 'Anonymous') + getVerifiedBadge(entry.uid) + (isMe ? ' <span style="font-size:0.7rem;color:var(--primary);margin-left:4px;">(আপনি)</span>' : '') + '</div>' +
-            '<div class="lb-score">' + (isMe ? scoreVal + ' ' + labels[tab] : (tab === 'hours' ? '🔒 private' : scoreVal + ' ' + labels[tab])) + '</div>' +
+            '<div class="lb-score">' + (scoreVal + ' ' + labels[tab]) + '</div>' +
             '</div>' +
             '<div class="lb-badge">' + medal + '</div>';
         list.appendChild(row);
@@ -7043,6 +7292,38 @@ async function fbPushLeaderboardStats() {
     try {
         const name = appData.profile.name || auth.currentUser.displayName || 'Anonymous';
         const dp = appData.profile.dp || auth.currentUser.photoURL || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=0D8ABC&color=fff');
+        const totalMins = appData.stats.studyMinutes || 0;
+        const realHours = parseFloat((totalMins / 60).toFixed(4));
+        const realStreak = (() => {
+            // Recalculate streak from heatmap for accuracy
+            const heatmap = appData.stats.heatmap || {};
+            const today = new Date().toISOString().split('T')[0];
+            let count = 0;
+            const check = new Date();
+            if ((heatmap[today] || 0) > 0) {
+                count = 1;
+                check.setDate(check.getDate() - 1);
+                for (let i = 0; i < 365; i++) {
+                    const ds = check.toISOString().split('T')[0];
+                    if ((heatmap[ds] || 0) > 0) { count++; check.setDate(check.getDate() - 1); }
+                    else break;
+                }
+            } else {
+                // today not studied yet — count from yesterday
+                check.setDate(check.getDate() - 1);
+                for (let i = 0; i < 365; i++) {
+                    const ds = check.toISOString().split('T')[0];
+                    if ((heatmap[ds] || 0) > 0) { count++; check.setDate(check.getDate() - 1); }
+                    else break;
+                }
+            }
+            return count;
+        })();
+        // Sync calculated streak back
+        if (realStreak !== appData.streak.current) {
+            appData.streak.current = realStreak;
+            appData.streak.longest = Math.max(appData.streak.longest || 0, realStreak);
+        }
         const payload = {
             uid,
             name,
@@ -7050,10 +7331,18 @@ async function fbPushLeaderboardStats() {
             bio: appData.profile.bio || '',
             class: appData.profile.class || '',
             institution: appData.profile.institution || '',
-            streak: appData.streak.current || 0,
-            tasks: appData.stats.completedTasks || 0,
+            streak: realStreak,
+            hours: realHours,
+            tasks: parseInt(appData.stats.completedTasks || 0),
+            sessions: parseInt(appData.stats.focusSessions || 0),
             updatedAt: Date.now()
         };
+        // Remove undefined/NaN values
+        Object.keys(payload).forEach(k => {
+            if (payload[k] === undefined || payload[k] === null || (typeof payload[k] === 'number' && isNaN(payload[k]))) {
+                payload[k] = typeof payload[k] === 'number' ? 0 : '';
+            }
+        });
         await setDoc(doc(firestore, 'leaderboard', uid), payload);
     } catch(e) { console.warn('Leaderboard push error:', e); }
 }
@@ -7123,17 +7412,38 @@ window._fbEditMsg = async function(msgId, newText, friendUid) {
 
 /* ---- LEADERBOARD: Load all users ---- */
 window._fbLoadLeaderboard = async function(tab) {
+    const loadingEl = document.getElementById('leaderboard-loading');
     try {
         const snap = await getDocs(collection(firestore, 'leaderboard'));
         let entries = [];
-        snap.forEach(d => { const data = d.data(); if (data && data.uid) entries.push(data); });
-        const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'streak' : 'tasks';
-        entries.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
+        snap.forEach(d => {
+            const data = d.data();
+            if (!data || !data.uid) return;
+            // Sanitize all numeric fields
+            const entry = {
+                ...data,
+                streak: parseInt(data.streak) || 0,
+                hours: parseFloat(data.hours) || 0,
+                tasks: parseInt(data.tasks) || 0,
+                sessions: parseInt(data.sessions) || 0
+            };
+            entries.push(entry);
+        });
+        // Sort by real values only
+        if (tab === 'streak') {
+            entries.sort((a, b) => (b.streak || 0) - (a.streak || 0));
+        } else if (tab === 'hours') {
+            entries.sort((a, b) => (b.hours || 0) - (a.hours || 0));
+        } else if (tab === 'tasks') {
+            entries.sort((a, b) => (b.tasks || 0) - (a.tasks || 0));
+        }
+        // Filter out entries with all zeros unless it's the current user
+        entries = entries.filter(e => e.uid === currentUser || (e.streak > 0 || e.hours > 0 || e.tasks > 0));
         entries = entries.slice(0, 50);
+        if (loadingEl) loadingEl.style.display = 'none';
         renderLeaderboard(entries, tab);
     } catch(e) {
         console.warn('Leaderboard load error:', e);
-        const loadingEl = document.getElementById('leaderboard-loading');
         if (loadingEl) loadingEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> লোড করা যায়নি: ' + e.message;
     }
 };
