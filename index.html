@@ -7800,6 +7800,41 @@ async function setupRTDBPresence(uid) {
     }
 }
 
+// Periodic stale-presence cleaner: runs every 20s, clears anyone whose lastSeen > 35s
+setInterval(() => {
+    let changed = false;
+    Object.keys(window._onlineStatus).forEach(uid => {
+        if (window._onlineStatus[uid]) {
+            const ls = window._lastSeen[uid] || 0;
+            if (Date.now() - ls > 30000) {
+                window._onlineStatus[uid] = false;
+                changed = true;
+            }
+        }
+    });
+    if (changed) {
+        if (currentView === 'inbox') renderInbox();
+        if (currentView === 'friends') renderFriendsSection();
+        // Re-render chat header status if a chat is open
+        if (currentChatUid && typeof openChatWith === 'function') {
+            const chatHeader = document.getElementById('chat-header');
+            if (chatHeader && chatHeader.querySelector('img')) {
+                const isOnline = window._onlineStatus[currentChatUid];
+                const lastSeenTs = window._lastSeen[currentChatUid];
+                // Find the status span by its position (second div's second child)
+                const statusDivs = chatHeader.querySelectorAll('div > div');
+                statusDivs.forEach(div => {
+                    if (div.style && div.style.marginTop === '1px') {
+                        div.innerHTML = isOnline
+                            ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active now</span>'
+                            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+                    }
+                });
+            }
+        }
+    }
+}, 20000);
+
 function startPresenceListener() {
     if (!auth.currentUser || _presenceListener) return;
     const presRef = collection(firestore, 'presence');
@@ -7813,8 +7848,8 @@ function startPresenceListener() {
                 window._lastSeen[d.id] = 0;
                 return;
             }
-            // Online = flag is true AND lastSeen within 35s
-            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 35000;
+            // Online = flag is true AND lastSeen within 30s
+            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 30000;
             window._onlineStatus[d.id] = !!(v.online && isRecent);
             window._lastSeen[d.id] = v.lastSeen || 0;
         });
@@ -7825,14 +7860,15 @@ function startPresenceListener() {
             if (chatHeader && currentChatUid) {
                 const isOnline = window._onlineStatus[currentChatUid];
                 const lastSeenTs = window._lastSeen[currentChatUid];
-                const statusEl = chatHeader.querySelector('[data-status]');
-                if (statusEl) {
-                    if (isOnline) {
-                        statusEl.innerHTML = '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>';
-                    } else if (lastSeenTs) {
-                        statusEl.innerHTML = '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>';
+                // Find the status div by margin-top style (set in _renderChatHeader)
+                const allDivs = chatHeader.querySelectorAll('div');
+                allDivs.forEach(div => {
+                    if (div.style && div.style.marginTop === '1px') {
+                        div.innerHTML = isOnline
+                            ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
+                            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
                     }
-                }
+                });
             }
         }
     }, (err) => {
