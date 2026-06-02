@@ -1354,7 +1354,7 @@
                 <div class="stat-card glass"><div class="stat-info"><p>Longest Streak</p><h3 id="stat-longest-streak" class="neon-text">0</h3></div></div>
             </div>
             <div class="glass chart-container" style="margin-bottom:24px;">
-                <h3 style="margin-bottom:8px;color:var(--text-main);">Study Heatmap (Last 210 Days)</h3>
+                <h3 style="margin-bottom:8px;color:var(--text-main);">Study Heatmap (Jun 2026 – Dec 2026)</h3>
                 <div class="heatmap-months" id="heatmap-months"></div>
                 <div class="heatmap-grid" id="study-heatmap"></div>
                 <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:0.75rem;color:var(--text-muted);">
@@ -3571,9 +3571,9 @@ function renderHeatmap() {
     const heatmap=appData.stats.heatmap||{};
     const allDates=[];
     const hEnd=new Date();
-    const hStart=new Date();
-    hStart.setDate(hEnd.getDate()-209); // Last 210 days (0..209 = 210 days)
-    for(let d=new Date(hStart);d<=hEnd;d.setDate(d.getDate()+1)){allDates.push(new Date(d).toISOString().split('T')[0]);}
+    const hStart=new Date('2026-06-01');
+    const hFixedEnd=new Date('2026-12-31');
+    for(let d=new Date(hStart);d<=hFixedEnd;d.setDate(d.getDate()+1)){allDates.push(new Date(d).toISOString().split('T')[0]);}
     const months={};
     allDates.forEach(ds=>{const m=ds.substring(0,7);if(!months[m])months[m]=0;months[m]++;});
     Object.keys(months).sort().forEach(m=>{const span=document.createElement('span');span.style.cssText=`width:${months[m]*17}px;overflow:hidden;white-space:nowrap;font-size:0.7rem;color:var(--text-muted);`;span.innerText=new Date(m+'-01').toLocaleString('default',{month:'short'});monthsEl.appendChild(span);});
@@ -4923,14 +4923,28 @@ async function openChatWith(friendUid) {
     }
 
     // Step 2: Render header immediately with best available data
+    function _formatLastSeen(ts) {
+        if (!ts || ts <= 0) return 'Offline';
+        const diff = Date.now() - ts;
+        const secs = Math.floor(diff / 1000);
+        const mins = Math.floor(secs / 60);
+        const hrs = Math.floor(mins / 60);
+        const days = Math.floor(hrs / 24);
+        if (secs < 60) return 'Active just now';
+        if (mins < 60) return 'Active ' + mins + ' minute' + (mins === 1 ? '' : 's') + ' ago';
+        if (hrs < 24) return 'Active ' + hrs + ' hour' + (hrs === 1 ? '' : 's') + ' ago';
+        if (days === 1) return 'Active yesterday';
+        if (days < 7) return 'Active ' + days + ' days ago';
+        return 'Active a while ago';
+    }
     function _renderChatHeader(name, dp) {
         // Only update if this chat is still open
         if (currentChatUid !== friendUid) return;
         const isOnline = window._onlineStatus && window._onlineStatus[friendUid];
         const lastSeenTs = window._lastSeen && window._lastSeen[friendUid];
         const statusHtml = isOnline
-            ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active now</span>'
-            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+            ? '<span class="status-text" style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
+            : '<span class="status-text" style="color:var(--text-muted);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;opacity:0.5;"></span>' + _formatLastSeen(lastSeenTs) + '</span>';
         const safeUid = friendUid.replace(/'/g, "\\'");
         chatHeader.innerHTML =
             '<button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background=\'rgba(0,240,255,0.1)\'" onmouseout="this.style.background=\'none\'"><i class="fa-solid fa-arrow-left"></i></button>' +
@@ -6495,6 +6509,9 @@ function closeAdminPanel() {
 /* ---- Show admin nav when creator logs in ---- */
 function showAdminNavIfCreator() {
   if (!isCreator()) return;
+  // Admin FAB stays hidden for creator — panel accessible via sidebar
+  const fab = document.getElementById('admin-fab');
+  if (fab) fab.classList.add('hidden');
   // Sidebar admin nav item
   const sidebarNav = document.getElementById('sidebar-nav-links');
   if (sidebarNav && !document.getElementById('admin-nav-item')) {
@@ -6515,9 +6532,9 @@ function showAdminNavIfCreator() {
     li2.onclick = () => { switchView('admin', li2); closeMobileDrawer(); };
     drawerNav.appendChild(li2);
   }
-  // Show admin FAB
+  // Admin FAB hidden for admin — sidebar nav is used instead
   const fab = document.getElementById('admin-fab');
-  if (fab) fab.classList.remove('hidden');
+  if (fab) fab.classList.add('hidden');
   // Auto-grant verified+admin to own leaderboard entry
   _ensureAdminVerified();
 }
@@ -7043,6 +7060,13 @@ async function fbPushLeaderboardStats() {
     try {
         const name = appData.profile.name || auth.currentUser.displayName || 'Anonymous';
         const dp = appData.profile.dp || auth.currentUser.photoURL || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=0D8ABC&color=fff');
+        // Validate all values before pushing — prevent fake/inflated data
+        const rawStreak = appData.streak.current || 0;
+        const rawTasks = appData.stats.completedTasks || 0;
+        const rawMins = appData.stats.studyMinutes || 0;
+        const validStreak = (Number.isFinite(rawStreak) && rawStreak >= 0 && rawStreak <= 3650) ? Math.floor(rawStreak) : 0;
+        const validTasks = (Number.isFinite(rawTasks) && rawTasks >= 0 && rawTasks <= 100000) ? Math.floor(rawTasks) : 0;
+        const validHours = (Number.isFinite(rawMins) && rawMins >= 0 && rawMins <= 5256000) ? parseFloat((rawMins / 60).toFixed(2)) : 0;
         const payload = {
             uid,
             name,
@@ -7050,11 +7074,12 @@ async function fbPushLeaderboardStats() {
             bio: appData.profile.bio || '',
             class: appData.profile.class || '',
             institution: appData.profile.institution || '',
-            streak: appData.streak.current || 0,
-            tasks: appData.stats.completedTasks || 0,
+            streak: validStreak,
+            tasks: validTasks,
+            hours: validHours,
             updatedAt: Date.now()
         };
-        await setDoc(doc(firestore, 'leaderboard', uid), payload);
+        await setDoc(doc(firestore, 'leaderboard', uid), payload, { merge: true });
     } catch(e) { console.warn('Leaderboard push error:', e); }
 }
 window._fbPushLeaderboardStats = fbPushLeaderboardStats;
@@ -7079,21 +7104,47 @@ async function fbLoadPresence() {
 // Realtime presence listener for friends only
 function startPresenceListener() {
     if (!auth.currentUser) return;
-    // Poll every 30s for presence updates
     fbLoadPresence();
-    setInterval(() => {
-        fbLoadPresence();
-    }, 30000);
+    // Poll every 20s and refresh chat header status if open
+    setInterval(async () => {
+        await fbLoadPresence();
+        // If a chat is open, re-render header status without rebuilding the whole header
+        if (currentChatUid) {
+            const statusEl = document.querySelector('#chat-header .status-text');
+            if (statusEl) {
+                const isOnline = window._onlineStatus && window._onlineStatus[currentChatUid];
+                const lastSeenTs = window._lastSeen && window._lastSeen[currentChatUid];
+                if (isOnline) {
+                    statusEl.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now';
+                    statusEl.style.color = 'var(--success)';
+                } else {
+                    statusEl.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;opacity:0.5;"></span>' + _formatLastSeen(lastSeenTs);
+                    statusEl.style.color = 'var(--text-muted)';
+                }
+            }
+        }
+    }, 20000);
 }
 
 if(auth.currentUser){
     fbUpdatePresence(auth.currentUser.uid, true);
-    setInterval(()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true); }, 25000);
-    document.addEventListener('visibilitychange',()=>{ 
-        if(!auth.currentUser) return; 
-        fbUpdatePresence(auth.currentUser.uid, document.visibilityState==='visible');
-        // Refresh presence when coming back to app
-        if(document.visibilityState==='visible') fbLoadPresence();
+    // Heartbeat every 20s to stay online
+    setInterval(()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true); }, 20000);
+    document.addEventListener('visibilitychange',async ()=>{
+        if(!auth.currentUser) return;
+        const visible = document.visibilityState === 'visible';
+        await fbUpdatePresence(auth.currentUser.uid, visible);
+        if(visible) await fbLoadPresence();
+        // Refresh chat header if open
+        if(visible && currentChatUid) {
+            const statusEl = document.querySelector('#chat-header .status-text');
+            if(statusEl) {
+                const isOnline = window._onlineStatus && window._onlineStatus[currentChatUid];
+                const lastSeenTs = window._lastSeen && window._lastSeen[currentChatUid];
+                if(isOnline){ statusEl.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now';statusEl.style.color='var(--success)'; }
+                else { if(typeof _formatLastSeen==='function'){statusEl.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;opacity:0.5;"></span>'+_formatLastSeen(lastSeenTs);statusEl.style.color='var(--text-muted)';} }
+            }
+        }
     });
     window.addEventListener('beforeunload',()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false); });
     startPresenceListener();
@@ -7124,10 +7175,29 @@ window._fbEditMsg = async function(msgId, newText, friendUid) {
 /* ---- LEADERBOARD: Load all users ---- */
 window._fbLoadLeaderboard = async function(tab) {
     try {
-        const snap = await getDocs(collection(firestore, 'leaderboard'));
+        const [lbSnap, bannedSnap] = await Promise.all([
+            getDocs(collection(firestore, 'leaderboard')),
+            getDocs(collection(firestore, 'bannedUsers')).catch(() => ({ docs: [] }))
+        ]);
+        const bannedUids = new Set();
+        bannedSnap.docs && bannedSnap.docs.forEach(d => bannedUids.add(d.id));
         let entries = [];
-        snap.forEach(d => { const data = d.data(); if (data && data.uid) entries.push(data); });
-        const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'streak' : 'tasks';
+        lbSnap.forEach(d => {
+            const data = d.data();
+            if (!data || !data.uid) return;
+            if (bannedUids.has(data.uid)) return;
+            // Validate: streak must be realistic (0–3650), tasks non-negative, hours non-negative
+            const streak = typeof data.streak === 'number' && data.streak >= 0 && data.streak <= 3650 ? Math.floor(data.streak) : 0;
+            const tasks = typeof data.tasks === 'number' && data.tasks >= 0 && data.tasks <= 100000 ? Math.floor(data.tasks) : 0;
+            const hours = typeof data.hours === 'number' && data.hours >= 0 && data.hours <= 87600 ? parseFloat(data.hours.toFixed(2)) : 0;
+            // Must have valid name and updatedAt timestamp (real users have this)
+            if (!data.name || data.name === 'Anonymous' && !data.institution && !data.class && streak === 0 && tasks === 0 && hours === 0) return;
+            // updatedAt must exist and be a real timestamp (not future, not impossibly old)
+            const now = Date.now();
+            if (data.updatedAt && (data.updatedAt > now + 86400000 || data.updatedAt < 1600000000000)) return;
+            entries.push({ ...data, streak, tasks, hours });
+        });
+        const sortKey = tab === 'streak' ? 'streak' : tab === 'tasks' ? 'tasks' : 'streak';
         entries.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
         entries = entries.slice(0, 50);
         renderLeaderboard(entries, tab);
@@ -7144,10 +7214,24 @@ window._fbLoadDashLeaderboard = async function() {
     const el = document.getElementById('dash-leaderboard-list');
     if (!el) return;
     try {
-        const snap = await getDocs(collection(firestore, 'leaderboard'));
+        const [snap, bannedSnap] = await Promise.all([
+            getDocs(collection(firestore, 'leaderboard')),
+            getDocs(collection(firestore, 'bannedUsers')).catch(() => ({ docs: [] }))
+        ]);
+        const bannedUids = new Set();
+        bannedSnap.docs && bannedSnap.docs.forEach(d => bannedUids.add(d.id));
         let entries = [];
-        snap.forEach(d => entries.push(d.data()));
-        entries.sort((a, b) => (b.hours || 0) - (a.hours || 0));
+        snap.forEach(d => {
+            const v = d.data();
+            if (!v || !v.uid || bannedUids.has(v.uid)) return;
+            const hours = typeof v.hours === 'number' && v.hours >= 0 && v.hours <= 87600 ? parseFloat(v.hours.toFixed(2)) : 0;
+            const streak = typeof v.streak === 'number' && v.streak >= 0 && v.streak <= 3650 ? Math.floor(v.streak) : 0;
+            const tasks = typeof v.tasks === 'number' && v.tasks >= 0 && v.tasks <= 100000 ? Math.floor(v.tasks) : 0;
+            const now = Date.now();
+            if (v.updatedAt && (v.updatedAt > now + 86400000 || v.updatedAt < 1600000000000)) return;
+            entries.push({ ...v, hours, streak, tasks });
+        });
+        entries.sort((a, b) => (b.streak || 0) - (a.streak || 0));
         entries = entries.slice(0, 5);
         if (!entries.length) { el.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">এখনো কেউ নেই।</p>'; return; }
         const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
