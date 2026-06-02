@@ -309,7 +309,7 @@
         .view-section { padding: 30px 40px; overflow-y: auto; flex: 1; min-height: 0; display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; }
         .view-section { padding: 30px 40px; overflow-y: auto; flex: 1; min-height: 0; display: none; animation: fadeIn 0.4s ease; -webkit-overflow-scrolling: touch; }
         #view-inbox { overflow: hidden !important; padding: 0 !important; flex: 1; min-height: 0; }
-        .view-section.active { display: flex !important; flex-direction: column !important; width: 100%; box-sizing: border-box; flex: 1; min-height: 0; overflow-y: auto; }
+        .view-section.active { display: flex !important; flex-direction: column !important; width: 100%; box-sizing: border-box; flex: 1; min-height: 0; overflow-y: auto; }#view-inbox.active { display: flex !important; }
         #view-inbox.active { display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; overflow: hidden !important; height: 100% !important; width: 100% !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
@@ -875,6 +875,64 @@
             .stat-card:hover { transform: none; box-shadow: none; }
             .btn:hover { transform: none; }
             .nav-item:hover { background: transparent; }
+        } {
+            #inbox-layout { height: 100% !important; border-radius: 0 !important; border: none !important; margin-top: 0 !important; display: flex !important; flex-direction: row !important; flex: 1 !important; min-height: 0 !important; overflow: hidden !important; }
+#inbox-layout > .conv-panel { width: 100% !important; max-width: 100% !important; min-width: 0 !important; flex-shrink: 0 !important; }
+            #chat-area { min-height: 0 !important; flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; height: 100% !important; }
+            #chat-messages { flex: 1 !important; min-height: 0 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; }
+            #chat-header { flex-shrink: 0 !important; width: 100% !important; z-index: 10 !important; }
+            #chat-input-area { flex-shrink: 0 !important; width: 100% !important; z-index: 10 !important; }
+            #inbox-layout > .conv-panel { border-right: none !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; width: 100% !important; max-width: 100% !important; min-width: 0 !important; flex: 0 0 100% !important; }
+#chat-area { position: absolute !important; inset: 0 !important; z-index: 10 !important; display: none !important; flex-direction: column !important; }
+#chat-area.chat-open { display: flex !important; }
+            .msg-bubble-me { background: linear-gradient(135deg,var(--secondary),var(--primary)) !important; }
+            #sidebar { display: none; }
+            #mobile-menu-btn { display: flex; }
+            header { padding: 11px 14px; }
+            .search-bar { max-width: 180px; }
+            .search-bar input { font-size: 0.82rem; padding: 9px 9px 9px 38px; }
+            .search-bar > i { top: 11px; left: 12px; font-size: 0.85rem; }
+            .view-section { padding: 14px 14px 14px; flex: 1; min-height: 0; }
+            #view-inbox { padding: 0 !important; flex: 1; min-height: 0; overflow: hidden !important; }
+            .section-title { font-size: 1.4rem; }
+            .analytics-grid, .todo-container, .settings-grid { grid-template-columns: 1fr; }
+            .focus-time { font-size: 5rem; }
+            .focus-quote { font-size: 1.1rem; }
+            .timer-container { padding: 18px; }
+            .circle-timer { width: 220px; height: 220px; }
+            .circle-inner { width: 200px; height: 200px; }
+            .time-display { font-size: 3.5rem; }
+            .pdf-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 12px; }
+            .pdf-card { min-height: 200px; padding: 14px; }
+            .pdf-icon { font-size: 2.8rem; }
+            .pdf-actions { opacity: 1; }
+            .dash-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+            .stat-card { padding: 16px; gap: 12px; }
+            .stat-info h3 { font-size: 1.5rem; }
+            .stat-icon { width: 46px; height: 46px; font-size: 1.3rem; }
+            .section-header { margin-bottom: 16px; }
+            .profile-header { gap: 18px; }
+            .notes-grid { grid-template-columns: 1fr; }
+            .achievements-grid { grid-template-columns: repeat(2, 1fr); }
+            .subject-grid { grid-template-columns: repeat(2, 1fr); }
+            
+            #bottom-nav { display: flex; position: relative; width: 100%; background: rgba(8,8,20,0.97); backdrop-filter: blur(15px); border-top: 1px solid var(--glass-border); z-index: 100; justify-content: space-around; padding: 9px 0; padding-bottom: calc(9px + env(safe-area-inset-bottom)); flex-shrink: 0; }
+            .b-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-muted); font-size: 0.68rem; cursor: pointer; padding: 4px 10px; min-width: 44px; border-radius: 8px; transition: color 0.2s; }
+            .b-nav-item i { font-size: 1.05rem; }
+            .b-nav-item.active { color: var(--primary); }
+            .b-nav-item:active { background: rgba(255,255,255,0.08); }
+            #toast-container { bottom: 20px; right: 12px; left: 12px; }
+            .view-section { padding: 14px 14px 14px; flex: 1; min-height: 0; overflow-y: auto; }
+            .section-header { flex-wrap: wrap; }
+            .dash-grid { grid-template-columns: 1fr 1fr; }
+            .pdf-grid { grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); }
+            .toast { padding: 11px 14px; font-size: 0.82rem; }
+            .viewer-header { padding: 9px 14px; }
+            .viewer-header h3 { font-size: 0.85rem; max-width: 130px; }
+            .focus-sounds { flex-wrap: wrap; justify-content: center; padding: 0 20px; }
+            .rev-two-col { grid-template-columns: 1fr !important; }
+            .goals-two-col { grid-template-columns: 1fr !important; }
+            .fb-auth-card { margin: 16px; padding: 32px 24px; }
         }
     </style>
 </head>
@@ -2272,12 +2330,10 @@ function saveAppData() {
 }
 
 async function startApp() {
-    console.log('[SV] HOME LOADED - startApp starting');
-    window._appStarted = true;
-    try { screens.main.classList.remove('hidden'); } catch(e) {}
-    // Deferred non-critical tasks
-    setTimeout(() => { try { requestPushPermission(); } catch(e) {} }, 5000);
-    setTimeout(() => { try { loadVerifiedUsers(); } catch(e) {} }, 2000);
+    screens.main.classList.remove('hidden');
+    setTimeout(requestPushPermission, 3000);
+    // Load verified users (non-blocking)
+    setTimeout(loadVerifiedUsers, 1000);
     const _authOv = document.getElementById('firebase-auth-overlay');
     _authOv.style.visibility = 'hidden';
     _authOv.style.opacity = '0';
@@ -3481,20 +3537,15 @@ function getChartColors() {
     };
 }
 function initCharts() {
-    try {
-    if (typeof Chart === 'undefined') { console.warn('[SV] Chart.js not loaded yet'); return; }
     const cc = getChartColors();
     Chart.defaults.color = cc.text;
     Chart.defaults.font.family = "'Outfit', sans-serif";
     const dashChartEl = document.getElementById('dash-chart'); const c1 = dashChartEl ? dashChartEl.getContext('2d') : null; if(!c1) { charts.dash = null; }
-    const weeklyEl = document.getElementById('weekly-chart'); if(!weeklyEl) return;
-    const taskEl = document.getElementById('task-chart'); if(!taskEl) return;
-    const c2=weeklyEl.getContext('2d');
-    const c3=taskEl.getContext('2d');
+    const c2=document.getElementById('weekly-chart').getContext('2d');
+    const c3=document.getElementById('task-chart').getContext('2d');
     if(c1) charts.dash=new Chart(c1,{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Study Hours',data:[0,0,0,0,0,0,0],borderColor:cc.primary,tension:0.4,fill:true,backgroundColor:'rgba(0,240,255,0.08)'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:cc.grid}}}}});
     charts.weekly=new Chart(c2,{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Hours',data:[0,0,0,0,0,0,0],backgroundColor:cc.border,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}}}});
     charts.task=new Chart(c3,{type:'doughnut',data:{labels:['Completed','Pending'],datasets:[{data:[1,1],backgroundColor:['#00ff66','rgba(255,255,255,0.1)'],borderWidth:0}]},options:{responsive:true,cutout:'80%'}});
-    } catch(chartErr) { console.warn('[SV] initCharts error:', chartErr); }
 }
 function updateCharts() {
     if(!charts.dash) return;
@@ -3896,22 +3947,17 @@ function showToast(msg,type='success') {
     setTimeout(()=>{t.style.animation='fadeOutT 0.3s ease forwards';setTimeout(()=>t.remove(),300);},3000);
 }
 async function requestPushPermission() {
-    try {
-        if (!('Notification' in window)) return;
-        // Android WebView often hangs on requestPermission - skip if WebView
-        const isWebView = /wv/.test(navigator.userAgent) || navigator.userAgent.includes('Median');
-        if (isWebView) return;
-        if (Notification.permission === 'default') {
-            const permPromise = Notification.requestPermission();
-            const perm = await Promise.race([
-                permPromise,
-                new Promise(res => setTimeout(() => res('timeout'), 4000))
-            ]);
-            if (perm === 'granted') {
-                showToast('Notifications চালু হয়েছে! 🔔', 'success');
-            }
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+            showToast('Notifications চালু হয়েছে! 🔔', 'success');
+        } else if (perm === 'denied') {
+            showToast('Notifications blocked! Browser settings থেকে allow করুন।', 'error');
         }
-    } catch(e) { console.warn('[SV] Push permission error:', e); }
+    } else if (Notification.permission === 'granted') {
+        // Already granted, good
+    }
 }
 function sendPushNotification(title, body) {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
@@ -4877,28 +4923,14 @@ async function openChatWith(friendUid) {
     }
 
     // Step 2: Render header immediately with best available data
-    function _formatLastSeen(ts) {
-        if (!ts || ts <= 0) return 'Offline';
-        const diff = Date.now() - ts;
-        const secs = Math.floor(diff / 1000);
-        const mins = Math.floor(secs / 60);
-        const hrs = Math.floor(mins / 60);
-        const days = Math.floor(hrs / 24);
-        if (secs < 60) return 'Active just now';
-        if (mins < 60) return 'Active ' + mins + ' minute' + (mins === 1 ? '' : 's') + ' ago';
-        if (hrs < 24) return 'Active ' + hrs + ' hour' + (hrs === 1 ? '' : 's') + ' ago';
-        if (days === 1) return 'Active yesterday';
-        if (days < 7) return 'Active ' + days + ' days ago';
-        return 'Active a while ago';
-    }
     function _renderChatHeader(name, dp) {
         // Only update if this chat is still open
         if (currentChatUid !== friendUid) return;
         const isOnline = window._onlineStatus && window._onlineStatus[friendUid];
         const lastSeenTs = window._lastSeen && window._lastSeen[friendUid];
         const statusHtml = isOnline
-            ? '<span class="status-text" style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
-            : '<span class="status-text" style="color:var(--text-muted);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;opacity:0.5;"></span>' + _formatLastSeen(lastSeenTs) + '</span>';
+            ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active now</span>'
+            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
         const safeUid = friendUid.replace(/'/g, "\\'");
         chatHeader.innerHTML =
             '<button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background=\'rgba(0,240,255,0.1)\'" onmouseout="this.style.background=\'none\'"><i class="fa-solid fa-arrow-left"></i></button>' +
@@ -6463,6 +6495,9 @@ function closeAdminPanel() {
 /* ---- Show admin nav when creator logs in ---- */
 function showAdminNavIfCreator() {
   if (!isCreator()) return;
+  // Admin FAB stays hidden for creator — panel accessible via sidebar
+  const fab = document.getElementById('admin-fab');
+  if (fab) fab.classList.add('hidden');
   // Sidebar admin nav item
   const sidebarNav = document.getElementById('sidebar-nav-links');
   if (sidebarNav && !document.getElementById('admin-nav-item')) {
@@ -6483,9 +6518,9 @@ function showAdminNavIfCreator() {
     li2.onclick = () => { switchView('admin', li2); closeMobileDrawer(); };
     drawerNav.appendChild(li2);
   }
-  // Admin FAB always hidden for admin — sidebar nav is used instead
-  const adminFab = document.getElementById('admin-fab');
-  if (adminFab) adminFab.classList.add('hidden');
+  // Admin FAB hidden for admin — sidebar nav is used instead
+  const fab = document.getElementById('admin-fab');
+  if (fab) fab.classList.add('hidden');
   // Auto-grant verified+admin to own leaderboard entry
   _ensureAdminVerified();
 }
@@ -6539,59 +6574,16 @@ setTimeout(() => {
 }, 100);
 
 /* ---- INIT ---- */
-// Global error handler for Android WebView
-window.onerror = function(msg, src, line, col, err) {
-    console.error('[SV-ERROR]', msg, src, line, col, err);
-    _emergencyHideSplash();
-    return false;
-};
-window.addEventListener('unhandledrejection', function(e) {
-    console.error('[SV-UNHANDLED]', e.reason);
-    _emergencyHideSplash();
-});
-
-function _emergencyHideSplash() {
-    try {
-        const splash = document.getElementById('splash-screen');
-        if (splash) { splash.style.opacity = '0'; splash.style.display = 'none'; }
-        const authOv = document.getElementById('firebase-auth-overlay');
-        if (authOv && authOv.style.display !== 'none') {
-            authOv.style.visibility = 'visible';
-            authOv.style.display = 'flex';
-            authOv.style.opacity = '1';
-        }
-    } catch(e) {}
-}
-
-window._splashHidden = false;
-function hideSplash() {
-    if (window._splashHidden) return;
-    window._splashHidden = true;
-    console.log('[SV] HIDING SPLASH');
-    const splash = document.getElementById('splash-screen');
-    if (splash) { splash.style.opacity = '0'; setTimeout(() => { splash.style.display = 'none'; }, 600); }
-}
-
 window.onload = async () => {
-    console.log('[SV] APP START');
-    try { await initDB(); } catch(e) { console.warn('[SV] IndexedDB init failed:', e); }
+    await initDB();
     applyTheme(appData.settings.darkMode !== false);
     updateClock(); setInterval(updateClock, 1000);
     setInterval(updateGreeting, 60000);
-    try { initCharts(); } catch(e) { console.warn('[SV] Charts init failed:', e); }
-    // 8-second hard fallback for Android WebView
+    initCharts();
+    // Fallback: if Firebase auth hasn't responded in 4 seconds, force show auth screen
     setTimeout(() => {
-        console.log('[SV] FALLBACK TIMEOUT - forcing splash hide');
         hideSplash();
-        const authOv = document.getElementById('firebase-auth-overlay');
-        if (authOv && !window._appStarted) {
-            authOv.style.visibility = 'visible';
-            authOv.style.display = 'flex';
-            authOv.style.opacity = '1';
-        }
-    }, 8000);
-    // 3-second early splash hide
-    setTimeout(() => { hideSplash(); }, 3000);
+    }, 4000);
 };
 </script>
 
@@ -6621,7 +6613,6 @@ import {
     deleteDoc,
     collection,
     getDocs,
-    onSnapshot,
     query,
     where
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
@@ -6650,10 +6641,8 @@ const auth = getAuth(app);
 const firestore = getFirestore(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
-// setPersistence - safe for Android WebView
-try {
-    setPersistence(auth, browserLocalPersistence).catch(e => console.warn('[SV] Persistence error:', e));
-} catch(e) { console.warn('[SV] setPersistence not supported:', e); }
+// setPersistence non-blocking — don't await at top level
+setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
 
 /* ---- Sync indicator helpers ---- */
 function showSync() {
@@ -6970,111 +6959,83 @@ window._fbLogout = async function() {
 
 /* ---- Auth State Observer ---- */
 onAuthStateChanged(auth, async (user) => {
-    console.log('[SV] AUTH READY', user ? user.uid : 'no-user');
-    hideSplash();
-    try {
     if (user) {
-        window._appStarted = true;
-        try { if (!db) await initDB(); } catch(e) { console.warn('[SV] DB init error:', e); }
+        if (!db) await initDB();
         currentUser = user.uid;
         const emailEl = document.getElementById('cloud-user-email');
         if (emailEl) emailEl.innerText = user.email || user.displayName || 'Unknown';
 
         // 1. Load local cache first for speed
-        try { loadAppData(); } catch(e) { console.warn('[SV] loadAppData error:', e); }
+        loadAppData();
 
-        // 2. Merge in cloud data with timeout (don't block on slow connections)
+        // Hide splash early so user sees something
+        hideSplash();
+
+        // 2. Merge in cloud data (authoritative)
         try {
-            const cloudDataPromise = fbLoadAppData(user.uid);
-            const timeoutPromise = new Promise(res => setTimeout(() => res(null), 5000));
-            const cloudData = await Promise.race([cloudDataPromise, timeoutPromise]);
+            const cloudData = await fbLoadAppData(user.uid);
             if (cloudData) mergeCloudData(cloudData);
-            console.log('[SV] FIREBASE READY');
-        } catch(e) { console.warn('[SV] Cloud load failed, using local data', e); }
-
-        try { applyTheme(appData.settings.darkMode !== false); } catch(e) {}
+        } catch(e) { console.warn('Cloud load failed, using local data', e); }
+        applyTheme(appData.settings.darkMode !== false);
 
         // 3. Set profile name from Firebase Auth if not set
         if ((!appData.profile.name || appData.profile.name === 'Student') && user.displayName) {
             appData.profile.name = user.displayName;
         }
 
-        // 4. Sync PDFs non-blocking, don't await
-        setTimeout(async () => {
-            try {
-                if (!db) await initDB();
-                await syncPDFsFromCloud(user.uid);
-            } catch(e) { console.warn('[SV] PDF sync error:', e); }
-        }, 2000);
+        // 4. Sync PDF metadata from cloud (non-blocking)
+        syncPDFsFromCloud(user.uid).catch(e => console.warn('PDF sync error:', e));
 
-        // 5. Admin role grant - non-blocking
+        // Auto-grant admin role to creator account
         if (user.uid === 'aoKaaZLi7xhkcASgXdlaSTuF06k2') {
-          setTimeout(async () => {
-            try {
-              await setDoc(doc(firestore, 'admins', user.uid), {
-                uid: user.uid, role: 'admin', verified: true,
-                email: user.email || 'oyasimsajjad@gmail.com',
-                grantedAt: Date.now()
-              });
-              await setDoc(doc(firestore, 'leaderboard', user.uid), {
-                verified: true, role: 'admin'
-              }, { merge: true });
-              window._verifiedUsers = window._verifiedUsers || new Set();
-              window._verifiedUsers.add(user.uid);
-            } catch(e) { console.warn('[SV] Admin auto-grant error:', e); }
-          }, 1500);
+          try {
+            await setDoc(doc(firestore, 'admins', user.uid), {
+              uid: user.uid, role: 'admin', verified: true,
+              email: user.email || 'oyasimsajjad@gmail.com',
+              grantedAt: Date.now()
+            });
+            await setDoc(doc(firestore, 'leaderboard', user.uid), {
+              verified: true, role: 'admin'
+            }, { merge: true });
+            window._verifiedUsers = window._verifiedUsers || new Set();
+            window._verifiedUsers.add(user.uid);
+          } catch(e) { console.warn('Admin auto-grant error:', e); }
         }
-
-        // 6. Start app UI
-        try {
-            const authOvEl = document.getElementById('firebase-auth-overlay');
-            if (authOvEl) { authOvEl.style.display = 'none'; authOvEl.style.visibility = 'hidden'; }
-        } catch(e) {}
-
+        // 5. Start app
         if (appData.settings.appLock && appData.settings.pin) {
-            try {
-                const lockEl = document.getElementById('app-lock-screen');
-                if (lockEl) lockEl.classList.remove('hidden');
-            } catch(e) {}
+            document.getElementById('firebase-auth-overlay').style.display = 'none';
+            document.getElementById('app-lock-screen').classList.remove('hidden');
         } else {
-            try {
-                await startApp();
-                console.log('[SV] UI READY');
-            } catch(e) {
-                console.error('[SV] startApp error:', e);
-                // Still try to show something
-                try {
-                    const mainApp = document.getElementById('main-app');
-                    if (mainApp) mainApp.classList.remove('hidden');
-                } catch(e2) {}
-            }
+            document.getElementById('firebase-auth-overlay').style.display = 'none';
+            await startApp();
         }
 
-        try { logEvent(analytics, 'session_start', { uid: user.uid }); } catch(e) {}
+        logEvent(analytics, 'session_start', { uid: user.uid });
 
-        // FCM with long delay - non-blocking, safe on Android
-        setTimeout(() => { try { initFCM(); } catch(e) { console.warn('[SV] FCM error:', e); } }, 6000);
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+            for (const client of clientList) {
+                if (client.url && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow('/');
+            }
+        })
+    );
+});
+        setTimeout(() => initFCM(), 3000);
 
     } else {
         // Not logged in - show Firebase auth overlay
-        console.log('[SV] NO USER - showing auth');
-        window._appStarted = false;
-        try {
-            const _fbAuth0 = document.getElementById('firebase-auth-overlay');
-            if (_fbAuth0) {
-                _fbAuth0.style.visibility = 'visible';
-                _fbAuth0.style.display = 'flex';
-                setTimeout(() => { _fbAuth0.style.opacity = '1'; }, 30);
-            }
-        } catch(e) { console.error('[SV] Auth overlay error:', e); }
-    }
-    } catch(outerErr) {
-        console.error('[SV] onAuthStateChanged outer error:', outerErr);
         hideSplash();
-        try {
-            const _fbAuth0 = document.getElementById('firebase-auth-overlay');
-            if (_fbAuth0) { _fbAuth0.style.visibility = 'visible'; _fbAuth0.style.display = 'flex'; _fbAuth0.style.opacity = '1'; }
-        } catch(e) {}
+        const _fbAuth0 = document.getElementById('firebase-auth-overlay');
+        _fbAuth0.style.visibility = 'visible';
+        _fbAuth0.style.display = 'flex';
+        setTimeout(() => { _fbAuth0.style.opacity = '1'; }, 30);
     }
 });
 
@@ -7085,13 +7046,6 @@ async function fbPushLeaderboardStats() {
     try {
         const name = appData.profile.name || auth.currentUser.displayName || 'Anonymous';
         const dp = appData.profile.dp || auth.currentUser.photoURL || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=0D8ABC&color=fff');
-        // Validate all values before pushing — prevent fake/inflated data
-        const rawStreak = appData.streak.current || 0;
-        const rawTasks = appData.stats.completedTasks || 0;
-        const rawMins = appData.stats.studyMinutes || 0;
-        const validStreak = (Number.isFinite(rawStreak) && rawStreak >= 0 && rawStreak <= 3650) ? Math.floor(rawStreak) : 0;
-        const validTasks = (Number.isFinite(rawTasks) && rawTasks >= 0 && rawTasks <= 100000) ? Math.floor(rawTasks) : 0;
-        const validHours = (Number.isFinite(rawMins) && rawMins >= 0 && rawMins <= 5256000) ? parseFloat((rawMins / 60).toFixed(2)) : 0;
         const payload = {
             uid,
             name,
@@ -7099,12 +7053,11 @@ async function fbPushLeaderboardStats() {
             bio: appData.profile.bio || '',
             class: appData.profile.class || '',
             institution: appData.profile.institution || '',
-            streak: validStreak,
-            tasks: validTasks,
-            hours: validHours,
+            streak: appData.streak.current || 0,
+            tasks: appData.stats.completedTasks || 0,
             updatedAt: Date.now()
         };
-        await setDoc(doc(firestore, 'leaderboard', uid), payload, { merge: true });
+        await setDoc(doc(firestore, 'leaderboard', uid), payload);
     } catch(e) { console.warn('Leaderboard push error:', e); }
 }
 window._fbPushLeaderboardStats = fbPushLeaderboardStats;
@@ -7129,55 +7082,24 @@ async function fbLoadPresence() {
 // Realtime presence listener for friends only
 function startPresenceListener() {
     if (!auth.currentUser) return;
+    // Poll every 30s for presence updates
     fbLoadPresence();
-    // Poll every 20s and refresh chat header status if open
-    setInterval(async () => {
-        await fbLoadPresence();
-        // If a chat is open, re-render header status without rebuilding the whole header
-        if (currentChatUid) {
-            const statusEl = document.querySelector('#chat-header .status-text');
-            if (statusEl) {
-                const isOnline = window._onlineStatus && window._onlineStatus[currentChatUid];
-                const lastSeenTs = window._lastSeen && window._lastSeen[currentChatUid];
-                if (isOnline) {
-                    statusEl.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now';
-                    statusEl.style.color = 'var(--success)';
-                } else {
-                    statusEl.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;opacity:0.5;"></span>' + _formatLastSeen(lastSeenTs);
-                    statusEl.style.color = 'var(--text-muted)';
-                }
-            }
-        }
-    }, 20000);
+    setInterval(() => {
+        fbLoadPresence();
+    }, 30000);
 }
 
-// Defer presence - don't block startup on Android
-setTimeout(() => {
-  try {
-    if(auth.currentUser){
-        fbUpdatePresence(auth.currentUser.uid, true).catch(()=>{});
-        setInterval(()=>{ try { if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true).catch(()=>{}); } catch(e){} }, 20000);
-        startPresenceListener();
-    }
-  } catch(e) { console.warn('[SV] Presence init error:', e); }
-}, 3000);
-document.addEventListener('visibilitychange',async ()=>{
-        if(!auth.currentUser) return;
-        const visible = document.visibilityState === 'visible';
-        await fbUpdatePresence(auth.currentUser.uid, visible);
-        if(visible) await fbLoadPresence();
-        // Refresh chat header if open
-        if(visible && currentChatUid) {
-            const statusEl = document.querySelector('#chat-header .status-text');
-            if(statusEl) {
-                const isOnline = window._onlineStatus && window._onlineStatus[currentChatUid];
-                const lastSeenTs = window._lastSeen && window._lastSeen[currentChatUid];
-                if(isOnline){ statusEl.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now';statusEl.style.color='var(--success)'; }
-                else { if(typeof _formatLastSeen==='function'){statusEl.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;opacity:0.5;"></span>'+_formatLastSeen(lastSeenTs);statusEl.style.color='var(--text-muted)';} }
-            }
-        }
+if(auth.currentUser){
+    fbUpdatePresence(auth.currentUser.uid, true);
+    setInterval(()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true); }, 25000);
+    document.addEventListener('visibilitychange',()=>{ 
+        if(!auth.currentUser) return; 
+        fbUpdatePresence(auth.currentUser.uid, document.visibilityState==='visible');
+        // Refresh presence when coming back to app
+        if(document.visibilityState==='visible') fbLoadPresence();
     });
     window.addEventListener('beforeunload',()=>{ if(auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false); });
+    startPresenceListener();
 }
 
 /* ---- MESSAGE ACTIONS ---- */
@@ -7205,29 +7127,10 @@ window._fbEditMsg = async function(msgId, newText, friendUid) {
 /* ---- LEADERBOARD: Load all users ---- */
 window._fbLoadLeaderboard = async function(tab) {
     try {
-        const [lbSnap, bannedSnap] = await Promise.all([
-            getDocs(collection(firestore, 'leaderboard')),
-            getDocs(collection(firestore, 'bannedUsers')).catch(() => ({ docs: [] }))
-        ]);
-        const bannedUids = new Set();
-        bannedSnap.docs && bannedSnap.docs.forEach(d => bannedUids.add(d.id));
+        const snap = await getDocs(collection(firestore, 'leaderboard'));
         let entries = [];
-        lbSnap.forEach(d => {
-            const data = d.data();
-            if (!data || !data.uid) return;
-            if (bannedUids.has(data.uid)) return;
-            // Validate: streak must be realistic (0–3650), tasks non-negative, hours non-negative
-            const streak = typeof data.streak === 'number' && data.streak >= 0 && data.streak <= 3650 ? Math.floor(data.streak) : 0;
-            const tasks = typeof data.tasks === 'number' && data.tasks >= 0 && data.tasks <= 100000 ? Math.floor(data.tasks) : 0;
-            const hours = typeof data.hours === 'number' && data.hours >= 0 && data.hours <= 87600 ? parseFloat(data.hours.toFixed(2)) : 0;
-            // Must have valid name and updatedAt timestamp (real users have this)
-            if (!data.name || data.name === 'Anonymous' && !data.institution && !data.class && streak === 0 && tasks === 0 && hours === 0) return;
-            // updatedAt must exist and be a real timestamp (not future, not impossibly old)
-            const now = Date.now();
-            if (data.updatedAt && (data.updatedAt > now + 86400000 || data.updatedAt < 1600000000000)) return;
-            entries.push({ ...data, streak, tasks, hours });
-        });
-        const sortKey = tab === 'streak' ? 'streak' : tab === 'tasks' ? 'tasks' : 'streak';
+        snap.forEach(d => { const data = d.data(); if (data && data.uid) entries.push(data); });
+        const sortKey = tab === 'streak' ? 'streak' : tab === 'hours' ? 'streak' : 'tasks';
         entries.sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
         entries = entries.slice(0, 50);
         renderLeaderboard(entries, tab);
@@ -7244,24 +7147,10 @@ window._fbLoadDashLeaderboard = async function() {
     const el = document.getElementById('dash-leaderboard-list');
     if (!el) return;
     try {
-        const [snap, bannedSnap] = await Promise.all([
-            getDocs(collection(firestore, 'leaderboard')),
-            getDocs(collection(firestore, 'bannedUsers')).catch(() => ({ docs: [] }))
-        ]);
-        const bannedUids = new Set();
-        bannedSnap.docs && bannedSnap.docs.forEach(d => bannedUids.add(d.id));
+        const snap = await getDocs(collection(firestore, 'leaderboard'));
         let entries = [];
-        snap.forEach(d => {
-            const v = d.data();
-            if (!v || !v.uid || bannedUids.has(v.uid)) return;
-            const hours = typeof v.hours === 'number' && v.hours >= 0 && v.hours <= 87600 ? parseFloat(v.hours.toFixed(2)) : 0;
-            const streak = typeof v.streak === 'number' && v.streak >= 0 && v.streak <= 3650 ? Math.floor(v.streak) : 0;
-            const tasks = typeof v.tasks === 'number' && v.tasks >= 0 && v.tasks <= 100000 ? Math.floor(v.tasks) : 0;
-            const now = Date.now();
-            if (v.updatedAt && (v.updatedAt > now + 86400000 || v.updatedAt < 1600000000000)) return;
-            entries.push({ ...v, hours, streak, tasks });
-        });
-        entries.sort((a, b) => (b.streak || 0) - (a.streak || 0));
+        snap.forEach(d => entries.push(d.data()));
+        entries.sort((a, b) => (b.hours || 0) - (a.hours || 0));
         entries = entries.slice(0, 5);
         if (!entries.length) { el.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">এখনো কেউ নেই।</p>'; return; }
         const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
@@ -7379,7 +7268,9 @@ window._fbLoadFriendsList = async function() {
 };
 
 /* ---- MESSAGING SYSTEM (Firestore) ---- */
-// onSnapshot imported at top of module with other firestore imports
+// onSnapshot already imported at top of module via named import
+// (using the getFirestore import block above - no extra import needed)
+const { onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
 
 function getChatId(uid1, uid2) {
     return [uid1, uid2].sort().join('_');
@@ -7592,82 +7483,53 @@ async function startMessageNotifListener(uid) {
     } catch(e) { console.warn('Message notif listener error:', e); }
 }
 
-// Defer notification listeners - don't block auth startup
-setTimeout(() => {
-    try {
-        if (auth.currentUser) {
-            startNotifListener(auth.currentUser.uid);
-            startMessageNotifListener(auth.currentUser.uid);
-        }
-    } catch(e) { console.warn('[SV] Notif listeners error:', e); }
-}, 4000);
+if (auth.currentUser) {
+    startNotifListener(auth.currentUser.uid);
+    startMessageNotifListener(auth.currentUser.uid);
+}
 
 /* ---- FCM PUSH NOTIFICATIONS ---- */
 let _fcmToken = null;
 async function initFCM() {
-    // Skip FCM entirely on Android WebView / Median - it freezes
-    const isAndroidWebView = /wv/.test(navigator.userAgent) || 
-        /Android.*Version\/\d/.test(navigator.userAgent) ||
-        (typeof window.Android !== 'undefined') ||
-        navigator.userAgent.includes('Median');
-    if (isAndroidWebView) {
-        console.log('[SV] FCM skipped on Android WebView');
-        return;
-    }
-    // Skip if Notifications not supported
-    if (!('Notification' in window)) {
-        console.log('[SV] Notifications not supported');
-        return;
-    }
-    // Skip if service worker not supported
-    if (!('serviceWorker' in navigator)) {
-        console.log('[SV] ServiceWorker not supported');
-        return;
-    }
     try {
         const { getMessaging, getToken, onMessage } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js');
         const messaging = getMessaging(app);
-        let swReg = null;
-        try {
-            swReg = await Promise.race([
-                navigator.serviceWorker.register('/firebase-messaging-sw.js'),
-                new Promise((_, rej) => setTimeout(() => rej(new Error('SW timeout')), 3000))
-            ]);
-        } catch(e) { console.warn('[SV] SW registration skipped:', e.message); return; }
-        if (Notification.permission !== 'granted') {
-            console.log('[SV] FCM: no notification permission');
-            return;
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            await navigator.serviceWorker.register('/firebase-messaging-sw.js');
         }
-        let token = null;
-        try {
-            token = await Promise.race([
-                getToken(messaging, {
-                    vapidKey: 'BC_T44GZVe4-V1xhQQoFrEWQbVm75ohSpz670m93Ui-M73lZac8BVtgIboFIf8ofRlVV9ozutfosFHWtb6OyDmQ',
-                    serviceWorkerRegistration: swReg
-                }),
-                new Promise((_, rej) => setTimeout(() => rej(new Error('getToken timeout')), 5000))
-            ]);
-        } catch(e) { console.warn('[SV] FCM getToken failed:', e.message); return; }
-        _fcmToken = token;
-        if (token && auth.currentUser) {
-            try {
-                await setDoc(doc(firestore, 'fcmTokens', auth.currentUser.uid), {
-                    token, uid: auth.currentUser.uid, updatedAt: Date.now()
-                });
-            } catch(e) { console.warn('[SV] FCM token save error:', e); }
-        }
-        onMessage(messaging, (payload) => {
-            try {
-                const title = (payload.notification && payload.notification.title) || (payload.data && payload.data.title) || 'StudyVault';
-                const body = (payload.notification && payload.notification.body) || (payload.data && payload.data.body) || '';
-                showToast('🔔 ' + title + ': ' + body, 'success');
-                addNotification(title + ': ' + body, 'info');
-                playSound();
-            } catch(e) {}
+
+        // Request permission
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') { console.warn('Push permission denied'); return; }
+
+        // Get FCM token — REPLACE 'YOUR_VAPID_KEY_HERE' with your actual VAPID key
+        const token = await getToken(messaging, {
+            vapidKey: 'BC_T44GZVe4-V1xhQQoFrEWQbVm75ohSpz670m93Ui-M73lZac8BVtgIboFIf8ofRlVV9ozutfosFHWtb6OyDmQ',
+            serviceWorkerRegistration: await navigator.serviceWorker.getRegistration()
         });
-        console.log('[SV] FCM initialized');
+        _fcmToken = token;
+
+        // Save token to Firestore
+        if (token && auth.currentUser) {
+            await setDoc(doc(firestore, 'fcmTokens', auth.currentUser.uid), {
+                token, uid: auth.currentUser.uid, updatedAt: Date.now()
+            });
+        }
+
+        // Foreground message handler
+        onMessage(messaging, (payload) => {
+            const title = payload.notification?.title || payload.data?.title || 'StudyVault';
+            const body = payload.notification?.body || payload.data?.body || '';
+            showToast(`🔔 ${title}: ${body}`, 'success');
+            addNotification(`${title}: ${body}`, 'info');
+            playSound();
+        });
+
+        console.log('FCM initialized, token:', token?.substring(0,20) + '...');
     } catch(e) {
-        console.warn('[SV] FCM init error:', e.message);
+        console.warn('FCM init error:', e.message);
     }
 }
 
