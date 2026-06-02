@@ -6509,9 +6509,6 @@ function closeAdminPanel() {
 /* ---- Show admin nav when creator logs in ---- */
 function showAdminNavIfCreator() {
   if (!isCreator()) return;
-  // Admin FAB stays hidden for creator — panel accessible via sidebar
-  const fab = document.getElementById('admin-fab');
-  if (fab) fab.classList.add('hidden');
   // Sidebar admin nav item
   const sidebarNav = document.getElementById('sidebar-nav-links');
   if (sidebarNav && !document.getElementById('admin-nav-item')) {
@@ -6532,9 +6529,9 @@ function showAdminNavIfCreator() {
     li2.onclick = () => { switchView('admin', li2); closeMobileDrawer(); };
     drawerNav.appendChild(li2);
   }
-  // Admin FAB hidden for admin — sidebar nav is used instead
-  const fab = document.getElementById('admin-fab');
-  if (fab) fab.classList.add('hidden');
+  // Admin FAB always hidden for admin — sidebar nav is used instead
+  const adminFab = document.getElementById('admin-fab');
+  if (adminFab) adminFab.classList.add('hidden');
   // Auto-grant verified+admin to own leaderboard entry
   _ensureAdminVerified();
 }
@@ -6997,8 +6994,12 @@ onAuthStateChanged(auth, async (user) => {
             appData.profile.name = user.displayName;
         }
 
-        // 4. Sync PDF metadata from cloud (non-blocking)
-        syncPDFsFromCloud(user.uid).catch(e => console.warn('PDF sync error:', e));
+        // 4. Sync PDF metadata from cloud (non-blocking, wait for db)
+        const _syncWhenReady = async () => {
+            if (!db) { await initDB(); }
+            syncPDFsFromCloud(user.uid).catch(e => console.warn('PDF sync error:', e));
+        };
+        _syncWhenReady();
 
         // Auto-grant admin role to creator account
         if (user.uid === 'aoKaaZLi7xhkcASgXdlaSTuF06k2') {
