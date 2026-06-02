@@ -7017,8 +7017,8 @@ function _buildProfileCardHTML(forExport) {
         </div>
 
         <!-- Avatar overlapping banner — sits OUTSIDE the banner div so overflow:hidden doesn't clip it -->
-        <div style="position:absolute;top:52px;left:22px;width:88px;height:88px;border-radius:50%;border:4px solid ${cardBg};background:${isDark?'#0d0d1f':'#fff'};overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.25);z-index:2;">
-            <img src="${dp}" crossorigin="anonymous" width="88" height="88" style="width:88px;height:88px;height:88px;object-fit:cover;object-position:center;display:block;border-radius:50%;" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff&size=256'">
+        <div style="position:absolute;top:52px;left:22px;width:88px;height:88px;border-radius:50%;border:4px solid ${cardBg};background:${isDark?'#0d0d1f':'#fff'};box-shadow:0 4px 24px rgba(0,0,0,0.25);z-index:2;overflow:hidden;-webkit-mask-image:-webkit-radial-gradient(white,black);mask-image:radial-gradient(white,black);">
+            <img src="${dp}" crossorigin="anonymous" width="88" height="88" style="width:88px;height:88px;height:88px;object-fit:cover;object-position:center;display:block;border-radius:50%;clip-path:circle(50%);" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff&size=256'">
         </div>
 
         <!-- Name / info row -->
@@ -7034,10 +7034,6 @@ function _buildProfileCardHTML(forExport) {
 
         <!-- Stats row 1: 3 cols -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:16px 22px 0;">
-            <div style="background:${statBg1};border:1px solid ${statBorder1};border-radius:14px;padding:13px 8px;text-align:center;">
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;color:${accentColor};line-height:1.1;">${totalHrs}<span style="font-size:13px;font-weight:600;margin-left:1px;">h</span></div>
-                <div style="font-size:11px;color:${mutedColor};margin-top:4px;font-weight:500;letter-spacing:0.3px;">Study Hours</div>
-            </div>
             <div style="background:${statBg2};border:1px solid ${statBorder2};border-radius:14px;padding:13px 8px;text-align:center;">
                 <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;color:#e6b800;line-height:1.1;">🔥${streak}</div>
                 <div style="font-size:11px;color:${mutedColor};margin-top:4px;font-weight:500;letter-spacing:0.3px;">Day Streak</div>
@@ -7661,6 +7657,8 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('firebase-auth-overlay').style.display = 'none';
             await startApp();
         }
+        setupRTDBPresence(user.uid);
+        startPresenceListener();
 
         logEvent(analytics, 'session_start', { uid: user.uid });
 
@@ -7845,6 +7843,7 @@ function startPresenceListener() {
 
 if (auth.currentUser) {
     setupRTDBPresence(auth.currentUser.uid);
+    startPresenceListener();
     document.addEventListener('visibilitychange', () => {
         if (!auth.currentUser) return;
         const online = document.visibilityState === 'visible';
