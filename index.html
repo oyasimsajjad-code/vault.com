@@ -6495,6 +6495,9 @@ function closeAdminPanel() {
 /* ---- Show admin nav when creator logs in ---- */
 function showAdminNavIfCreator() {
   if (!isCreator()) return;
+  // Admin FAB stays hidden for creator — panel accessible via sidebar
+  const fab = document.getElementById('admin-fab');
+  if (fab) fab.classList.add('hidden');
   // Sidebar admin nav item
   const sidebarNav = document.getElementById('sidebar-nav-links');
   if (sidebarNav && !document.getElementById('admin-nav-item')) {
@@ -6515,9 +6518,9 @@ function showAdminNavIfCreator() {
     li2.onclick = () => { switchView('admin', li2); closeMobileDrawer(); };
     drawerNav.appendChild(li2);
   }
-  // Show admin FAB
+  // Admin FAB hidden for admin — sidebar nav is used instead
   const fab = document.getElementById('admin-fab');
-  if (fab) fab.classList.remove('hidden');
+  if (fab) fab.classList.add('hidden');
   // Auto-grant verified+admin to own leaderboard entry
   _ensureAdminVerified();
 }
