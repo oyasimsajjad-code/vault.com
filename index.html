@@ -7012,11 +7012,13 @@ function _buildProfileCardHTML(forExport) {
     return `<div id="profile-share-card-inner" style="width:${CARD_W}px;border-radius:28px;overflow:hidden;font-family:'Outfit',sans-serif;background:${cardBg};box-shadow:${outerShadow};position:relative;">
 
         <!-- Top gradient banner -->
-        <div style="height:96px;background:linear-gradient(130deg,${purpleColor} 0%,${accentColor} 100%);position:relative;overflow:hidden;">
-            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,rgba(255,255,255,0.10) 0%,transparent 70%);"></div>
-            <div style="position:absolute;bottom:-28px;left:22px;width:88px;height:88px;border-radius:50%;border:4px solid ${cardBg};background:${isDark?'#0d0d1f':'#fff'};overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
-                <img src="${dp}" crossorigin="anonymous" width="88" height="88" style="width:88px;height:88px;object-fit:cover;display:block;border-radius:50%;" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff&size=256'">
-            </div>
+        <div style="height:96px;background:linear-gradient(130deg,${purpleColor} 0%,${accentColor} 100%);position:relative;">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,rgba(255,255,255,0.10) 0%,transparent 70%);pointer-events:none;"></div>
+        </div>
+
+        <!-- Avatar overlapping banner — sits OUTSIDE the banner div so overflow:hidden doesn't clip it -->
+        <div style="position:absolute;top:52px;left:22px;width:88px;height:88px;border-radius:50%;border:4px solid ${cardBg};background:${isDark?'#0d0d1f':'#fff'};overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.25);z-index:2;">
+            <img src="${dp}" crossorigin="anonymous" width="88" height="88" style="width:88px;height:88px;height:88px;object-fit:cover;object-position:center;display:block;border-radius:50%;" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff&size=256'">
         </div>
 
         <!-- Name / info row -->
@@ -7752,9 +7754,10 @@ async function fbPushLeaderboardStats() {
 }
 window._fbPushLeaderboardStats = fbPushLeaderboardStats;
 
-/* ---- REALTIME ONLINE PRESENCE ---- */
+/* ---- REALTIME ONLINE PRESENCE (RTDB onDisconnect) ---- */
 window._onlineStatus = {}; window._lastSeen = {};
 let _presenceListener = null;
+let _rtdbPresenceRef = null;
 
 async function fbUpdatePresence(uid, online) {
     if (!uid) return;
@@ -7764,10 +7767,41 @@ async function fbUpdatePresence(uid, online) {
             lastSeen: Date.now(),
             uid
         }, { merge: true });
-    } catch(e) { console.warn('Presence update error:', e.code); }
+    } catch(e) { console.warn('Presence Firestore error:', e.code); }
 }
 
-// Realtime onSnapshot listener — instant updates, no polling
+async function setupRTDBPresence(uid) {
+    try {
+        const { getDatabase, ref: rtdbRef, onValue, set, onDisconnect, serverTimestamp } =
+            await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js');
+        const rtdb = getDatabase();
+        const userStatusRef = rtdbRef(rtdb, 'presence/' + uid);
+        const connectedRef = rtdbRef(rtdb, '.info/connected');
+        _rtdbPresenceRef = userStatusRef;
+        onValue(connectedRef, async (snap) => {
+            if (!snap.val()) return;
+            // When we disconnect, write offline + timestamp to RTDB
+            await onDisconnect(userStatusRef).set({
+                online: false,
+                lastSeen: Date.now(),
+                uid
+            });
+            // Now mark online in RTDB
+            await set(userStatusRef, { online: true, lastSeen: Date.now(), uid });
+            // Mirror to Firestore so existing onSnapshot listener picks it up
+            await fbUpdatePresence(uid, true);
+        });
+    } catch(e) {
+        console.warn('RTDB presence setup failed, falling back to Firestore heartbeat:', e.message);
+        // Fallback: Firestore heartbeat every 25s
+        fbUpdatePresence(uid, true);
+        const _hb = setInterval(() => {
+            if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true);
+            else clearInterval(_hb);
+        }, 25000);
+    }
+}
+
 function startPresenceListener() {
     if (!auth.currentUser || _presenceListener) return;
     const presRef = collection(firestore, 'presence');
@@ -7781,15 +7815,13 @@ function startPresenceListener() {
                 window._lastSeen[d.id] = 0;
                 return;
             }
-            // Consider online if lastSeen within 35 seconds
+            // Online = flag is true AND lastSeen within 35s
             const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 35000;
             window._onlineStatus[d.id] = !!(v.online && isRecent);
             window._lastSeen[d.id] = v.lastSeen || 0;
         });
-        // Refresh inbox/friends UI if open
         if (currentView === 'inbox') renderInbox();
         if (currentView === 'friends') renderFriendsSection();
-        // Refresh chat header status without re-rendering messages
         if (currentChatUid) {
             const chatHeader = document.getElementById('chat-header');
             if (chatHeader && currentChatUid) {
@@ -7812,29 +7844,28 @@ function startPresenceListener() {
 }
 
 if (auth.currentUser) {
-    // Set online immediately
-    fbUpdatePresence(auth.currentUser.uid, true);
-    // Heartbeat every 25s to stay "online"
-    const _presenceHeartbeat = setInterval(() => {
-        if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true);
-        else clearInterval(_presenceHeartbeat);
-    }, 25000);
-    // App visibility changes
+    setupRTDBPresence(auth.currentUser.uid);
     document.addEventListener('visibilitychange', () => {
         if (!auth.currentUser) return;
         const online = document.visibilityState === 'visible';
         fbUpdatePresence(auth.currentUser.uid, online);
+        if (online && _rtdbPresenceRef) {
+            import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js').then(({ set }) => {
+                set(_rtdbPresenceRef, { online: true, lastSeen: Date.now(), uid: auth.currentUser.uid });
+            }).catch(() => {});
+        }
     });
-    // Tab/window close
     window.addEventListener('beforeunload', () => {
         if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false);
     });
-    // Mobile app background detection
     window.addEventListener('pagehide', () => {
         if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false);
     });
     window.addEventListener('pageshow', () => {
-        if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true);
+        if (auth.currentUser) {
+            fbUpdatePresence(auth.currentUser.uid, true);
+            setupRTDBPresence(auth.currentUser.uid);
+        }
     });
     startPresenceListener();
 }
