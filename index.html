@@ -2354,7 +2354,8 @@ function loadAppData() {
 let _saveTimeout = null;
 function saveAppData() {
     // Always save to localStorage as fast local cache
-    _localSave('studyVault_data_' + (currentUser || 'default'), JSON.stringify(appData));
+    if (!currentUser) return;
+    _localSave('studyVault_data_' + currentUser, JSON.stringify(appData));
     // Debounce cloud save
     clearTimeout(_saveTimeout);
     _saveTimeout = setTimeout(() => {
@@ -6785,6 +6786,7 @@ async function adminUnbanUser(uid, name, btn) {
 
 async function adminDeleteUser(uid, name, btn) {
     if (!isCreator()) { showToast('Access Denied', 'error'); return; }
+    if (auth.currentUser && uid === auth.currentUser.uid) { showToast('❌ নিজের account delete করা যাবে না!', 'error'); return; }
     if (!confirm('⚠️ WARNING: "' + name + '" এর সব Firestore data মুছে যাবে! Continue?')) return;
     if (!confirm('আপনি কি একদম নিশ্চিত? এই কাজ undo করা যাবে না।')) return;
     if (btn) { btn.disabled = true; btn.innerText = 'Deleting...'; }
