@@ -8268,9 +8268,15 @@ window._fbListenMessages = function(friendUid, callback) {
         async (snap) => {
             const messages = [];
             const batch = [];
+            // Track latest message timestamp from friend to update their lastSeen locally
+            let _latestFriendMsgTs = 0;
             snap.forEach(d => {
                 const m = { id: d.id, ...d.data() };
                 messages.push(m);
+                // If friend sent this message, use its timestamp as their presence signal
+                if (m.fromUid === friendUid && m.timestamp && m.timestamp > _latestFriendMsgTs) {
+                    _latestFriendMsgTs = m.timestamp;
+                }
                 // Mark messages from friend as delivered+seen
                 if (m.fromUid === friendUid && !m.seen) {
                     batch.push(setDoc(doc(firestore, 'chats', chatId, 'messages', d.id), { delivered: true, seen: true }, { merge: true }));
@@ -8281,6 +8287,34 @@ window._fbListenMessages = function(friendUid, callback) {
                 }
             });
             if (batch.length) Promise.all(batch).catch(()=>{});
+            // If friend sent a message more recently than their stored lastSeen, update locally
+            if (_latestFriendMsgTs > 0) {
+                const _storedLastSeen = window._lastSeen[friendUid] || 0;
+                if (_latestFriendMsgTs > _storedLastSeen) {
+                    window._lastSeen[friendUid] = _latestFriendMsgTs;
+                    // If message is within 5 minutes, treat as recently active
+                    if (Date.now() - _latestFriendMsgTs < 300000) {
+                        window._onlineStatus[friendUid] = false; // don't fake "Active now"
+                    }
+                    // Update chat header with accurate last seen from message time
+                    if (currentChatUid === friendUid) {
+                        const chatHeader = document.getElementById('chat-header');
+                        if (chatHeader) {
+                            chatHeader.querySelectorAll('div').forEach(div => {
+                                if (div.style && div.style.marginTop === '1px') {
+                                    const _isOnline = !!(window._onlineStatus[friendUid]);
+                                    const _ls = window._lastSeen[friendUid] || 0;
+                                    const _recentMsg = _ls && (Date.now() - _ls) < 35000;
+                                    const _online = _isOnline || _recentMsg;
+                                    div.innerHTML = _online
+                                        ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
+                                        : (_ls ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(_ls) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+                                }
+                            });
+                        }
+                    }
+                }
+            }
             messages.sort((a,b) => (a.timestamp||0)-(b.timestamp||0));
             callback(messages);
             setDoc(doc(firestore, 'users', uid, 'conversations', friendUid), { unread: 0 }, { merge: true }).catch(()=>{});
