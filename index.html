@@ -3173,7 +3173,7 @@ function _recordStudyTime(mins, subj) {
     appData.stats.subjectHours[subj] = (appData.stats.subjectHours[subj] || 0) + mins / 60;
     appData.stats.totalSubjectHours[subj] = (appData.stats.totalSubjectHours[subj] || 0) + mins / 60;
     if (!appData.stats.heatmap) appData.stats.heatmap = {};
-    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins / 60;
+    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins;
     checkAndUpdateStreak(today);
 }
 
@@ -3193,7 +3193,7 @@ function savePartialSession() {
 }
 let _partialSaved = false;
 function stopTimer() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    if (isRunning && timerMode === 'focus' && !_partialSaved && timeLeft > 0) savePartialSession();
     _partialSaved = false;
     clearInterval(timerInt); timerInt = null; isRunning = false;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
@@ -3426,7 +3426,7 @@ function enterFocusMode() {
     if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
 }
 function exitFocusMode() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    if (isRunning && timerMode === 'focus' && !_partialSaved && timeLeft > 0) savePartialSession();
     isFocusModeActive = false;
     document.getElementById('focus-mode-screen').classList.add('hidden');
     stopAllSounds();
@@ -3905,7 +3905,7 @@ function renderSubjectAnalytics() {
 
     // Always render all 8 subject cards for Today
     subjects.forEach((s,i)=>{
-        const h=parseFloat((dailyHours[s]||0).toFixed(3));
+        const h = Math.round((dailyHours[s]||0) * 2) / 2;
         const pct = maxDaily > 0 ? Math.round((h/maxDaily)*100) : 0;
         const d=document.createElement('div');
         d.className='subj-card';
@@ -3921,7 +3921,7 @@ function renderSubjectAnalytics() {
 
     // Always render all 8 subject cards for All Time
     subjects.forEach((s,i)=>{
-        const h=parseFloat((totalHours[s]||0).toFixed(3));
+        const h = Math.round((totalHours[s]||0) * 2) / 2;
         const pct = maxTotal > 0 ? Math.round((h/maxTotal)*100) : 0;
         const d=document.createElement('div');
         d.className='subj-card';
