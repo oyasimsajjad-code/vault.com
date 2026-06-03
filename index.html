@@ -3109,7 +3109,7 @@ function loadTimerSettings() {
     document.getElementById('custom-short').value = ts.short || 5;
     document.getElementById('custom-long').value = ts.long || 15;
     timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]);
-    const _today = new Date().toISOString().split('T')[0];
+    const _today = _getLocalDateStr();
     const _dailySess = (appData.stats.dailySessionsDate === _today) ? (appData.stats.dailySessions || 0) : 0;
     document.getElementById('session-count').innerText = _dailySess;
     const wlCb = document.getElementById('setting-wakelock');
@@ -3157,7 +3157,7 @@ function setTimerMode(mode,btn) {
     document.getElementById('timer-status').innerText=mode==='focus'?'Ready to focus':'Take a break';
 }
 function _recordStudyTime(mins, subj) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = _getLocalDateStr();
     if (!appData.stats.subjectHoursDate) appData.stats.subjectHoursDate = today;
     if (appData.stats.subjectHoursDate !== today) {
         appData.stats.subjectHours = {};
@@ -3242,7 +3242,7 @@ function timerTick() {
             _partialSaved = true;
             const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
             const mins = _msBlock.enabled ? _msBlock.blockFocus : (appData.timerSettings.focus || 25);
-            const today = new Date().toISOString().split('T')[0];
+            const today = _getLocalDateStr();
             // Daily sessions counter
             if (!appData.stats.dailySessionsDate) appData.stats.dailySessionsDate = today;
             if (appData.stats.dailySessionsDate !== today) { appData.stats.dailySessions = 0; appData.stats.dailySessionsDate = today; }
@@ -3544,6 +3544,13 @@ function _getMidnightResetKey() {
         String(now.getMonth() + 1).padStart(2, '0') + '-' +
         String(now.getDate()).padStart(2, '0');
 }
+function _getLocalDateStr(date) {
+    // Always use LOCAL date (not UTC) to avoid midnight-rollover bugs in BD (UTC+6)
+    const d = date || new Date();
+    return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+}
 
 function _scheduleMidnightReset() {
     const now = new Date();
@@ -3595,7 +3602,7 @@ function checkAndUpdateStreak(todayStr) {
     }
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayStr = _getLocalDateStr(yesterday);
     const lastDate = appData.streak.lastDate || '';
     if (lastDate === yesterdayStr) {
         // Consecutive day
@@ -3608,7 +3615,7 @@ function checkAndUpdateStreak(todayStr) {
         check.setDate(check.getDate() - 1);
         // Count backwards from yesterday
         for (let i = 0; i < 365; i++) {
-            const ds = check.toISOString().split('T')[0];
+            const ds = _getLocalDateStr(check);
             if ((heatmap[ds] || 0) > 0) {
                 consecutive++;
                 check.setDate(check.getDate() - 1);
@@ -3638,9 +3645,9 @@ function addRevisionTopic() {
     if(!topic){showToast('Topic name required','error');return;}
     const subj=document.getElementById('rev-subject').value;
     if(!appData.revisionTopics) appData.revisionTopics=[];
-    const today=new Date().toISOString().split('T')[0];
+    const today=_getLocalDateStr();
     const nextDate=new Date(); nextDate.setDate(nextDate.getDate()+1);
-    appData.revisionTopics.push({ id:Date.now().toString(), topic, subject:subj, addedDate:today, nextRevision:nextDate.toISOString().split('T')[0], level:0, doneCount:0 });
+    appData.revisionTopics.push({ id:Date.now().toString(), topic, subject:subj, addedDate:today, nextRevision:_getLocalDateStr(nextDate), level:0, doneCount:0 });
     saveAppData(); document.getElementById('rev-topic').value='';
     document.getElementById('revision-form').classList.add('hidden');
     renderRevision(); showToast('Topic added to revision!','success');
@@ -3650,12 +3657,12 @@ function markRevisionDone(id) {
     item.level=Math.min(item.level+1,SRS_INTERVALS.length-1);
     item.doneCount=(item.doneCount||0)+1;
     const next=new Date(); next.setDate(next.getDate()+SRS_INTERVALS[item.level]);
-    item.nextRevision=next.toISOString().split('T')[0];
+    item.nextRevision=_getLocalDateStr(next);
     saveAppData(); renderRevision(); showToast('Revision done! Next: '+item.nextRevision,'success');
 }
 function deleteRevisionTopic(id) { appData.revisionTopics=appData.revisionTopics.filter(r=>r.id!==id); saveAppData(); renderRevision(); }
 function renderRevision() {
-    const today=new Date().toISOString().split('T')[0];
+    const today=_getLocalDateStr();
     const topics=appData.revisionTopics||[];
     const todayList=topics.filter(r=>r.nextRevision<=today);
     const overdueList=topics.filter(r=>r.nextRevision<today);
@@ -3693,7 +3700,7 @@ function getWeeklyHoursData() {
     for (let i = 0; i < 7; i++) {
         const d = new Date(today);
         d.setDate(today.getDate() + mondayOffset + i);
-        const ds = d.toISOString().split('T')[0];
+        const ds = _getLocalDateStr(d);
         result[i] = parseFloat(((heatmap[ds] || 0) / 60).toFixed(2));
     }
     return result;
@@ -3848,7 +3855,7 @@ function renderHeatmap() {
     const allDates=[];
     const hStart=new Date('2026-06-01');
     const hFixedEnd=new Date('2026-12-31');
-    for(let d=new Date(hStart);d<=hFixedEnd;d.setDate(d.getDate()+1)){allDates.push(new Date(d).toISOString().split('T')[0]);}
+    for(let d=new Date(hStart);d<=hFixedEnd;d.setDate(d.getDate()+1)){allDates.push(_getLocalDateStr(new Date(d)));}
     const months={};
     allDates.forEach(ds=>{const m=ds.substring(0,7);if(!months[m])months[m]=0;months[m]++;});
     // Month labels
@@ -3875,7 +3882,7 @@ function renderHeatmap() {
         const cell=document.createElement('div');
         cell.className='heatmap-cell'+(cls?' '+cls:'');
         cell.style.display='inline-block';
-        const today=new Date().toISOString().split('T')[0];
+        const today=_getLocalDateStr();
         if(ds===today) cell.style.outline='2px solid var(--primary)';
         const tooltip=document.createElement('div');
         tooltip.className='heatmap-tooltip';
@@ -3893,7 +3900,7 @@ function renderSubjectAnalytics() {
     const grid=document.getElementById('subject-analytics-grid'); if(!grid) return;
     const subjects=['Physics','Chemistry','Higher Math','Biology','ICT','English','Bangla','Others'];
     const colors=['#00f0ff','#ff6b35','#7000ff','#00ff66','#ffcc00','#ff9800','#00bcd4','#8b90a0'];
-    const today = new Date().toISOString().split('T')[0];
+    const today = _getLocalDateStr();
     const dailyHours = (appData.stats.subjectHoursDate === today) ? (appData.stats.subjectHours||{}) : {};
     const totalHours = appData.stats.totalSubjectHours || {};
     const maxDaily = Math.max(...subjects.map(s=>dailyHours[s]||0), 0.01);
@@ -3935,7 +3942,7 @@ function updateDashboardStats() {
     const m = Math.round(totalMins % 60);
     document.getElementById('dash-focus-hours').innerText = h + 'h';
     // Daily sessions display
-    const today = new Date().toISOString().split('T')[0];
+    const today = _getLocalDateStr();
     const dailySessions = (appData.stats.dailySessionsDate === today) ? (appData.stats.dailySessions || 0) : 0;
     const sessionEl = document.getElementById('session-count');
     if (sessionEl) sessionEl.innerText = dailySessions;
@@ -4218,7 +4225,7 @@ function exportBackup() {
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a'); a.href=url;
-    a.download=`studyvault_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download=`studyvault_backup_${_getLocalDateStr()}.json`;
     a.click(); URL.revokeObjectURL(url);
     showToast('Backup exported!','success');
 }
@@ -5884,7 +5891,7 @@ async function analyzeWeakTopics() {
     const subjects = ['Physics','Chemistry','Higher Math','Biology','ICT','Bangla','English'];
     const studyData = subjects.map(s => ({ subject: s, hours: parseFloat((subjectHours[s] || 0).toFixed(2)) }));
     const revTopics = (appData.revisionTopics || []).filter(r => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = _getLocalDateStr();
         return r.nextRevision <= today;
     }).map(r => r.topic + ' (' + r.subject + ')');
     const completionRate = appData.stats.completedTasks ? Math.round((appData.stats.completedTasks / Math.max(appData.tasks.length, 1)) * 100) : 0;
@@ -5988,7 +5995,7 @@ const DAILY_CHALLENGES_POOL = [
 ];
 
 function getTodayChallenges() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = _getLocalDateStr();
     // Deterministic daily selection using date hash
     const hash = today.split('-').reduce((a,b) => a + parseInt(b), 0);
     const indices = [];
@@ -6001,7 +6008,7 @@ function getTodayChallenges() {
 }
 
 function loadChallengeState() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = _getLocalDateStr();
     try {
         const raw = localStorage.getItem('sv_challenges_' + (currentUser||'default'));
         if (raw) {
@@ -6022,7 +6029,7 @@ function renderDailyChallenge() {
     const dateEl = document.getElementById('challenge-date-badge');
     const streakEl = document.getElementById('challenge-streak-num');
     if (!listEl) return;
-    const today = new Date().toISOString().split('T')[0];
+    const today = _getLocalDateStr();
     if (dateEl) dateEl.innerText = new Date().toLocaleDateString('en-BD', { weekday:'short', month:'short', day:'numeric' });
     const state = loadChallengeState();
     if (streakEl) streakEl.innerText = state.streak || 0;
@@ -6239,10 +6246,8 @@ function toggleGroupTimer() {
                 playSound();
                 showToast('Group Focus session শেষ! 🏆', 'success');
                 const mins = groupRooms[currentGroupRoom] ? groupRooms[currentGroupRoom].duration : 25;
-                appData.stats.studyMinutes = (appData.stats.studyMinutes||0) + mins;
                 appData.stats.focusSessions = (appData.stats.focusSessions||0) + 1;
-                appData.stats.todayMinutes = (appData.stats.todayMinutes||0) + mins;
-                checkAndUpdateStreak(new Date().toISOString().split('T')[0]);
+                _recordStudyTime(mins, 'Group Focus');
                 saveAppData();
             }
         }, 1000);
@@ -6528,10 +6533,8 @@ function _syncStartTimer(startTime, duration) {
                 playSessionCompleteSound();
                 showToast('Group Focus session শেষ! 🏆', 'success');
                 const mins = groupRooms[currentGroupRoom] ? groupRooms[currentGroupRoom].duration : 25;
-                appData.stats.studyMinutes = (appData.stats.studyMinutes||0) + mins;
                 appData.stats.focusSessions = (appData.stats.focusSessions||0) + 1;
-                appData.stats.todayMinutes = (appData.stats.todayMinutes||0) + mins;
-                checkAndUpdateStreak(new Date().toISOString().split('T')[0]);
+                _recordStudyTime(mins, 'Group Focus');
                 saveAppData();
             }
         }, 1000);
@@ -6545,7 +6548,7 @@ function saveGroupRooms() {
 
 function resetDailyChallenge() {
     if (!confirm('আজকের সব challenge reset করবেন? XP ফেরত যাবে না।')) return;
-    const today = new Date().toISOString().split('T')[0];
+    const today = _getLocalDateStr();
     const state = loadChallengeState();
     state.completed = [];
     saveChallengeState(state);
@@ -7803,14 +7806,14 @@ async function fbPushLeaderboardStats() {
         const realStreak = (() => {
             // Recalculate streak from heatmap for accuracy
             const heatmap = appData.stats.heatmap || {};
-            const today = new Date().toISOString().split('T')[0];
+            const today = _getLocalDateStr();
             let count = 0;
             const check = new Date();
             if ((heatmap[today] || 0) > 0) {
                 count = 1;
                 check.setDate(check.getDate() - 1);
                 for (let i = 0; i < 365; i++) {
-                    const ds = check.toISOString().split('T')[0];
+                    const ds = _getLocalDateStr(check);
                     if ((heatmap[ds] || 0) > 0) { count++; check.setDate(check.getDate() - 1); }
                     else break;
                 }
@@ -7818,7 +7821,7 @@ async function fbPushLeaderboardStats() {
                 // today not studied yet — count from yesterday
                 check.setDate(check.getDate() - 1);
                 for (let i = 0; i < 365; i++) {
-                    const ds = check.toISOString().split('T')[0];
+                    const ds = _getLocalDateStr(check);
                     if ((heatmap[ds] || 0) > 0) { count++; check.setDate(check.getDate() - 1); }
                     else break;
                 }
