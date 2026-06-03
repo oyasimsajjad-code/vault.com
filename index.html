@@ -5193,12 +5193,9 @@ async function renderInbox() {
         const displayName = getDisplayName(uid, _baseName);
         const displayDp = conv.dp || friendData.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(displayName||'U')+'&background=0D8ABC&color=fff');
         const isActive = uid === currentChatUid;
-        const isOnline = window._onlineStatus && window._onlineStatus[uid];
-        // Use realtime presence lastSeen; fall back to lastTimestamp from conversation doc
-        const _presenceLastSeen = window._lastSeen && window._lastSeen[uid];
-        const _effectiveLastSeen = _presenceLastSeen || conv.lastTimestamp || 0;
-        const _isRecentlyActive = _effectiveLastSeen && (Date.now() - _effectiveLastSeen) < 120000; // within 2min = online
-        const _displayOnline = isOnline || _isRecentlyActive;
+        const isOnline = !!(window._onlineStatus && window._onlineStatus[uid]);
+        const _presenceLastSeen = (window._lastSeen && window._lastSeen[uid]) || 0;
+        const _displayOnline = isOnline || (_presenceLastSeen && (Date.now() - _presenceLastSeen) < 35000);
         return `<div style="position:relative;display:flex;flex-direction:row;align-items:center;width:100%;box-sizing:border-box;" onmouseenter="this.querySelector('.conv-del-btn').style.opacity='1'" onmouseleave="this.querySelector('.conv-del-btn').style.opacity='0'">
         <div onclick="openChatWith('${uid}')" style="flex:1;min-width:0;display:flex;flex-direction:row;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;background:${isActive?'rgba(0,240,255,0.1)':'transparent'};border:1px solid ${isActive?'var(--primary)':'transparent'};margin-bottom:2px;transition:all 0.18s;width:100%;box-sizing:border-box;" onmouseover="if('${uid}'!==currentChatUid)this.style.background='rgba(255,255,255,0.05)'" onmouseout="if('${uid}'!==currentChatUid)this.style.background='transparent'">
             <div style="position:relative;flex-shrink:0;">
@@ -5208,7 +5205,7 @@ async function renderInbox() {
             <div style="flex:1;min-width:0;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div style="font-weight:${conv.unread>0?'700':'600'};font-size:0.88rem;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;display:flex;align-items:center;gap:2px;">${displayName}${getVerifiedBadge(uid)}</div>
-                    <div style="font-size:0.62rem;color:${_displayOnline?'var(--success)':'var(--text-muted)'};flex-shrink:0;">${_displayOnline?'Active now':(conv.lastTimestamp?timeAgo(conv.lastTimestamp):'')}</div>
+                    <div style="font-size:0.62rem;color:${_displayOnline?'var(--success)':'var(--text-muted)'};flex-shrink:0;">${_displayOnline?'Active now':(_presenceLastSeen?'Active '+timeAgo(_presenceLastSeen)+' ago':(conv.lastTimestamp?timeAgo(conv.lastTimestamp):''))}</div>
                 </div>
                 <div style="font-size:0.73rem;color:${conv.unread>0?'var(--text-secondary)':'var(--text-muted)'};font-weight:${conv.unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${conv.lastMsg||'...'}</div>
                 ${conv.unread>0?`<span style="background:var(--primary);color:#000;font-size:0.62rem;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;padding:0 3px;margin-top:2px;">${conv.unread}</span>`:''}
@@ -5262,16 +5259,12 @@ async function openChatWith(friendUid) {
     function _renderChatHeader(name, dp) {
         // Only update if this chat is still open
         if (currentChatUid !== friendUid) return;
-        const isOnline = window._onlineStatus && window._onlineStatus[friendUid];
-        const lastSeenTs = window._lastSeen && window._lastSeen[friendUid];
-        // Use conversation's lastTimestamp as fallback if no presence doc yet
-        const _convLastTs = conversations && conversations[friendUid] && conversations[friendUid].lastTimestamp;
-        const _effectiveTs = lastSeenTs || _convLastTs || 0;
-        const _recentlyActive = _effectiveTs && (Date.now() - _effectiveTs) < 120000;
-        const _showOnline = isOnline || _recentlyActive;
+        const isOnline = !!(window._onlineStatus && window._onlineStatus[friendUid]);
+        const lastSeenTs = (window._lastSeen && window._lastSeen[friendUid]) || 0;
+        const _showOnline = isOnline || (lastSeenTs && (Date.now() - lastSeenTs) < 35000);
         const statusHtml = _showOnline
-            ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active now</span>'
-            : (_effectiveTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(_effectiveTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+            ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
+            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
         const safeUid = friendUid.replace(/'/g, "\\'");
         chatHeader.innerHTML =
             '<button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background=\'rgba(0,240,255,0.1)\'" onmouseout="this.style.background=\'none\'"><i class="fa-solid fa-arrow-left"></i></button>' +
@@ -7896,7 +7889,7 @@ setInterval(() => {
     Object.keys(window._onlineStatus).forEach(uid => {
         if (window._onlineStatus[uid]) {
             const ls = window._lastSeen[uid] || 0;
-            if (Date.now() - ls > 30000) {
+            if (Date.now() - ls > 35000) {
                 window._onlineStatus[uid] = false;
                 changed = true;
             }
@@ -7911,9 +7904,8 @@ setInterval(() => {
             if (chatHeader && chatHeader.querySelector('img')) {
                 const isOnline = window._onlineStatus[currentChatUid];
                 const lastSeenTs = window._lastSeen[currentChatUid];
-                const _cTs = conversations && conversations[currentChatUid] && conversations[currentChatUid].lastTimestamp;
-                const _eTs = lastSeenTs || _cTs || 0;
-                const _sOnline = isOnline || (_eTs && (Date.now() - _eTs) < 120000);
+                const _eTs = lastSeenTs || 0;
+                const _sOnline = isOnline || (_eTs && (Date.now() - _eTs) < 35000);
                 const statusDivs = chatHeader.querySelectorAll('div > div');
                 statusDivs.forEach(div => {
                     if (div.style && div.style.marginTop === '1px') {
@@ -7940,8 +7932,7 @@ function startPresenceListener() {
                 window._lastSeen[d.id] = 0;
                 return;
             }
-            // Online = flag is true AND lastSeen within 30s
-            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 30000;
+            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 35000;
             window._onlineStatus[d.id] = !!(v.online && isRecent);
             window._lastSeen[d.id] = v.lastSeen || 0;
         });
@@ -7952,9 +7943,8 @@ function startPresenceListener() {
             if (chatHeader && currentChatUid) {
                 const isOnline = window._onlineStatus[currentChatUid];
                 const lastSeenTs = window._lastSeen[currentChatUid];
-                const _convTs = conversations && conversations[currentChatUid] && conversations[currentChatUid].lastTimestamp;
-                const _effTs = lastSeenTs || _convTs || 0;
-                const _showOnline = isOnline || (_effTs && (Date.now() - _effTs) < 120000);
+                const _effTs = lastSeenTs || 0;
+                const _showOnline = isOnline || (_effTs && (Date.now() - _effTs) < 35000);
                 const allDivs = chatHeader.querySelectorAll('div');
                 allDivs.forEach(div => {
                     if (div.style && div.style.marginTop === '1px') {
@@ -7997,6 +7987,19 @@ if (auth.currentUser) {
         }
     });
     startPresenceListener();
+
+    // Heartbeat every 25s — keeps own presence fresh so others see correct status
+    let _presenceHeartbeat = setInterval(() => {
+        if (!auth.currentUser) { clearInterval(_presenceHeartbeat); return; }
+        if (document.visibilityState === 'visible') {
+            fbUpdatePresence(auth.currentUser.uid, true);
+            if (_rtdbPresenceRef) {
+                import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js')
+                    .then(({ set }) => set(_rtdbPresenceRef, { online: true, lastSeen: Date.now(), uid: auth.currentUser.uid }))
+                    .catch(() => {});
+            }
+        }
+    }, 25000);
 }
 
 /* ---- MESSAGE ACTIONS ---- */
@@ -8237,7 +8240,7 @@ window._fbListenMessages = function(friendUid, callback) {
             if (!psnap.exists()) return;
             const v = psnap.data();
             if (!v) return;
-            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 30000;
+            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 35000;
             window._onlineStatus[friendUid] = !!(v.online && isRecent);
             window._lastSeen[friendUid] = v.lastSeen || 0;
             if (typeof renderInbox === 'function') renderInbox();
@@ -8245,16 +8248,13 @@ window._fbListenMessages = function(friendUid, callback) {
                 const chatHeader = document.getElementById('chat-header');
                 if (chatHeader) {
                     const isOnline = window._onlineStatus[friendUid];
-                    const lastSeenTs = window._lastSeen[friendUid];
+                    const lastSeenTs = window._lastSeen[friendUid] || 0;
+                    const _showOnlineNow = isOnline || (lastSeenTs && (Date.now() - lastSeenTs) < 35000);
                     chatHeader.querySelectorAll('div').forEach(div => {
                         if (div.style && div.style.marginTop === '1px') {
-                            const _convFallback = conversations && conversations[friendUid] && conversations[friendUid].lastTimestamp;
-                            const _effTs = lastSeenTs || _convFallback || 0;
-                            const _isRecentlySeen = _effTs && (Date.now() - _effTs) < 120000;
-                            const _showOnlineNow = isOnline || _isRecentlySeen;
                             div.innerHTML = _showOnlineNow
                                 ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
-                                : (_effTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(_effTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+                                : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
                         }
                     });
                 }
