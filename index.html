@@ -5194,19 +5194,23 @@ async function renderInbox() {
         const displayDp = conv.dp || friendData.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(displayName||'U')+'&background=0D8ABC&color=fff');
         const isActive = uid === currentChatUid;
         const isOnline = window._onlineStatus && window._onlineStatus[uid];
+        // Use realtime presence lastSeen; fall back to lastTimestamp from conversation doc
+        const _presenceLastSeen = window._lastSeen && window._lastSeen[uid];
+        const _effectiveLastSeen = _presenceLastSeen || conv.lastTimestamp || 0;
+        const _isRecentlyActive = _effectiveLastSeen && (Date.now() - _effectiveLastSeen) < 120000; // within 2min = online
+        const _displayOnline = isOnline || _isRecentlyActive;
         return `<div style="position:relative;display:flex;align-items:center;group:true;" onmouseenter="this.querySelector('.conv-del-btn').style.opacity='1'" onmouseleave="this.querySelector('.conv-del-btn').style.opacity='0'">
         <div onclick="openChatWith('${uid}')" style="flex:1;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;background:${isActive?'rgba(0,240,255,0.1)':'transparent'};border:1px solid ${isActive?'var(--primary)':'transparent'};margin-bottom:2px;transition:all 0.18s;" onmouseover="this.style.background=this.style.background||'rgba(255,255,255,0.05)'" onmouseout="if('${uid}'!==currentChatUid)this.style.background='transparent'">
             <div style="position:relative;flex-shrink:0;">
-                <img src="${displayDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${isActive?'var(--primary)':isOnline?'var(--success)':'transparent'};">
-                ${isOnline?'<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>':''}
+                <img src="${displayDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${isActive?'var(--primary)':_displayOnline?'var(--success)':'transparent'};">
+                ${_displayOnline?'<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>':''}
             </div>
             <div style="flex:1;min-width:0;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div style="font-weight:${conv.unread>0?'700':'600'};font-size:0.88rem;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;max-width:130px;display:flex;align-items:center;gap:2px;">${displayName}${getVerifiedBadge(uid)}</div>
-                    <div style="font-size:0.62rem;color:var(--text-muted);flex-shrink:0;">${conv.lastTimestamp?timeAgo(conv.lastTimestamp):''}</div>
+                    <div style="font-size:0.62rem;color:${_displayOnline?'var(--success)':'var(--text-muted)'};flex-shrink:0;">${_displayOnline?'Active now':(conv.lastTimestamp?timeAgo(conv.lastTimestamp):'')}</div>
                 </div>
                 <div style="font-size:0.73rem;color:${conv.unread>0?'var(--text-secondary)':'var(--text-muted)'};font-weight:${conv.unread>0?'600':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${conv.lastMsg||'...'}</div>
-            </div>
             ${conv.unread>0?`<span style="background:var(--primary);color:#000;font-size:0.62rem;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;padding:0 3px;">${conv.unread}</span>`:''}
         </div>
         <button class="conv-del-btn" onclick="deleteConversationLocal('${uid}',event)" style="opacity:0;transition:opacity 0.2s;background:rgba(255,0,60,0.12);border:none;color:var(--accent);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:4px;font-size:0.75rem;" title="Delete chat (only for you)"><i class="fa-solid fa-trash"></i></button>
@@ -5259,15 +5263,20 @@ async function openChatWith(friendUid) {
         if (currentChatUid !== friendUid) return;
         const isOnline = window._onlineStatus && window._onlineStatus[friendUid];
         const lastSeenTs = window._lastSeen && window._lastSeen[friendUid];
-        const statusHtml = isOnline
+        // Use conversation's lastTimestamp as fallback if no presence doc yet
+        const _convLastTs = conversations && conversations[friendUid] && conversations[friendUid].lastTimestamp;
+        const _effectiveTs = lastSeenTs || _convLastTs || 0;
+        const _recentlyActive = _effectiveTs && (Date.now() - _effectiveTs) < 120000;
+        const _showOnline = isOnline || _recentlyActive;
+        const statusHtml = _showOnline
             ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active now</span>'
-            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+            : (_effectiveTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(_effectiveTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
         const safeUid = friendUid.replace(/'/g, "\\'");
         chatHeader.innerHTML =
             '<button onclick="closeChatPanel()" style="background:none;border:none;color:var(--primary);font-size:1.1rem;cursor:pointer;padding:4px 8px;margin-right:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;transition:background 0.2s;" onmouseover="this.style.background=\'rgba(0,240,255,0.1)\'" onmouseout="this.style.background=\'none\'"><i class="fa-solid fa-arrow-left"></i></button>' +
             '<div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries[\'' + safeUid + '\'])showUserProfile(window._dashLbEntries[\'' + safeUid + '\'])">' +
             '<img src="' + dp + '" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff\'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">' +
-            (isOnline ? '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>' : '') +
+            (_showOnline ? '<span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-secondary);display:block;"></span>' : '') +
             '</div>' +
             '<div style="flex:1;min-width:0;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries[\'' + safeUid + '\'])showUserProfile(window._dashLbEntries[\'' + safeUid + '\'])">' +
             '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
@@ -7231,10 +7240,18 @@ function shareAppWhatsApp() {
 }
 
 function shareAppMessenger() {
-    const url = encodeURIComponent(APK_LINK);
-    window.open('https://www.facebook.com/dialog/send?link=' + url + '&app_id=your_app_id&redirect_uri=' + url, '_blank');
-    // Fallback: copy to clipboard
-    navigator.clipboard.writeText(getShareText()).then(() => showToast('Link copied! Paste in Messenger 📋', 'success')).catch(() => {});
+    const shareText = getShareText();
+    // Use Web Share API on mobile (opens native share sheet including Messenger)
+    if (navigator.share) {
+        navigator.share({ title: 'StudyVault', text: shareText, url: APK_LINK }).catch(() => {
+            navigator.clipboard.writeText(shareText).then(() => showToast('Link copied! Paste in Messenger 📋', 'success')).catch(() => {});
+        });
+    } else {
+        // Desktop fallback: use m.me send link (no App ID required)
+        const url = encodeURIComponent(APK_LINK);
+        window.open('https://www.messenger.com/share?link=' + url, '_blank');
+        navigator.clipboard.writeText(shareText).then(() => showToast('Link copied! Paste in Messenger 📋', 'success')).catch(() => {});
+    }
 }
 
 function shareAppFacebook() {
@@ -7329,6 +7346,24 @@ const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 // setPersistence non-blocking — don't await at top level
 setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
+
+// Handle redirect result from mobile Google sign-in (must run before onAuthStateChanged resolves)
+(async () => {
+    try {
+        const { getRedirectResult } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+            logEvent(analytics, 'login', { method: 'google_redirect' });
+        }
+    } catch(e) {
+        if (e.code !== 'auth/no-auth-event' && e.code !== 'auth/null-user') {
+            console.warn('Redirect result error:', e.code, e.message);
+            if (e.code === 'auth/unauthorized-domain') {
+                if (typeof showFbError === 'function') showFbError('Domain authorized না। Firebase Console → Auth → Authorized domains-এ URL যোগ করুন।');
+            }
+        }
+    }
+})();
 
 /* ---- Sync indicator helpers ---- */
 function showSync() {
@@ -7565,6 +7600,18 @@ window.handleFirebaseSignup = async function() {
 };
 
 window.handleGoogleLogin = async function() {
+    // On Android/mobile browsers popups are blocked at OS level — use redirect directly
+    const _isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (_isMobile) {
+        try {
+            const { signInWithRedirect } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+            await signInWithRedirect(auth, googleProvider);
+        } catch(e) {
+            showFbError('Google sign-in failed: ' + (e.message || e.code));
+        }
+        return;
+    }
+    // Desktop: use popup
     try {
         const result = await signInWithPopup(auth, googleProvider);
         if (result && result.user) {
@@ -7863,13 +7910,15 @@ setInterval(() => {
             if (chatHeader && chatHeader.querySelector('img')) {
                 const isOnline = window._onlineStatus[currentChatUid];
                 const lastSeenTs = window._lastSeen[currentChatUid];
-                // Find the status span by its position (second div's second child)
+                const _cTs = conversations && conversations[currentChatUid] && conversations[currentChatUid].lastTimestamp;
+                const _eTs = lastSeenTs || _cTs || 0;
+                const _sOnline = isOnline || (_eTs && (Date.now() - _eTs) < 120000);
                 const statusDivs = chatHeader.querySelectorAll('div > div');
                 statusDivs.forEach(div => {
                     if (div.style && div.style.marginTop === '1px') {
-                        div.innerHTML = isOnline
+                        div.innerHTML = _sOnline
                             ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active now</span>'
-                            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+                            : (_eTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(_eTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
                     }
                 });
             }
@@ -7902,13 +7951,15 @@ function startPresenceListener() {
             if (chatHeader && currentChatUid) {
                 const isOnline = window._onlineStatus[currentChatUid];
                 const lastSeenTs = window._lastSeen[currentChatUid];
-                // Find the status div by margin-top style (set in _renderChatHeader)
+                const _convTs = conversations && conversations[currentChatUid] && conversations[currentChatUid].lastTimestamp;
+                const _effTs = lastSeenTs || _convTs || 0;
+                const _showOnline = isOnline || (_effTs && (Date.now() - _effTs) < 120000);
                 const allDivs = chatHeader.querySelectorAll('div');
                 allDivs.forEach(div => {
                     if (div.style && div.style.marginTop === '1px') {
-                        div.innerHTML = isOnline
+                        div.innerHTML = _showOnline
                             ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
-                            : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+                            : (_effTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(_effTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
                     }
                 });
             }
