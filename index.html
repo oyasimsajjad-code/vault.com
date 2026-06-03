@@ -3173,7 +3173,7 @@ function _recordStudyTime(mins, subj) {
     appData.stats.subjectHours[subj] = (appData.stats.subjectHours[subj] || 0) + mins / 60;
     appData.stats.totalSubjectHours[subj] = (appData.stats.totalSubjectHours[subj] || 0) + mins / 60;
     if (!appData.stats.heatmap) appData.stats.heatmap = {};
-    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins;
+    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins / 60;
     checkAndUpdateStreak(today);
 }
 
@@ -3193,7 +3193,7 @@ function savePartialSession() {
 }
 let _partialSaved = false;
 function stopTimer() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved && timeLeft > 0) savePartialSession();
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
     _partialSaved = false;
     clearInterval(timerInt); timerInt = null; isRunning = false;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
@@ -3426,7 +3426,7 @@ function enterFocusMode() {
     if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
 }
 function exitFocusMode() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved && timeLeft > 0) savePartialSession();
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
     isFocusModeActive = false;
     document.getElementById('focus-mode-screen').classList.add('hidden');
     stopAllSounds();
@@ -3863,13 +3863,6 @@ function renderHeatmap() {
         monthsEl.appendChild(span);
     });
     // Determine max for scaling
-    const isMinutes = Object.values(heatmap).some(v => v > 24);
-    const normalizedHeatmap = {};
-    Object.keys(heatmap).forEach(k => {
-        normalizedHeatmap[k] = isMinutes ? heatmap[k] : heatmap[k] * 60;
-    });
-    const heatmap2 = normalizedHeatmap;
-    Object.keys(heatmap).forEach(k => heatmap[k] = heatmap2[k]);
     const vals=Object.values(heatmap).filter(v=>v>0);
     const maxVal=vals.length>0?Math.max(...vals):1;
     allDates.forEach(ds=>{
@@ -3912,7 +3905,7 @@ function renderSubjectAnalytics() {
 
     // Always render all 8 subject cards for Today
     subjects.forEach((s,i)=>{
-        const h = Math.round((dailyHours[s]||0) * 2) / 2;
+        const h=parseFloat((dailyHours[s]||0).toFixed(3));
         const pct = maxDaily > 0 ? Math.round((h/maxDaily)*100) : 0;
         const d=document.createElement('div');
         d.className='subj-card';
@@ -3928,13 +3921,12 @@ function renderSubjectAnalytics() {
 
     // Always render all 8 subject cards for All Time
     subjects.forEach((s,i)=>{
-        const h = Math.round((totalHours[s]||0) * 2) / 2;
+        const h=parseFloat((totalHours[s]||0).toFixed(3));
         const pct = maxTotal > 0 ? Math.round((h/maxTotal)*100) : 0;
         const d=document.createElement('div');
         d.className='subj-card';
         d.style.cssText='border-color:rgba(255,204,0,0.2);';
-        const hDisp = Number.isInteger(h) ? h+'h' : h.toFixed(1)+'h';
-        d.innerHTML=`<h4 style="color:var(--text-main);display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>${s}</h4><div class="subj-bar"><div class="subj-fill" style="width:${pct}%;background:linear-gradient(90deg,${colors[i]},var(--warning));"></div></div><div class="subj-time" style="color:var(--warning);font-weight:600;">${h>0?hDisp+' total':'0h total'}</div>`;
+        d.innerHTML=`<h4 style="color:var(--text-main);display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};display:inline-block;flex-shrink:0;"></span>${s}</h4><div class="subj-bar"><div class="subj-fill" style="width:${pct}%;background:linear-gradient(90deg,${colors[i]},var(--warning));"></div></div><div class="subj-time" style="color:var(--warning);font-weight:600;">${h>0?h.toFixed(2)+'h total':'0h total'}</div>`;
         grid.appendChild(d);
     });
 }
@@ -3985,13 +3977,10 @@ function updateGoalUI() {
     if(document.getElementById('goal-daily-pct')){
         document.getElementById('goal-daily-pct').innerText=dp+'%';
         document.getElementById('goal-daily-fill').style.width=dp+'%';
-        const todayMinDisp = todayMin >= 60 ? (Math.floor(todayMin/60)+'h '+(todayMin%60>0?(todayMin%60)+'m':'')) : todayMin+'m';
-        const dailyGoalDisp = dailyMins >= 60 ? (Math.floor(dailyMins/60)+'h '+(dailyMins%60>0?(dailyMins%60)+'m':'')) : dailyMins+'m';
-        document.getElementById('goal-daily-sub').innerText=`${todayMinDisp} / ${dailyGoalDisp} today`;
+        document.getElementById('goal-daily-sub').innerText=`${todayMin} / ${dailyMins} min today`;
         document.getElementById('goal-weekly-pct').innerText=wp+'%';
         document.getElementById('goal-weekly-fill').style.width=wp+'%';
-        const weeklyHrsDisp = Number.isInteger(totalHrs) ? totalHrs+'h' : totalHrs.toFixed(1)+'h';
-        document.getElementById('goal-weekly-sub').innerText=`${weeklyHrsDisp} / ${weeklyHrs}h this week`;
+        document.getElementById('goal-weekly-sub').innerText=`${totalHrs.toFixed(1)} / ${weeklyHrs} hrs this week`;
         document.getElementById('goal-monthly-pct').innerText=mp+'%';
         document.getElementById('goal-monthly-fill').style.width=mp+'%';
         document.getElementById('goal-monthly-sub').innerText=`${completedTasks} / ${monthlyTasks} tasks this month`;
