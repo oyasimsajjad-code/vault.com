@@ -5397,7 +5397,8 @@ function renderChatMessages(messages, friendName, friendDp) {
         const safeText = (msg.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         const safeMsgText = (msg.text||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
         const safeId = (msg.id||'').replace(/'/g,'');
-        const reaction = msg.reaction ? `<div style="position:absolute;${isMe?'left:-4px':'right:-4px'};bottom:-14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:20px;padding:1px 6px;font-size:0.85rem;backdrop-filter:blur(10px);z-index:1;">${msg.reaction}</div>` : '';
+        const _rxn = (msg.reaction && typeof msg.reaction === 'string') ? msg.reaction : null;
+        const reaction = _rxn ? `<div style="position:absolute;${isMe?'left:-4px':'right:-4px'};bottom:-14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:20px;padding:1px 6px;font-size:0.85rem;backdrop-filter:blur(10px);z-index:1;">${_rxn}</div>` : '';
         const editedTag = msg.edited ? `<span style="font-size:0.58rem;color:rgba(255,255,255,0.55);margin-left:4px;font-style:italic;">edited</span>` : '';
         const replyThread = msg.replyTo ? (() => {
             const orig = messages.find(m => m.id === msg.replyTo.msgId);
@@ -5633,10 +5634,14 @@ function openMsgMenu(msgId, msgText, isMe) {
 }
 function reactMsg(msgId, reaction, currentReaction) {
     document.getElementById('msg-menu-overlay')?.remove();
-    if (window._fbReactMsg && currentChatUid) {
-        const finalReaction = (currentReaction && currentReaction === reaction) ? null : reaction;
-        window._fbReactMsg(msgId, finalReaction, currentChatUid);
+    if (!msgId || !window._fbReactMsg || !currentChatUid) return;
+    let liveReaction = currentReaction;
+    if (window._currentMessages) {
+        const liveMsg = window._currentMessages.find(m => m.id === msgId);
+        if (liveMsg !== undefined) liveReaction = liveMsg.reaction || null;
     }
+    const finalReaction = (liveReaction && liveReaction === reaction) ? null : reaction;
+    window._fbReactMsg(msgId, finalReaction, currentChatUid);
 }
 function unsendMsg(msgId) {
     document.getElementById('msg-menu-overlay')?.remove();
@@ -8040,15 +8045,23 @@ if (auth.currentUser) {
 
 /* ---- MESSAGE ACTIONS ---- */
 window._fbReactMsg = async function(msgId, reaction, friendUid) {
-    if(!msgId||!friendUid||!auth.currentUser) return;
+    if(!msgId || !friendUid || !auth.currentUser) return;
     const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
     try {
-        const { doc: _d, updateDoc: _u } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-        await _u(_d(firestore,'chats',chatId,'messages',msgId),{reaction: reaction ?? null});
-    } catch(e){
+        const { doc: _d, updateDoc: _u, setDoc: _s } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const msgRef = _d(firestore, 'chats', chatId, 'messages', msgId);
         try {
-            await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{reaction: reaction ?? null},{merge:true});
-        } catch(e2){ showToast('React failed','error'); }
+            await _u(msgRef, { reaction: reaction ?? null });
+        } catch(e) {
+            if (e.code === 'not-found') {
+                await _s(msgRef, { reaction: reaction ?? null }, { merge: true });
+            } else {
+                throw e;
+            }
+        }
+    } catch(e2) {
+        console.warn('React failed:', e2);
+        showToast('React failed', 'error');
     }
 };
 window._fbUnsendMsg = async function(msgId, friendUid) {
@@ -8354,6 +8367,7 @@ window._fbListenMessages = function(friendUid, callback) {
                 }
             }
             messages.sort((a,b) => (a.timestamp||0)-(b.timestamp||0));
+            if (currentChatUid === friendUid) window._currentMessages = messages;
             callback(messages);
             setDoc(doc(firestore, 'users', uid, 'conversations', friendUid), { unread: 0 }, { merge: true }).catch(()=>{});
             renderInbox();
