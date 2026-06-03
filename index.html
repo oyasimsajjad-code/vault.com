@@ -5414,7 +5414,7 @@ function renderChatMessages(messages, friendName, friendDp) {
         html += `<div id="${msgWrapId}" style="display:flex;align-items:flex-end;gap:6px;margin-bottom:${isLastInGroup?'10':'3'}px;${isMe?'flex-direction:row-reverse;':''};touch-action:pan-y;user-select:none;transition:transform 0.2s ease;" data-msgid="${safeId}" data-msgtext="${safeMsgText}" data-isme="${isMe}" class="msg-swipe-row">
             ${isLastInGroup ? `<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;position:relative;"><img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;cursor:pointer;" onclick="${!isMe&&safeId?`if(window._dashLbEntries&&window._dashLbEntries['${msg.fromUid||''}'])showUserProfile(window._dashLbEntries['${msg.fromUid||''}'])`:'void(0)'}">${window._verifiedUsers&&window._verifiedUsers.has(msg.fromUid||'')?'<span style="position:absolute;bottom:-3px;right:-3px;width:12px;height:12px;background:#1877F2;border-radius:50%;border:1.5px solid var(--bg-base);display:flex;align-items:center;justify-content:center;font-size:0;"></span>':''}</div>` : '<div style="width:28px;flex-shrink:0;"></div>'}
             <div style="max-width:72%;${isMe?'text-align:right;':''}">
-                <div style="position:relative;display:inline-block;max-width:100%;" oncontextmenu="event.preventDefault();openMsgMenu('${safeId}','${safeMsgText}',${isMe})" ondblclick="openMsgMenu('${safeId}','${safeMsgText}',${isMe})">
+                <div style="position:relative;display:inline-block;max-width:100%;" oncontextmenu="event.preventDefault();openMsgMenu('${safeId}','${safeMsgText}',${isMe})" ondblclick="reactMsg('${safeId}','❤️')">
                     ${msgContent}
                     ${reaction}
                     <div class="reply-swipe-icon" id="rsi_${safeId}" style="position:absolute;${isMe?'left:-36px':'right:-36px'};bottom:4px;width:28px;height:28px;border-radius:50%;background:rgba(0,240,255,0.15);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.18s;pointer-events:none;"><i class="fa-solid fa-reply" style="color:var(--primary);font-size:0.8rem;"></i></div>
@@ -7955,7 +7955,7 @@ function startPresenceListener() {
                 const isOnline = window._onlineStatus[currentChatUid];
                 const lastSeenTs = window._lastSeen[currentChatUid];
                 const _effTs = lastSeenTs || 0;
-                const _showOnline = isOnline || (_effTs && (Date.now() - _effTs) < 35000);
+                const _showOnline = isOnline || (_effTs && (Date.now() - _effTs) < 60000);
                 const allDivs = chatHeader.querySelectorAll('div');
                 allDivs.forEach(div => {
                     if (div.style && div.style.marginTop === '1px') {
@@ -8038,10 +8038,7 @@ window._fbReactMsg = async function(msgId, reaction, friendUid) {
     if(!msgId||!friendUid||!auth.currentUser) return;
     const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
     try {
-        const msgSnap = await getDoc(doc(firestore,'chats',chatId,'messages',msgId));
-        const currentReaction = msgSnap.exists() ? msgSnap.data().reaction : null;
-        const newReaction = currentReaction === reaction ? null : reaction;
-        await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{reaction: newReaction},{merge:true});
+        await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{reaction: reaction},{merge:true});
     } catch(e){ showToast('React failed','error'); }
 };
 window._fbUnsendMsg = async function(msgId, friendUid) {
@@ -8335,7 +8332,7 @@ window._fbListenMessages = function(friendUid, callback) {
                                 if (div.style && div.style.marginTop === '1px') {
                                     const _isOnline = !!(window._onlineStatus[friendUid]);
                                     const _ls = window._lastSeen[friendUid] || 0;
-                                    const _recentMsg = _ls && (Date.now() - _ls) < 35000;
+                                    const _recentMsg = _ls && (Date.now() - _ls) < 60000;
                                     const _online = _isOnline || _recentMsg;
                                     div.innerHTML = _online
                                         ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
