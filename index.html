@@ -5560,14 +5560,25 @@ function timeAgo(ts) {
     if (!ts) return '';
     const diff = Date.now() - ts;
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'now';
-    if (mins < 60) return mins + 'm';
+    if (mins < 1) return 'just now';
+    if (mins === 1) return '1 min';
+    if (mins < 60) return mins + ' mins';
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return hrs + 'h';
+    if (hrs === 1) return '1 hour';
+    if (hrs < 24) return hrs + ' hours';
     const days = Math.floor(hrs / 24);
-    if (days < 7) return days + 'd';
+    if (days === 1) return '1 day';
+    if (days < 7) return days + ' days';
     return Math.floor(days / 7) + 'w';
 }
+
+// Realtime timeAgo refresh — every 60s re-renders inbox & friends so "X mins ago" stays live
+setInterval(() => {
+    if (typeof currentView !== 'undefined') {
+        if (currentView === 'inbox' && typeof renderInbox === 'function') renderInbox();
+        if (currentView === 'friends' && typeof renderFriendsSection === 'function') renderFriendsSection();
+    }
+}, 60000);
 
 /* ---- MSG MENU ---- */
 function toggleEmojiPicker() {
@@ -7747,7 +7758,6 @@ onAuthStateChanged(auth, async (user) => {
             }
 
             setupRTDBPresence(user.uid);
-            startPresenceListener();
             logEvent(analytics, 'session_start', { uid: user.uid });
             setTimeout(() => initFCM(), 3000);
 
@@ -7889,7 +7899,7 @@ setInterval(() => {
     Object.keys(window._onlineStatus).forEach(uid => {
         if (window._onlineStatus[uid]) {
             const ls = window._lastSeen[uid] || 0;
-            if (Date.now() - ls > 35000) {
+            if (Date.now() - ls > 60000) {
                 window._onlineStatus[uid] = false;
                 changed = true;
             }
@@ -7932,7 +7942,7 @@ function startPresenceListener() {
                 window._lastSeen[d.id] = 0;
                 return;
             }
-            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 35000;
+            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 60000;
             window._onlineStatus[d.id] = !!(v.online && isRecent);
             window._lastSeen[d.id] = v.lastSeen || 0;
         });
@@ -7975,10 +7985,28 @@ if (auth.currentUser) {
         }
     });
     window.addEventListener('beforeunload', () => {
-        if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false);
+        if (auth.currentUser) {
+            fbUpdatePresence(auth.currentUser.uid, false);
+            if (_rtdbPresenceRef) {
+                try {
+                    import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js')
+                        .then(({ set }) => set(_rtdbPresenceRef, { online: false, lastSeen: Date.now(), uid: auth.currentUser.uid }))
+                        .catch(() => {});
+                } catch(_) {}
+            }
+        }
     });
     window.addEventListener('pagehide', () => {
-        if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, false);
+        if (auth.currentUser) {
+            fbUpdatePresence(auth.currentUser.uid, false);
+            if (_rtdbPresenceRef) {
+                try {
+                    import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js')
+                        .then(({ set }) => set(_rtdbPresenceRef, { online: false, lastSeen: Date.now(), uid: auth.currentUser.uid }))
+                        .catch(() => {});
+                } catch(_) {}
+            }
+        }
     });
     window.addEventListener('pageshow', () => {
         if (auth.currentUser) {
@@ -7987,6 +8015,8 @@ if (auth.currentUser) {
         }
     });
     startPresenceListener();
+    startNotifListener(auth.currentUser.uid);
+    startMessageNotifListener(auth.currentUser.uid);
 
     // Heartbeat every 25s — keeps own presence fresh so others see correct status
     let _presenceHeartbeat = setInterval(() => {
@@ -8240,7 +8270,7 @@ window._fbListenMessages = function(friendUid, callback) {
             if (!psnap.exists()) return;
             const v = psnap.data();
             if (!v) return;
-            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 35000;
+            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 60000;
             window._onlineStatus[friendUid] = !!(v.online && isRecent);
             window._lastSeen[friendUid] = v.lastSeen || 0;
             if (typeof renderInbox === 'function') renderInbox();
@@ -8475,10 +8505,7 @@ async function startMessageNotifListener(uid) {
     } catch(e) { console.warn('Message notif listener error:', e); }
 }
 
-if (auth.currentUser) {
-    startNotifListener(auth.currentUser.uid);
-    startMessageNotifListener(auth.currentUser.uid);
-}
+
 
 /* ---- FCM PUSH NOTIFICATIONS ---- */
 let _fcmToken = null;
