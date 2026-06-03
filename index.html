@@ -5195,7 +5195,7 @@ async function renderInbox() {
         const isActive = uid === currentChatUid;
         const isOnline = !!(window._onlineStatus && window._onlineStatus[uid]);
         const _presenceLastSeen = (window._lastSeen && window._lastSeen[uid]) || 0;
-        const _displayOnline = isOnline || (_presenceLastSeen && (Date.now() - _presenceLastSeen) < 35000);
+        const _displayOnline = isOnline || (_presenceLastSeen && (Date.now() - _presenceLastSeen) < 60000);
         return `<div style="position:relative;display:flex;flex-direction:row;align-items:center;width:100%;box-sizing:border-box;" onmouseenter="this.querySelector('.conv-del-btn').style.opacity='1'" onmouseleave="this.querySelector('.conv-del-btn').style.opacity='0'">
         <div onclick="openChatWith('${uid}')" style="flex:1;min-width:0;display:flex;flex-direction:row;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;background:${isActive?'rgba(0,240,255,0.1)':'transparent'};border:1px solid ${isActive?'var(--primary)':'transparent'};margin-bottom:2px;transition:all 0.18s;width:100%;box-sizing:border-box;" onmouseover="if('${uid}'!==currentChatUid)this.style.background='rgba(255,255,255,0.05)'" onmouseout="if('${uid}'!==currentChatUid)this.style.background='transparent'">
             <div style="position:relative;flex-shrink:0;">
@@ -5261,7 +5261,7 @@ async function openChatWith(friendUid) {
         if (currentChatUid !== friendUid) return;
         const isOnline = !!(window._onlineStatus && window._onlineStatus[friendUid]);
         const lastSeenTs = (window._lastSeen && window._lastSeen[friendUid]) || 0;
-        const _showOnline = isOnline || (lastSeenTs && (Date.now() - lastSeenTs) < 35000);
+        const _showOnline = isOnline || (lastSeenTs && (Date.now() - lastSeenTs) < 60000);
         const statusHtml = _showOnline
             ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
             : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
@@ -5414,7 +5414,7 @@ function renderChatMessages(messages, friendName, friendDp) {
         html += `<div id="${msgWrapId}" style="display:flex;align-items:flex-end;gap:6px;margin-bottom:${isLastInGroup?'10':'3'}px;${isMe?'flex-direction:row-reverse;':''};touch-action:pan-y;user-select:none;transition:transform 0.2s ease;" data-msgid="${safeId}" data-msgtext="${safeMsgText}" data-isme="${isMe}" class="msg-swipe-row">
             ${isLastInGroup ? `<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;position:relative;"><img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;cursor:pointer;" onclick="${!isMe&&safeId?`if(window._dashLbEntries&&window._dashLbEntries['${msg.fromUid||''}'])showUserProfile(window._dashLbEntries['${msg.fromUid||''}'])`:'void(0)'}">${window._verifiedUsers&&window._verifiedUsers.has(msg.fromUid||'')?'<span style="position:absolute;bottom:-3px;right:-3px;width:12px;height:12px;background:#1877F2;border-radius:50%;border:1.5px solid var(--bg-base);display:flex;align-items:center;justify-content:center;font-size:0;"></span>':''}</div>` : '<div style="width:28px;flex-shrink:0;"></div>'}
             <div style="max-width:72%;${isMe?'text-align:right;':''}">
-                <div style="position:relative;display:inline-block;max-width:100%;" oncontextmenu="event.preventDefault();openMsgMenu('${safeId}','${safeMsgText}',${isMe})" ondblclick="reactMsg('${safeId}','❤️')">
+                <div style="position:relative;display:inline-block;max-width:100%;" oncontextmenu="event.preventDefault();openMsgMenu('${safeId}','${safeMsgText}',${isMe})" ondblclick="reactMsg('${safeId}','❤️','${msg.reaction||''}')">
                     ${msgContent}
                     ${reaction}
                     <div class="reply-swipe-icon" id="rsi_${safeId}" style="position:absolute;${isMe?'left:-36px':'right:-36px'};bottom:4px;width:28px;height:28px;border-radius:50%;background:rgba(0,240,255,0.15);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.18s;pointer-events:none;"><i class="fa-solid fa-reply" style="color:var(--primary);font-size:0.8rem;"></i></div>
@@ -5631,9 +5631,12 @@ function openMsgMenu(msgId, msgText, isMe) {
     overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
     document.body.appendChild(overlay);
 }
-function reactMsg(msgId, reaction) {
+function reactMsg(msgId, reaction, currentReaction) {
     document.getElementById('msg-menu-overlay')?.remove();
-    if (window._fbReactMsg && currentChatUid) window._fbReactMsg(msgId, reaction, currentChatUid);
+    if (window._fbReactMsg && currentChatUid) {
+        const finalReaction = (currentReaction && currentReaction === reaction) ? null : reaction;
+        window._fbReactMsg(msgId, finalReaction, currentChatUid);
+    }
 }
 function unsendMsg(msgId) {
     document.getElementById('msg-menu-overlay')?.remove();
@@ -7871,7 +7874,10 @@ async function setupRTDBPresence(uid) {
         const connectedRef = rtdbRef(rtdb, '.info/connected');
         _rtdbPresenceRef = userStatusRef;
         onValue(connectedRef, async (snap) => {
-            if (!snap.val()) return;
+            if (!snap.val()) {
+                await fbUpdatePresence(uid, false);
+                return;
+            }
             // When we disconnect, write offline + server timestamp to RTDB
             await onDisconnect(userStatusRef).set({
                 online: false,
@@ -8015,7 +8021,6 @@ if (auth.currentUser) {
             setupRTDBPresence(auth.currentUser.uid);
         }
     });
-    startPresenceListener();
     startNotifListener(auth.currentUser.uid);
     startMessageNotifListener(auth.currentUser.uid);
 
@@ -8030,7 +8035,7 @@ if (auth.currentUser) {
                     .catch(() => {});
             }
         }
-    }, 25000);
+    }, 15000);
 }
 
 /* ---- MESSAGE ACTIONS ---- */
@@ -8038,8 +8043,13 @@ window._fbReactMsg = async function(msgId, reaction, friendUid) {
     if(!msgId||!friendUid||!auth.currentUser) return;
     const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
     try {
-        await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{reaction: reaction},{merge:true});
-    } catch(e){ showToast('React failed','error'); }
+        const { doc: _d, updateDoc: _u } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        await _u(_d(firestore,'chats',chatId,'messages',msgId),{reaction: reaction ?? null});
+    } catch(e){
+        try {
+            await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{reaction: reaction ?? null},{merge:true});
+        } catch(e2){ showToast('React failed','error'); }
+    }
 };
 window._fbUnsendMsg = async function(msgId, friendUid) {
     if(!msgId||!friendUid||!auth.currentUser) return;
