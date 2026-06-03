@@ -2985,12 +2985,9 @@ function toggleTask(id) {
     saveAppData(); renderTasks(); checkAchievements();
 }
 function deleteTask(id) {
-    const t = appData.tasks.find(x => x.id === id);
-    if (t && t.completed) {
-        appData.stats.completedTasks = Math.max(0, (appData.stats.completedTasks || 0) - 1);
-    }
     appData.tasks = appData.tasks.filter(x => x.id !== id);
     saveAppData(); renderTasks();
+    if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
 }
 
 function renderTasks() {
