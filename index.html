@@ -3863,6 +3863,13 @@ function renderHeatmap() {
         monthsEl.appendChild(span);
     });
     // Determine max for scaling
+    const isMinutes = Object.values(heatmap).some(v => v > 24);
+    const normalizedHeatmap = {};
+    Object.keys(heatmap).forEach(k => {
+        normalizedHeatmap[k] = isMinutes ? heatmap[k] : heatmap[k] * 60;
+    });
+    const heatmap2 = normalizedHeatmap;
+    Object.keys(heatmap).forEach(k => heatmap[k] = heatmap2[k]);
     const vals=Object.values(heatmap).filter(v=>v>0);
     const maxVal=vals.length>0?Math.max(...vals):1;
     allDates.forEach(ds=>{
