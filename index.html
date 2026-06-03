@@ -3697,7 +3697,7 @@ function getWeeklyHoursData() {
         const d = new Date(today);
         d.setDate(today.getDate() + mondayOffset + i);
         const ds = d.toISOString().split('T')[0];
-        result[i] = parseFloat((heatmap[ds] || 0).toFixed(2));
+        result[i] = parseFloat(((heatmap[ds] || 0) / 60).toFixed(2));
     }
     return result;
 }
@@ -3774,14 +3774,14 @@ function initCharts() {
                 legend:{display:false},
                 tooltip:{
                     callbacks:{
-                        label: ctx => ' ' + (ctx.raw||0).toFixed(2) + 'h'
+                        label: ctx => { const v=ctx.raw||0; const h=Math.floor(v),m=Math.round((v-h)*60); return ' '+(h>0?(m>0?h+'h '+m+'m':h+'h'):m+'m'); }
                     }
                 }
             },
             scales:{
                 x:{grid:{display:false}, ticks:{color:cc.text}},
                 y:{grid:{color:cc.grid}, ticks:{color:cc.text}, beginAtZero:true,
-                   ticks:{callback: v => v.toFixed(1)+'h'}}
+                   ticks:{callback: v => v>=1?v.toFixed(1)+'h':(Math.round(v*60)+'m')}}
             }
         }
     });
