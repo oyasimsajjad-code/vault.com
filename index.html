@@ -3173,7 +3173,7 @@ function _recordStudyTime(mins, subj) {
     appData.stats.subjectHours[subj] = (appData.stats.subjectHours[subj] || 0) + mins / 60;
     appData.stats.totalSubjectHours[subj] = (appData.stats.totalSubjectHours[subj] || 0) + mins / 60;
     if (!appData.stats.heatmap) appData.stats.heatmap = {};
-    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins / 60;
+    appData.stats.heatmap[today] = (appData.stats.heatmap[today] || 0) + mins;
     checkAndUpdateStreak(today);
 }
 
@@ -3882,7 +3882,9 @@ function renderHeatmap() {
         if(ds===today) cell.style.outline='2px solid var(--primary)';
         const tooltip=document.createElement('div');
         tooltip.className='heatmap-tooltip';
-        tooltip.innerText=ds+': '+(val>0?val.toFixed(2)+'h':'No study');
+        const valH=Math.floor(val/60),valM=Math.round(val%60);
+        const valDisp=val<=0?'No study':valH>0?(valM>0?valH+'h '+valM+'m':valH+'h'):valM+'m';
+        tooltip.innerText=ds+': '+valDisp;
         cell.appendChild(tooltip);
         container.appendChild(cell);
     });
