@@ -2387,9 +2387,12 @@ async function startApp() {
     loadRoutine();
     renderRecentPDFs();
     updateGreeting();
-    setTimeout(renderDashLeaderboard, 1500);
-    setTimeout(loadFriendRequestsBadge, 2000);
-    setTimeout(loadInboxBadge, 2000);
+    // Parallel non-blocking load — prevents 0-value flicker and sequential delays
+    Promise.all([
+        window._fbLoadDashLeaderboard ? window._fbLoadDashLeaderboard() : Promise.resolve(),
+        typeof loadFriendRequestsBadge === 'function' ? Promise.resolve().then(loadFriendRequestsBadge) : Promise.resolve(),
+        typeof loadInboxBadge === 'function' ? Promise.resolve().then(loadInboxBadge) : Promise.resolve()
+    ]).catch(e => console.warn('Parallel dashboard load error:', e));
     currentLang = appData.settings.language || 'en';
     applyLang();
     const lbEn = document.getElementById('lang-btn-en');
@@ -2400,6 +2403,7 @@ async function startApp() {
     navHistory = ['dashboard']; currentView = 'dashboard';
     history.replaceState({ view: 'dashboard' }, '');
     checkAndUpdateStreak();
+    _scheduleMidnightReset();
     setupSwipeGestures();
     showAdminNavIfCreator();
     if (!appData.stats.aiXP) appData.stats.aiXP = 0;
@@ -3535,9 +3539,37 @@ function playFocusStartSound() {
 }
 
 /* ---- STREAK ---- */
+function _getMidnightResetKey() {
+    // Returns a string 'YYYY-MM-DD' representing today's local date
+    const now = new Date();
+    return now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0');
+}
+
+function _scheduleMidnightReset() {
+    const now = new Date();
+    const msUntilMidnight = new Date(
+        now.getFullYear(), now.getMonth(), now.getDate() + 1,
+        0, 0, 0, 0
+    ) - now;
+    setTimeout(() => {
+        // Guard against duplicate execution (in case multiple tabs run this)
+        const resetKey = _getMidnightResetKey();
+        const lastReset = _localGet('sv_midnight_reset_' + (currentUser || 'default'));
+        if (lastReset !== resetKey) {
+            _localSave('sv_midnight_reset_' + (currentUser || 'default'), resetKey);
+            checkAndUpdateStreak(resetKey);
+            saveAppData();
+        }
+        // Reschedule for next midnight
+        _scheduleMidnightReset();
+    }, msUntilMidnight + 100); // +100ms buffer past midnight
+}
+
 function checkAndUpdateStreak(todayStr) {
-    const today=todayStr||new Date().toISOString().split('T')[0];
-    // Reset todayMinutes if new day
+    const today=todayStr||_getMidnightResetKey();
+    // Reset todayMinutes if new day (exact date comparison, not floating 24h)
     if(appData.stats.lastStudyDate && appData.stats.lastStudyDate !== today) {
         appData.stats.todayMinutes = 0;
         // Reset daily subject hours on new day
@@ -7095,6 +7127,8 @@ function openProfileShareCard() {
 
 async function downloadProfileCard() {
     showToast('📸 Generating profile card...', 'success');
+    // Yield to UI thread before heavy work
+    await new Promise(res => setTimeout(res, 0));
     if (!window.html2canvas) {
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
@@ -7109,9 +7143,11 @@ async function downloadProfileCard() {
     const cardEl = document.getElementById('profile-share-card-inner');
     if (!cardEl) { showToast('Could not find card', 'error'); return; }
 
-    // Force font render before capture
+    // Force font render before capture, then yield again to keep UI responsive
     await document.fonts.ready;
     await new Promise(res => setTimeout(res, 120));
+    // Second yield — allows browser to paint/respond between heavy frames
+    await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
 
     const dpr = Math.max(window.devicePixelRatio || 1, 3);
 
@@ -7262,7 +7298,9 @@ import {
     collection,
     getDocs,
     query,
-    where
+    where,
+    orderBy,
+    limitToLast
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import {
     getStorage,
@@ -7607,85 +7645,89 @@ window._fbLogout = async function() {
 
 /* ---- Auth State Observer ---- */
 onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        if (!db) await initDB();
-        currentUser = user.uid;
-        const emailEl = document.getElementById('cloud-user-email');
-        if (emailEl) emailEl.innerText = user.email || user.displayName || 'Unknown';
+    try {
+        if (user) {
+            if (!db) { try { await initDB(); } catch(e) { console.warn('DB init error:', e); } }
+            currentUser = user.uid;
+            const emailEl = document.getElementById('cloud-user-email');
+            if (emailEl) emailEl.innerText = user.email || user.displayName || 'Unknown';
 
-        // 1. Load local cache first for speed
-        loadAppData();
+            // 1. Load local cache first for speed
+            try { loadAppData(); } catch(e) { console.warn('Local load error:', e); }
 
-        // Hide splash early so user sees something
-        hideSplash();
+            // Hide splash early so user sees something
+            hideSplash();
 
-        // 2. Merge in cloud data (authoritative)
-        try {
-            const cloudData = await fbLoadAppData(user.uid);
-            if (cloudData) mergeCloudData(cloudData);
-        } catch(e) { console.warn('Cloud load failed, using local data', e); }
-        applyTheme(appData.settings.darkMode !== false);
+            // 2. Merge in cloud data (authoritative) — never block rendering
+            try {
+                const cloudData = await fbLoadAppData(user.uid);
+                if (cloudData) mergeCloudData(cloudData);
+            } catch(e) { console.warn('Cloud load failed, using local data', e); }
+            try { applyTheme(appData.settings.darkMode !== false); } catch(e) {}
 
-        // 3. Set profile name from Firebase Auth if not set
-        if ((!appData.profile.name || appData.profile.name === 'Student') && user.displayName) {
-            appData.profile.name = user.displayName;
-        }
+            // 3. Set profile name from Firebase Auth if not set
+            if ((!appData.profile.name || appData.profile.name === 'Student') && user.displayName) {
+                appData.profile.name = user.displayName;
+            }
 
-        // 4. Sync PDF metadata from cloud (non-blocking)
-        syncPDFsFromCloud(user.uid).catch(e => console.warn('PDF sync error:', e));
+            // 4. Sync PDF metadata from cloud (non-blocking)
+            syncPDFsFromCloud(user.uid).catch(e => console.warn('PDF sync error:', e));
 
-        // Auto-grant admin role to creator account
-        if (user.uid === 'aoKaaZLi7xhkcASgXdlaSTuF06k2') {
-          try {
-            await setDoc(doc(firestore, 'admins', user.uid), {
-              uid: user.uid, role: 'admin', verified: true,
-              email: user.email || 'oyasimsajjad@gmail.com',
-              grantedAt: Date.now()
-            });
-            await setDoc(doc(firestore, 'leaderboard', user.uid), {
-              verified: true, role: 'admin'
-            }, { merge: true });
-            window._verifiedUsers = window._verifiedUsers || new Set();
-            window._verifiedUsers.add(user.uid);
-          } catch(e) { console.warn('Admin auto-grant error:', e); }
-        }
-        // 5. Start app
-        if (appData.settings.appLock && appData.settings.pin) {
-            document.getElementById('firebase-auth-overlay').style.display = 'none';
-            document.getElementById('app-lock-screen').classList.remove('hidden');
-        } else {
-            document.getElementById('firebase-auth-overlay').style.display = 'none';
-            await startApp();
-        }
-        setupRTDBPresence(user.uid);
-        startPresenceListener();
+            // Auto-grant admin role to creator account (non-blocking)
+            if (user.uid === 'aoKaaZLi7xhkcASgXdlaSTuF06k2') {
+              Promise.all([
+                setDoc(doc(firestore, 'admins', user.uid), {
+                  uid: user.uid, role: 'admin', verified: true,
+                  email: user.email || 'oyasimsajjad@gmail.com',
+                  grantedAt: Date.now()
+                }),
+                setDoc(doc(firestore, 'leaderboard', user.uid), {
+                  verified: true, role: 'admin'
+                }, { merge: true })
+              ]).then(() => {
+                window._verifiedUsers = window._verifiedUsers || new Set();
+                window._verifiedUsers.add(user.uid);
+              }).catch(e => console.warn('Admin auto-grant error:', e));
+            }
 
-        logEvent(analytics, 'session_start', { uid: user.uid });
-
-self.addEventListener('notificationclick', event => {
-    event.notification.close();
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
-            for (const client of clientList) {
-                if (client.url && 'focus' in client) {
-                    return client.focus();
+            // 5. Start app — always render dashboard, never block on errors
+            try {
+                document.getElementById('firebase-auth-overlay').style.display = 'none';
+                if (appData.settings.appLock && appData.settings.pin) {
+                    document.getElementById('app-lock-screen').classList.remove('hidden');
+                } else {
+                    await startApp();
                 }
+            } catch(e) {
+                console.error('startApp error:', e);
+                // Force show app even if startApp threw
+                try { document.getElementById('main-app').classList.remove('hidden'); } catch(_) {}
+                try { document.getElementById('firebase-auth-overlay').style.display = 'none'; } catch(_) {}
             }
-            if (clients.openWindow) {
-                return clients.openWindow('/');
-            }
-        })
-    );
-});
-        setTimeout(() => initFCM(), 3000);
 
-    } else {
-        // Not logged in - show Firebase auth overlay
+            setupRTDBPresence(user.uid);
+            startPresenceListener();
+            logEvent(analytics, 'session_start', { uid: user.uid });
+            setTimeout(() => initFCM(), 3000);
+
+        } else {
+            // Not logged in - show Firebase auth overlay
+            hideSplash();
+            const _fbAuth0 = document.getElementById('firebase-auth-overlay');
+            _fbAuth0.style.visibility = 'visible';
+            _fbAuth0.style.display = 'flex';
+            setTimeout(() => { _fbAuth0.style.opacity = '1'; }, 30);
+        }
+    } catch(e) {
+        // Catastrophic auth error — prevent permanent white screen
+        console.error('onAuthStateChanged fatal error:', e);
         hideSplash();
-        const _fbAuth0 = document.getElementById('firebase-auth-overlay');
-        _fbAuth0.style.visibility = 'visible';
-        _fbAuth0.style.display = 'flex';
-        setTimeout(() => { _fbAuth0.style.opacity = '1'; }, 30);
+        try {
+            const _fbAuth0 = document.getElementById('firebase-auth-overlay');
+            _fbAuth0.style.visibility = 'visible';
+            _fbAuth0.style.display = 'flex';
+            setTimeout(() => { _fbAuth0.style.opacity = '1'; }, 30);
+        } catch(_) {}
     }
 });
 
@@ -8133,8 +8175,38 @@ window._fbListenMessages = function(friendUid, callback) {
     const uid = auth.currentUser.uid;
     const chatId = getChatId(uid, friendUid);
     const msgsRef = collection(firestore, 'chats', chatId, 'messages');
+    // Attach per-user realtime presence listener scoped to this chat session
+    let _presenceUnsub = null;
+    try {
+        const presRef = doc(firestore, 'presence', friendUid);
+        _presenceUnsub = onSnapshot(presRef, (psnap) => {
+            if (!psnap.exists()) return;
+            const v = psnap.data();
+            if (!v) return;
+            const isRecent = v.lastSeen && (Date.now() - v.lastSeen) < 30000;
+            window._onlineStatus[friendUid] = !!(v.online && isRecent);
+            window._lastSeen[friendUid] = v.lastSeen || 0;
+            if (typeof renderInbox === 'function') renderInbox();
+            if (currentChatUid === friendUid) {
+                const chatHeader = document.getElementById('chat-header');
+                if (chatHeader) {
+                    const isOnline = window._onlineStatus[friendUid];
+                    const lastSeenTs = window._lastSeen[friendUid];
+                    chatHeader.querySelectorAll('div').forEach(div => {
+                        if (div.style && div.style.marginTop === '1px') {
+                            div.innerHTML = isOnline
+                                ? '<span style="color:var(--success);font-size:0.7rem;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;"></span>Active now</span>'
+                                : (lastSeenTs ? '<span style="color:var(--text-muted);font-size:0.7rem;">Active ' + timeAgo(lastSeenTs) + ' ago</span>' : '<span style="color:var(--text-muted);font-size:0.7rem;">Offline</span>');
+                        }
+                    });
+                }
+            }
+        }, () => {});
+    } catch(e) { console.warn('Per-chat presence listener error:', e); }
+    // Load only last 25 messages to prevent blocking render on large histories
+    const pagedQuery = query(msgsRef, orderBy('timestamp', 'asc'), limitToLast(25));
     const unsubscribe = onSnapshot(
-        query(msgsRef),
+        pagedQuery,
         async (snap) => {
             const messages = [];
             const batch = [];
@@ -8158,7 +8230,11 @@ window._fbListenMessages = function(friendUid, callback) {
         },
         (err) => { console.warn('Message listener error:', err); }
     );
-    return unsubscribe;
+    // Return composite unsubscribe that cleans up both listeners
+    return function() {
+        try { unsubscribe(); } catch(e) {}
+        try { if (_presenceUnsub) _presenceUnsub(); } catch(e) {}
+    };
 };
 
 window._fbSendImage = async function(toUid, blob, fileName) {
