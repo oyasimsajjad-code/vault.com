@@ -1543,6 +1543,7 @@
     <div class="rt-prog-seg done" id="rt-prog-1"></div>
     <div class="rt-prog-seg" id="rt-prog-2"></div>
     <div class="rt-prog-seg" id="rt-prog-3"></div>
+    <div class="rt-prog-seg" id="rt-prog-4"></div>
   </div>
 
   <!-- STEP 1: Subject Selection -->
@@ -1585,16 +1586,52 @@
     </div>
   </div>
 
-  <!-- STEP 3: Timeline Selection -->
+  <!-- STEP 3: Study Mode Selection (NEW) -->
   <div class="rt-step" id="rt-step-3">
     <div class="rt-step-header">
       <div class="rt-step-num">3</div>
+      <div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:var(--text-main);">Daily Study Mode নির্বাচন করুন</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">প্রতিদিন কীভাবে পড়তে চান?</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;">
+      <div id="rt-mode-single" onclick="rtSetStudyMode('single')" style="display:flex;align-items:flex-start;gap:14px;padding:18px;border-radius:var(--radius-md);background:var(--glass-bg);border:2px solid var(--primary);cursor:pointer;transition:all 0.2s;">
+        <div style="font-size:1.8rem;flex-shrink:0;">📖</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;color:var(--text-main);font-size:0.95rem;margin-bottom:4px;">Single Subject Per Day</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;">প্রতিদিন মাত্র একটি বিষয়ের topics পড়বেন। একটি বিষয় শেষ হলে পরবর্তী বিষয়ে যাবেন।</div>
+          <div style="margin-top:8px;font-size:0.72rem;padding:3px 10px;border-radius:20px;background:rgba(0,240,255,0.12);color:var(--primary);display:inline-block;">Sequential • Focus Mode</div>
+        </div>
+        <div id="rt-mode-single-check" style="width:22px;height:22px;border-radius:50%;background:var(--primary);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;"><i class="fa-solid fa-check" style="color:#000;font-size:9px;"></i></div>
+      </div>
+      <div id="rt-mode-multi" onclick="rtSetStudyMode('multi')" style="display:flex;align-items:flex-start;gap:14px;padding:18px;border-radius:var(--radius-md);background:var(--glass-bg);border:2px solid var(--glass-border);cursor:pointer;transition:all 0.2s;">
+        <div style="font-size:1.8rem;flex-shrink:0;">⚖️</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;color:var(--text-main);font-size:0.95rem;margin-bottom:4px;">Multiple Subjects Per Day (Balanced)</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.5;">প্রতিদিন সব বিষয় থেকে সমানভাবে topics পড়বেন। কোনো বিষয় বাদ যাবে না।</div>
+          <div style="margin-top:8px;font-size:0.72rem;padding:3px 10px;border-radius:20px;background:rgba(112,0,255,0.12);color:var(--secondary);display:inline-block;">Balanced • Round-Robin</div>
+        </div>
+        <div id="rt-mode-multi-check" style="width:22px;height:22px;border-radius:50%;background:transparent;border:2px solid var(--glass-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn" style="flex:1;justify-content:center;" onclick="rtGoToStep2()"><i class="fa-solid fa-arrow-left"></i> পেছনে</button>
+      <button class="btn btn-primary" style="flex:2;justify-content:center;" onclick="rtGoToStep4()"><i class="fa-solid fa-arrow-right"></i> পরবর্তী: Timeline</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Timeline Selection (was Step 3) -->
+  <div class="rt-step" id="rt-step-4">
+    <div class="rt-step-header">
+      <div class="rt-step-num">4</div>
       <div>
         <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:var(--text-main);">Timeline নির্বাচন করুন</div>
         <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">কতদিনে পড়তে চান?</div>
       </div>
     </div>
     <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <div id="rt-selected-mode-badge" style="margin-bottom:14px;font-size:0.8rem;padding:8px 14px;border-radius:var(--radius-sm);background:rgba(0,240,255,0.06);border:1px solid rgba(0,240,255,0.15);color:var(--primary);"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
         <div>
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:6px;"><i class="fa-solid fa-calendar-plus" style="color:var(--primary);margin-right:6px;"></i>শুরুর তারিখ</label>
@@ -1616,7 +1653,7 @@
       <div id="rt-timeline-warning" class="rt-warning-box" style="display:none;margin-top:14px;margin-bottom:0;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i><span id="rt-warning-text"></span></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px;">
-      <button class="btn" style="flex:1;justify-content:center;" onclick="rtGoToStep2()"><i class="fa-solid fa-arrow-left"></i> পেছনে</button>
+      <button class="btn" style="flex:1;justify-content:center;" onclick="rtGoToStep3()"><i class="fa-solid fa-arrow-left"></i> পেছনে</button>
       <button class="btn btn-primary" style="flex:2;justify-content:center;padding:13px;" onclick="rtGenerateRoutine()" id="rt-generate-btn">
         <i class="fa-solid fa-magic-wand-sparkles"></i> Routine তৈরি করুন
       </button>
@@ -1624,7 +1661,7 @@
   </div>
 
   <!-- GENERATED ROUTINE VIEW -->
-  <div class="rt-step" id="rt-step-4">
+  <div class="rt-step" id="rt-step-5">
     <div id="rt-gen-progress-area" style="margin-bottom:20px;">
       <div class="rt-progress-summary" id="rt-stats-grid"></div>
       <div class="glass" style="padding:14px 18px;margin-bottom:16px;">
@@ -4996,6 +5033,7 @@ let _rtState = {
   selectedChapters: [],
   startDate: '',
   endDate: '',
+  studyMode: 'single',
   generatedRoutine: null,
   completionMap: {}
 };
@@ -5034,9 +5072,8 @@ function renderRoutine() { _rtRender(); }
 
 function _rtRender() {
   _rtUpdateProgressBar();
-  // Decide which step to show
   if (_rtState.generatedRoutine && _rtState.generatedRoutine.length > 0) {
-    _rtShowStep(4);
+    _rtShowStep(5);
     _rtRenderGeneratedRoutine();
     document.getElementById('rt-delete-btn').style.display = 'inline-flex';
     document.getElementById('rt-regenerate-btn').style.display = 'inline-flex';
@@ -5046,12 +5083,13 @@ function _rtRender() {
     _rtShowStep(_rtState.step || 1);
     if (_rtState.step === 1) _rtRenderSubjects();
     if (_rtState.step === 2) _rtRenderChapters();
-    if (_rtState.step === 3) _rtRenderTimeline();
+    if (_rtState.step === 3) rtRenderModeStep();
+    if (_rtState.step === 4) _rtRenderTimeline();
   }
 }
 
 function _rtShowStep(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const el = document.getElementById('rt-step-' + i);
     if (el) el.classList.toggle('rt-active', i === n);
   }
@@ -5060,7 +5098,7 @@ function _rtShowStep(n) {
 
 function _rtUpdateProgressBar(step) {
   const s = step || _rtState.step || 1;
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 4; i++) {
     const seg = document.getElementById('rt-prog-' + i);
     if (seg) seg.classList.toggle('done', i <= s);
   }
@@ -5119,6 +5157,56 @@ function rtGoToStep2() {
   _rtRenderChapters();
 }
 
+function rtGoToStep3() {
+  if (!_rtState.selectedChapters.length) { showToast('কমপক্ষে একটি অধ্যায় select করুন', 'error'); return; }
+  _rtState.step = 3;
+  _rtShowStep(3);
+  rtRenderModeStep();
+}
+
+function rtGoToStep4() {
+  _rtState.step = 4;
+  _rtShowStep(4);
+  _rtRenderTimeline();
+  const badge = document.getElementById('rt-selected-mode-badge');
+  if (badge) {
+    if (_rtState.studyMode === 'multi') {
+      badge.innerHTML = '<i class="fa-solid fa-scale-balanced" style="margin-right:6px;"></i>Mode: <strong>Multiple Subjects Per Day (Balanced)</strong>';
+      badge.style.background = 'rgba(112,0,255,0.08)';
+      badge.style.borderColor = 'rgba(112,0,255,0.25)';
+      badge.style.color = 'var(--secondary)';
+    } else {
+      badge.innerHTML = '<i class="fa-solid fa-book-open" style="margin-right:6px;"></i>Mode: <strong>Single Subject Per Day</strong>';
+      badge.style.background = 'rgba(0,240,255,0.06)';
+      badge.style.borderColor = 'rgba(0,240,255,0.15)';
+      badge.style.color = 'var(--primary)';
+    }
+  }
+}
+
+function rtSetStudyMode(mode) {
+  _rtState.studyMode = mode;
+  const singleCard  = document.getElementById('rt-mode-single');
+  const multiCard   = document.getElementById('rt-mode-multi');
+  const singleCheck = document.getElementById('rt-mode-single-check');
+  const multiCheck  = document.getElementById('rt-mode-multi-check');
+  if (mode === 'single') {
+    if (singleCard)  { singleCard.style.borderColor = 'var(--primary)';      singleCard.style.background = 'rgba(0,240,255,0.06)'; }
+    if (multiCard)   { multiCard.style.borderColor  = 'var(--glass-border)'; multiCard.style.background  = 'var(--glass-bg)'; }
+    if (singleCheck) { singleCheck.style.background = 'var(--primary)'; singleCheck.style.borderColor = 'var(--primary)'; singleCheck.innerHTML = '<i class="fa-solid fa-check" style="color:#000;font-size:9px;"></i>'; }
+    if (multiCheck)  { multiCheck.style.background  = 'transparent';    multiCheck.style.borderColor  = 'var(--glass-border)'; multiCheck.innerHTML = ''; }
+  } else {
+    if (multiCard)   { multiCard.style.borderColor  = 'var(--secondary)';    multiCard.style.background  = 'rgba(112,0,255,0.06)'; }
+    if (singleCard)  { singleCard.style.borderColor = 'var(--glass-border)'; singleCard.style.background = 'var(--glass-bg)'; }
+    if (multiCheck)  { multiCheck.style.background  = 'var(--secondary)'; multiCheck.style.borderColor  = 'var(--secondary)'; multiCheck.innerHTML = '<i class="fa-solid fa-check" style="color:#fff;font-size:9px;"></i>'; }
+    if (singleCheck) { singleCheck.style.background = 'transparent';     singleCheck.style.borderColor = 'var(--glass-border)'; singleCheck.innerHTML = ''; }
+  }
+}
+
+function rtRenderModeStep() {
+  rtSetStudyMode(_rtState.studyMode || 'single');
+}
+
 /* ---- STEP 2: CHAPTERS ---- */
 function _rtRenderChapters() {
   const container = document.getElementById('rt-chapters-list');
@@ -5173,12 +5261,7 @@ function rtClearAllChapters() {
   _rtRenderChapters();
 }
 
-function rtGoToStep3() {
-  if (!_rtState.selectedChapters.length) { showToast('কমপক্ষে একটি অধ্যায় select করুন', 'error'); return; }
-  _rtState.step = 3;
-  _rtShowStep(3);
-  _rtRenderTimeline();
-}
+/* rtGoToStep3 and rtGoToStep4 are defined above (in the navigation block) */
 
 /* ---- STEP 3: TIMELINE ---- */
 function _rtRenderTimeline() {
@@ -5235,95 +5318,155 @@ function rtUpdateTimeline() {
 /* ---- ROUTINE GENERATION ENGINE ---- */
 function rtGenerateRoutine() {
   const startStr = _rtState.startDate;
-  const endStr = _rtState.endDate;
+  const endStr   = _rtState.endDate;
   if (!startStr || !endStr) { showToast('তারিখ নির্বাচন করুন', 'error'); return; }
   const start = new Date(startStr);
-  const end = new Date(endStr);
+  const end   = new Date(endStr);
   if (end <= start) { showToast('শেষের তারিখ শুরুর তারিখের পরে হতে হবে', 'error'); return; }
 
-  // Build full topic list grouped by chapter
-  const allTopicItems = [];
-  // Preserve subject order for balanced distribution
-  _rtState.selectedSubjects.forEach(subj => {
-    RT_DATASET[subj].chapters.forEach(ch => {
-      if (!_rtState.selectedChapters.includes(ch.id)) return;
-      ch.topics.forEach(topic => {
-        allTopicItems.push({ subject: subj, chapter: ch.name, topic, chId: ch.id });
-      });
-    });
-  });
+  const days    = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  const mode    = _rtState.studyMode || 'single';
+  const routine = mode === 'multi'
+    ? _rtGenerateMultiSubjectRoutine(start, days)
+    : _rtGenerateSingleSubjectRoutine(start, days);
 
-  const days = Math.round((end - start) / (1000*60*60*24)) + 1;
+  _rtState.generatedRoutine = routine;
+  _rtState.completionMap    = {};
+  _rtSave();
+  _rtShowStep(5);
+  document.getElementById('rt-delete-btn').style.display    = 'inline-flex';
+  document.getElementById('rt-regenerate-btn').style.display = 'inline-flex';
+  _rtRenderGeneratedRoutine();
+  showToast('🎉 Routine তৈরি হয়েছে! ' + routine.length + ' দিনের plan ready.', 'success');
+}
 
-  // Distribute topics evenly across days
-  // Strategy: fill days one by one keeping chapters together for each day
+/* ---- MODE 1: SINGLE SUBJECT — Sequential (original behaviour) ---- */
+function _rtGenerateSingleSubjectRoutine(start, days) {
   const chapterGroups = {};
   _rtState.selectedSubjects.forEach(subj => {
     RT_DATASET[subj].chapters.forEach(ch => {
       if (!_rtState.selectedChapters.includes(ch.id)) return;
-      chapterGroups[ch.id] = { subject: subj, chapter: ch.name, topics: [...ch.topics], color: RT_DATASET[subj].color };
+      chapterGroups[ch.id] = {
+        subject: subj, chapter: ch.name,
+        topics: [...ch.topics], color: RT_DATASET[subj].color
+      };
     });
   });
 
-  const chapterQueue = Object.entries(chapterGroups); // [[chId, {subject,chapter,topics,color}]]
-  const routine = [];
-
-  // Calculate topics per day: ceil(totalTopics / days) capped at 8
-  const totalTopics = allTopicItems.length;
-  const rawPerDay = Math.ceil(totalTopics / days);
-  const topicsPerDay = Math.min(rawPerDay, 8); // max 8 topics/day to avoid overload
-
-  let chapterPointer = 0;
-  let topicPointer = 0;
-  let currentChKey = chapterQueue.length ? chapterQueue[0][0] : null;
-  let currentTopicIdx = 0;
+  const chapterQueue   = Object.entries(chapterGroups);
+  const totalTopics    = chapterQueue.reduce((a, [, c]) => a + c.topics.length, 0);
+  const rawPerDay      = Math.ceil(totalTopics / days);
+  const topicsPerDay   = Math.min(rawPerDay, 8);
+  const routine        = [];
+  let chapterPointer   = 0;
+  let currentTopicIdx  = 0;
 
   for (let d = 0; d < days; d++) {
     const dateObj = new Date(start);
     dateObj.setDate(dateObj.getDate() + d);
-    const dateStr = dateObj.toISOString().split('T')[0];
+    const dateStr  = dateObj.toISOString().split('T')[0];
     const dayItems = [];
-    let topicsAdded = 0;
+    let added      = 0;
 
-    while (topicsAdded < topicsPerDay && chapterPointer < chapterQueue.length) {
+    while (added < topicsPerDay && chapterPointer < chapterQueue.length) {
       const [chId, chData] = chapterQueue[chapterPointer];
-      const remainingTopics = chData.topics.slice(currentTopicIdx);
-      if (remainingTopics.length === 0) {
-        chapterPointer++;
-        currentTopicIdx = 0;
-        continue;
-      }
-      // Try to fit remaining topics of this chapter if they fit
-      const canTake = topicsPerDay - topicsAdded;
-      const take = Math.min(canTake, remainingTopics.length);
+      const remaining = chData.topics.slice(currentTopicIdx);
+      if (!remaining.length) { chapterPointer++; currentTopicIdx = 0; continue; }
+      const take = Math.min(topicsPerDay - added, remaining.length);
       for (let t = 0; t < take; t++) {
-        dayItems.push({ subject: chData.subject, chapter: chData.chapter, topic: remainingTopics[t], chId, id: chId + '_' + (currentTopicIdx + t) + '_' + d, color: chData.color });
+        dayItems.push({
+          subject: chData.subject, chapter: chData.chapter,
+          topic: remaining[t], chId,
+          id: chId + '_' + (currentTopicIdx + t) + '_' + d,
+          color: chData.color
+        });
       }
-      topicsAdded += take;
+      added          += take;
       currentTopicIdx += take;
-      if (currentTopicIdx >= chData.topics.length) {
-        chapterPointer++;
-        currentTopicIdx = 0;
-      }
-      if (topicsAdded >= topicsPerDay) break;
+      if (currentTopicIdx >= chData.topics.length) { chapterPointer++; currentTopicIdx = 0; }
+      if (added >= topicsPerDay) break;
     }
 
-    if (dayItems.length > 0) {
-      routine.push({ date: dateStr, items: dayItems });
-    } else if (chapterPointer < chapterQueue.length) {
-      // Edge case: still have chapters but somehow 0 items — skip
-    }
+    if (dayItems.length) routine.push({ date: dateStr, items: dayItems });
     if (chapterPointer >= chapterQueue.length) break;
   }
+  return routine;
+}
 
-  _rtState.generatedRoutine = routine;
-  _rtState.completionMap = {};
-  _rtSave();
-  _rtShowStep(4);
-  document.getElementById('rt-delete-btn').style.display = 'inline-flex';
-  document.getElementById('rt-regenerate-btn').style.display = 'inline-flex';
-  _rtRenderGeneratedRoutine();
-  showToast('🎉 Routine তৈরি হয়েছে! ' + routine.length + ' দিনের plan ready.', 'success');
+/* ---- MODE 2: MULTI SUBJECT BALANCED — Round-Robin per subject ---- */
+function _rtGenerateMultiSubjectRoutine(start, days) {
+  /*
+   * Algorithm:
+   * 1. Collect all topics per subject as flat queues.
+   * 2. Calculate topicsPerSubjectPerDay = ceil(subjectTopics / days).
+   * 3. Each day: iterate subjects in order, pop topicsPerSubjectPerDay topics.
+   * 4. Guarantees every subject appears every day and all topics finish within timeline.
+   */
+
+  // Build per-subject topic queues
+  const subjectQueues = {}; // { subj: [{chapter,topic,chId,color}, ...] }
+  _rtState.selectedSubjects.forEach(subj => {
+    subjectQueues[subj] = [];
+    RT_DATASET[subj].chapters.forEach(ch => {
+      if (!_rtState.selectedChapters.includes(ch.id)) return;
+      ch.topics.forEach(topic => {
+        subjectQueues[subj].push({
+          subject: subj,
+          chapter: ch.name,
+          topic,
+          chId: ch.id,
+          color: RT_DATASET[subj].color
+        });
+      });
+    });
+  });
+
+  const activeSubjects = _rtState.selectedSubjects.filter(s => subjectQueues[s].length > 0);
+  if (!activeSubjects.length) return [];
+
+  // Topics per subject per day (ceiling so all finish within days)
+  const allocPerSubj = {};
+  activeSubjects.forEach(subj => {
+    allocPerSubj[subj] = Math.max(1, Math.ceil(subjectQueues[subj].length / days));
+  });
+
+  // Per-subject cursors
+  const cursors = {};
+  activeSubjects.forEach(subj => { cursors[subj] = 0; });
+
+  const routine = [];
+
+  for (let d = 0; d < days; d++) {
+    const dateObj = new Date(start);
+    dateObj.setDate(dateObj.getDate() + d);
+    const dateStr  = dateObj.toISOString().split('T')[0];
+    const dayItems = [];
+    let anyLeft    = false;
+
+    activeSubjects.forEach(subj => {
+      const queue = subjectQueues[subj];
+      const cursor = cursors[subj];
+      if (cursor >= queue.length) return;
+      anyLeft = true;
+      const take = Math.min(allocPerSubj[subj], queue.length - cursor);
+      for (let t = 0; t < take; t++) {
+        const item = queue[cursor + t];
+        dayItems.push({
+          subject: item.subject,
+          chapter: item.chapter,
+          topic:   item.topic,
+          chId:    item.chId,
+          id:      item.chId + '_' + (cursor + t) + '_d' + d,
+          color:   item.color
+        });
+      }
+      cursors[subj] += take;
+    });
+
+    if (dayItems.length) routine.push({ date: dateStr, items: dayItems });
+    if (!anyLeft) break;
+  }
+  return routine;
 }
 
 /* ---- RENDER GENERATED ROUTINE ---- */
@@ -5426,10 +5569,11 @@ function rtToggleTopic(topicId) {
 function rtDeleteRoutine() {
   if (!confirm('Routine মুছে ফেলবেন? সব progress হারিয়ে যাবে।')) return;
   _rtState.generatedRoutine = null;
-  _rtState.completionMap = {};
-  _rtState.step = 1;
+  _rtState.completionMap    = {};
+  _rtState.step             = 1;
+  _rtState.studyMode        = 'single';
   _rtSave();
-  document.getElementById('rt-delete-btn').style.display = 'none';
+  document.getElementById('rt-delete-btn').style.display     = 'none';
   document.getElementById('rt-regenerate-btn').style.display = 'none';
   _rtShowStep(1);
   _rtRenderSubjects();
@@ -5438,10 +5582,11 @@ function rtDeleteRoutine() {
 
 function rtStartOver() {
   _rtState.generatedRoutine = null;
-  _rtState.completionMap = {};
-  _rtState.step = 1;
+  _rtState.completionMap    = {};
+  _rtState.step             = 1;
+  _rtState.studyMode        = 'single';
   _rtSave();
-  document.getElementById('rt-delete-btn').style.display = 'none';
+  document.getElementById('rt-delete-btn').style.display     = 'none';
   document.getElementById('rt-regenerate-btn').style.display = 'none';
   _rtShowStep(1);
   _rtRenderSubjects();
