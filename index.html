@@ -1574,6 +1574,10 @@
         <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">কোন কোন অধ্যায় পড়তে চান?</div>
       </div>
     </div>
+    <div style="background:rgba(0,240,255,0.05);border:1px solid rgba(0,240,255,0.12);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:0.78rem;color:var(--text-muted);display:flex;align-items:flex-start;gap:8px;">
+      <i class="fa-solid fa-filter" style="color:var(--primary);margin-top:2px;flex-shrink:0;"></i>
+      <span>বিজ্ঞান বিষয়গুলোতে <strong style="color:var(--primary);">১ম পত্র / ২য় পত্র / উভয়</strong> filter করুন, তারপর অধ্যায় select করুন।</span>
+    </div>
     <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
       <button class="btn rt-select-all-btn" onclick="rtSelectAllChapters()"><i class="fa-solid fa-check-double"></i> সব Select</button>
       <button class="btn rt-select-all-btn" onclick="rtClearAllChapters()" style="border-color:var(--accent);color:var(--accent);background:rgba(255,0,60,0.06);"><i class="fa-solid fa-xmark"></i> সব Clear</button>
@@ -1582,7 +1586,7 @@
     <div id="rt-chapters-list"></div>
     <div style="display:flex;gap:10px;margin-top:18px;">
       <button class="btn" style="flex:1;justify-content:center;" onclick="rtGoToStep1()"><i class="fa-solid fa-arrow-left"></i> পেছনে</button>
-      <button class="btn btn-primary" style="flex:2;justify-content:center;" onclick="rtGoToStep3()"><i class="fa-solid fa-arrow-right"></i> পরবর্তী: Timeline</button>
+      <button class="btn btn-primary" style="flex:2;justify-content:center;" onclick="rtGoToStep3()"><i class="fa-solid fa-arrow-right"></i> পরবর্তী: Mode</button>
     </div>
   </div>
 
@@ -5031,6 +5035,7 @@ let _rtState = {
   step: 1,
   selectedSubjects: [],
   selectedChapters: [],
+  paperSelections: {},   // { 'Physics': '1st'|'2nd'|'both', ... }
   startDate: '',
   endDate: '',
   studyMode: 'single',
@@ -5082,7 +5087,7 @@ function _rtRender() {
     document.getElementById('rt-regenerate-btn').style.display = 'none';
     _rtShowStep(_rtState.step || 1);
     if (_rtState.step === 1) _rtRenderSubjects();
-    if (_rtState.step === 2) _rtRenderChapters();
+    if (_rtState.step === 2) _rtRenderChaptersWithPaperFilter();
     if (_rtState.step === 3) rtRenderModeStep();
     if (_rtState.step === 4) _rtRenderTimeline();
   }
@@ -5154,11 +5159,14 @@ function rtGoToStep2() {
   if (!_rtState.selectedSubjects.length) { showToast('কমপক্ষে একটি বিষয় select করুন', 'error'); return; }
   _rtState.step = 2;
   _rtShowStep(2);
-  _rtRenderChapters();
+  _rtRenderChaptersWithPaperFilter();
 }
 
 function rtGoToStep3() {
-  if (!_rtState.selectedChapters.length) { showToast('কমপক্ষে একটি অধ্যায় select করুন', 'error'); return; }
+  if (!_rtState.selectedChapters.length) {
+    showToast('কমপক্ষে একটি অধ্যায় select করুন। Paper filter পরীক্ষা করুন।', 'error');
+    return;
+  }
   _rtState.step = 3;
   _rtShowStep(3);
   rtRenderModeStep();
@@ -5207,33 +5215,122 @@ function rtRenderModeStep() {
   rtSetStudyMode(_rtState.studyMode || 'single');
 }
 
-/* ---- STEP 2: CHAPTERS ---- */
-function _rtRenderChapters() {
+/* ---- STEP 2: PAPER FILTER + CHAPTERS ---- */
+
+/**
+ * Returns the canonical paper key(s) for a subject based on its dataset.
+ * Subjects with only one paper type (ICT, Bangla, English) return ['only'].
+ * Science subjects return ['1st Paper', '2nd Paper'] variants.
+ */
+function _rtGetPaperTypes(subj) {
+  const papers = [...new Set(RT_DATASET[subj].chapters.map(ch => ch.paper))];
+  return papers;
+}
+
+/**
+ * Returns true if a chapter should be shown given the subject's paper selection.
+ */
+function _rtChapterMatchesPaperFilter(ch, subj) {
+  const sel = _rtState.paperSelections[subj] || 'both';
+  if (sel === 'both') return true;
+  const p = ch.paper.toLowerCase();
+  if (sel === '1st') return p.includes('1st') || p.includes('botany') || p.includes('ict') || p.includes('1st paper');
+  if (sel === '2nd') return p.includes('2nd') || p.includes('zoology') || p.includes('2nd paper');
+  return true;
+}
+
+/**
+ * Main render: for each subject shows a Paper Filter bar, then the filtered chapter list.
+ */
+function _rtRenderChaptersWithPaperFilter() {
   const container = document.getElementById('rt-chapters-list');
   if (!container) return;
   container.innerHTML = '';
+
   _rtState.selectedSubjects.forEach(subj => {
     const data = RT_DATASET[subj];
+    const paperTypes = _rtGetPaperTypes(subj);
+    const isMultiPaper = paperTypes.length > 1;
+    const curSel = _rtState.paperSelections[subj] || 'both';
+
     const group = document.createElement('div');
     group.className = 'rt-subj-group';
-    group.innerHTML = `<div class="rt-subj-group-title" style="color:${data.color};">${data.icon} ${data.label}</div>`;
-    data.chapters.forEach(ch => {
-      const isSel = _rtState.selectedChapters.includes(ch.id);
-      const item = document.createElement('div');
-      item.className = 'rt-chapter-item' + (isSel ? ' rt-sel' : '');
-      item.onclick = () => _rtToggleChapter(ch.id, item);
-      item.innerHTML = `
-        <div class="rt-cb2"></div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;color:var(--text-main);font-size:0.88rem;">${ch.name}</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${ch.paper} • ${ch.topics.length} টপিক</div>
-        </div>
-      `;
-      group.appendChild(item);
-    });
+    group.setAttribute('data-subj', subj);
+
+    // Subject header
+    let headerHTML = `<div class="rt-subj-group-title" style="color:${data.color};display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <span>${data.icon} ${data.label}</span>`;
+
+    // Paper filter pills — only for subjects that actually have 2 papers
+    if (isMultiPaper) {
+      const pills = [
+        { key: '1st', label: '১ম পত্র' },
+        { key: '2nd', label: '২য় পত্র' },
+        { key: 'both', label: 'উভয়' }
+      ];
+      headerHTML += `<div style="display:flex;gap:6px;flex-wrap:wrap;">`;
+      pills.forEach(pill => {
+        const isActive = curSel === pill.key;
+        headerHTML += `<button onclick="_rtSetPaperFilter('${subj}','${pill.key}')"
+          style="font-size:0.7rem;padding:3px 11px;border-radius:20px;border:1px solid ${isActive ? data.color : 'var(--glass-border)'};
+          background:${isActive ? data.color + '22' : 'transparent'};color:${isActive ? data.color : 'var(--text-muted)'};
+          cursor:pointer;font-weight:${isActive ? '700' : '400'};transition:all 0.2s;">${pill.label}</button>`;
+      });
+      headerHTML += `</div>`;
+    }
+
+    headerHTML += `</div>`;
+    group.innerHTML = headerHTML;
+
+    // Filtered chapter list
+    const filteredChapters = data.chapters.filter(ch => _rtChapterMatchesPaperFilter(ch, subj));
+    const chapterListDiv = document.createElement('div');
+    chapterListDiv.className = 'rt-chapter-items-' + subj;
+
+    if (!filteredChapters.length) {
+      chapterListDiv.innerHTML = `<div style="font-size:0.8rem;color:var(--text-muted);padding:10px 4px;">এই পত্রে কোনো অধ্যায় নেই।</div>`;
+    } else {
+      filteredChapters.forEach(ch => {
+        const isSel = _rtState.selectedChapters.includes(ch.id);
+        const item = document.createElement('div');
+        item.className = 'rt-chapter-item' + (isSel ? ' rt-sel' : '');
+        item.id = 'rt-ch-item-' + ch.id;
+        item.onclick = () => _rtToggleChapter(ch.id, item);
+        item.innerHTML = `
+          <div class="rt-cb2"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;color:var(--text-main);font-size:0.88rem;">${ch.name}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${ch.paper} • ${ch.topics.length} টপিক</div>
+          </div>
+        `;
+        chapterListDiv.appendChild(item);
+      });
+    }
+
+    group.appendChild(chapterListDiv);
     container.appendChild(group);
   });
+
   _rtUpdateChapterCount();
+}
+
+/**
+ * Called when user taps a paper filter pill.
+ * Updates selection, deselects chapters from the other paper, re-renders that subject block.
+ */
+function _rtSetPaperFilter(subj, paperKey) {
+  _rtState.paperSelections[subj] = paperKey;
+
+  // Deselect chapters that no longer match the new filter for this subject
+  const data = RT_DATASET[subj];
+  _rtState.selectedChapters = _rtState.selectedChapters.filter(chId => {
+    const ch = data.chapters.find(c => c.id === chId);
+    if (!ch) return true; // belongs to another subject — keep
+    return _rtChapterMatchesPaperFilter(ch, subj);
+  });
+
+  // Re-render just this subject's block for performance
+  _rtRenderChaptersWithPaperFilter();
 }
 
 function _rtToggleChapter(chId, el) {
@@ -5249,16 +5346,24 @@ function _rtUpdateChapterCount() {
   if (el) el.textContent = _rtState.selectedChapters.length + ' অধ্যায় selected';
 }
 
+/**
+ * Select All respects the per-subject paper filter.
+ */
 function rtSelectAllChapters() {
   _rtState.selectedChapters = [];
   _rtState.selectedSubjects.forEach(subj => {
-    RT_DATASET[subj].chapters.forEach(ch => _rtState.selectedChapters.push(ch.id));
+    RT_DATASET[subj].chapters.forEach(ch => {
+      if (_rtChapterMatchesPaperFilter(ch, subj)) {
+        _rtState.selectedChapters.push(ch.id);
+      }
+    });
   });
-  _rtRenderChapters();
+  _rtRenderChaptersWithPaperFilter();
 }
+
 function rtClearAllChapters() {
   _rtState.selectedChapters = [];
-  _rtRenderChapters();
+  _rtRenderChaptersWithPaperFilter();
 }
 
 /* rtGoToStep3 and rtGoToStep4 are defined above (in the navigation block) */
@@ -5572,6 +5677,7 @@ function rtDeleteRoutine() {
   _rtState.completionMap    = {};
   _rtState.step             = 1;
   _rtState.studyMode        = 'single';
+  _rtState.paperSelections  = {};
   _rtSave();
   document.getElementById('rt-delete-btn').style.display     = 'none';
   document.getElementById('rt-regenerate-btn').style.display = 'none';
@@ -5585,6 +5691,7 @@ function rtStartOver() {
   _rtState.completionMap    = {};
   _rtState.step             = 1;
   _rtState.studyMode        = 'single';
+  _rtState.paperSelections  = {};
   _rtSave();
   document.getElementById('rt-delete-btn').style.display     = 'none';
   document.getElementById('rt-regenerate-btn').style.display = 'none';
