@@ -5096,12 +5096,10 @@ function _rtRenderSubjects() {
 }
 
 function _rtToggleSubject(subj, el) {
-  if (!Array.isArray(_rtState.selectedSubjects)) _rtState.selectedSubjects = [];
   const idx = _rtState.selectedSubjects.indexOf(subj);
   if (idx >= 0) _rtState.selectedSubjects.splice(idx, 1);
   else _rtState.selectedSubjects.push(subj);
   el.classList.toggle('rt-sel', _rtState.selectedSubjects.includes(subj));
-  _rtSave();
 }
 
 function rtSelectAllSubjects() {
@@ -5156,13 +5154,11 @@ function _rtRenderChapters() {
 }
 
 function _rtToggleChapter(chId, el) {
-  if (!Array.isArray(_rtState.selectedChapters)) _rtState.selectedChapters = [];
   const idx = _rtState.selectedChapters.indexOf(chId);
   if (idx >= 0) _rtState.selectedChapters.splice(idx, 1);
   else _rtState.selectedChapters.push(chId);
   el.classList.toggle('rt-sel', _rtState.selectedChapters.includes(chId));
   _rtUpdateChapterCount();
-  _rtSave();
 }
 
 function _rtUpdateChapterCount() {
