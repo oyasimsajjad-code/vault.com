@@ -1044,7 +1044,7 @@
             <div class="nav-item" onclick="switchView('goals',this);closeMobileDrawer()"><i class="fa-solid fa-bullseye"></i> Goals</div>
             <div class="nav-item" onclick="switchView('achievements',this);closeMobileDrawer()"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this);closeMobileDrawer()"><i class="fa-solid fa-shield-halved"></i> Vault</div>
-            <div class="nav-item" onclick="switchView('routine',this);closeMobileDrawer()"><i class="fa-solid fa-calendar-days"></i> Routine</div>
+            
                          <div class="nav-item" onclick="switchView('groupfocus',this);closeMobileDrawer()"><i class="fa-solid fa-users"></i> Group Focus</div>
             <div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
@@ -1083,7 +1083,6 @@
             <div class="nav-item" onclick="switchView('goals',this)"><i class="fa-solid fa-bullseye"></i> Goals</div>
             <div class="nav-item" onclick="switchView('achievements',this)"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
-            <div class="nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i> Routine</div>
             <div class="nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div>
                         <div class="nav-item" onclick="switchView('groupfocus',this)"><i class="fa-solid fa-users"></i> Group Focus</div>            <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
@@ -1484,83 +1483,162 @@
     <div id="leaderboard-list"></div>
 </section>
 
-<!-- Routine -->
+<!-- HSC AI Routine Generator -->
 <section id="view-routine" class="view-section">
+  <style>
+    .rt-step { display:none; }
+    .rt-step.rt-active { display:block; }
+    .rt-subject-card { display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--radius-md);background:var(--glass-bg);border:2px solid var(--glass-border);cursor:pointer;transition:all 0.2s;margin-bottom:10px;user-select:none; }
+    .rt-subject-card:hover { border-color:var(--primary);background:rgba(0,240,255,0.05); }
+    .rt-subject-card.rt-sel { border-color:var(--primary);background:rgba(0,240,255,0.1);box-shadow:0 0 12px rgba(0,240,255,0.15); }
+    .rt-subject-card .rt-cb { width:20px;height:20px;border-radius:5px;border:2px solid var(--glass-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s; }
+    .rt-subject-card.rt-sel .rt-cb { background:var(--primary);border-color:var(--primary); }
+    .rt-subject-card.rt-sel .rt-cb::after { content:'\f00c';font-family:'Font Awesome 6 Free';font-weight:900;color:#000;font-size:10px; }
+    .rt-chapter-item { display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);cursor:pointer;transition:all 0.2s;margin-bottom:8px;user-select:none; }
+    .rt-chapter-item:hover { border-color:var(--primary);background:rgba(0,240,255,0.05); }
+    .rt-chapter-item.rt-sel { border-color:var(--primary);background:rgba(0,240,255,0.08); }
+    .rt-chapter-item .rt-cb2 { width:18px;height:18px;border-radius:4px;border:2px solid var(--glass-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all 0.2s; }
+    .rt-chapter-item.rt-sel .rt-cb2 { background:var(--primary);border-color:var(--primary); }
+    .rt-chapter-item.rt-sel .rt-cb2::after { content:'\f00c';font-family:'Font Awesome 6 Free';font-weight:900;color:#000;font-size:9px; }
+    .rt-step-header { display:flex;align-items:center;gap:14px;margin-bottom:20px; }
+    .rt-step-num { width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--secondary),var(--primary));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:1rem;color:#fff;flex-shrink:0; }
+    .rt-progress-bar { display:flex;gap:6px;margin-bottom:24px; }
+    .rt-prog-seg { flex:1;height:4px;border-radius:10px;background:rgba(255,255,255,0.1);transition:background 0.3s; }
+    .rt-prog-seg.done { background:var(--primary); }
+    .rt-subj-group { margin-bottom:20px; }
+    .rt-subj-group-title { font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-left:4px; }
+    .rt-day-card { border-radius:var(--radius-md);overflow:hidden;margin-bottom:14px;border:1px solid var(--glass-border);background:var(--glass-bg); }
+    .rt-day-header { padding:14px 18px;background:rgba(0,240,255,0.06);border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between; }
+    .rt-day-title { font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--primary); }
+    .rt-day-date { font-size:0.78rem;color:var(--text-muted); }
+    .rt-topic-row { padding:10px 18px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:12px;transition:background 0.2s; }
+    .rt-topic-row:last-child { border-bottom:none; }
+    .rt-topic-row:hover { background:rgba(255,255,255,0.03); }
+    .rt-topic-check { width:22px;height:22px;border-radius:50%;border:2px solid var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s; }
+    .rt-topic-check.done { background:var(--success);border-color:var(--success); }
+    .rt-topic-check.done::after { content:'\f00c';font-family:'Font Awesome 6 Free';font-weight:900;color:#000;font-size:9px; }
+    .rt-topic-label { flex:1;font-size:0.88rem;color:var(--text-main); }
+    .rt-topic-label.done-label { text-decoration:line-through;color:var(--text-muted); }
+    .rt-subj-pill { font-size:0.7rem;padding:2px 9px;border-radius:20px;font-weight:700;background:rgba(112,0,255,0.2);color:var(--secondary);flex-shrink:0; }
+    .rt-progress-summary { display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px; }
+    .rt-stat-box { background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-md);padding:14px;text-align:center; }
+    .rt-stat-num { font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--primary); }
+    .rt-stat-label { font-size:0.72rem;color:var(--text-muted);margin-top:2px; }
+    .rt-warning-box { background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.3);border-radius:var(--radius-md);padding:16px;margin-bottom:16px;color:var(--warning);font-size:0.88rem; }
+    .rt-select-all-btn { font-size:0.78rem;padding:5px 12px;border-radius:20px;border:1px solid var(--primary);color:var(--primary);background:rgba(0,240,255,0.06);cursor:pointer;transition:all 0.2s; }
+    .rt-select-all-btn:hover { background:rgba(0,240,255,0.15); }
+    @media(max-width:480px){.rt-progress-summary{grid-template-columns:1fr 1fr;}}
+  </style>
+
   <div class="section-header">
-    <h2 class="section-title">Study Routine</h2>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn" id="btn-class6" onclick="switchRoutineSeg('class6')">Class 6-8</button>
-      <button class="btn" id="btn-ssc" onclick="switchRoutineSeg('ssc')">SSC</button>
-      <button class="btn btn-primary" id="btn-hsc" onclick="switchRoutineSeg('hsc')">HSC</button>
+    <h2 class="section-title"><i class="fa-solid fa-calendar-days" style="color:var(--primary);margin-right:10px;"></i>HSC Routine</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="rt-action-btns">
+      <button class="btn btn-danger" id="rt-delete-btn" onclick="rtDeleteRoutine()" style="display:none;font-size:0.82rem;padding:8px 14px;"><i class="fa-solid fa-trash"></i> Delete</button>
+      <button class="btn" id="rt-regenerate-btn" onclick="rtStartOver()" style="display:none;font-size:0.82rem;padding:8px 14px;border-color:var(--warning);color:var(--warning);"><i class="fa-solid fa-rotate"></i> Regenerate</button>
     </div>
   </div>
-  <div class="glass" style="padding:20px;margin-bottom:20px;">
-    <h3 style="margin-bottom:14px;color:var(--text-main);">নতুন Slot যোগ করুন</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+
+  <!-- Progress bar steps -->
+  <div class="rt-progress-bar" id="rt-prog-bar">
+    <div class="rt-prog-seg done" id="rt-prog-1"></div>
+    <div class="rt-prog-seg" id="rt-prog-2"></div>
+    <div class="rt-prog-seg" id="rt-prog-3"></div>
+  </div>
+
+  <!-- STEP 1: Subject Selection -->
+  <div class="rt-step rt-active" id="rt-step-1">
+    <div class="rt-step-header">
+      <div class="rt-step-num">1</div>
       <div>
-        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">দিন</label>
-        <select id="rt-day" style="width:100%;">
-          <option>প্রতিদিন</option>
-          <option>শনিবার</option><option>রবিবার</option>
-          <option>সোমবার</option><option>মঙ্গলবার</option>
-          <option>বুধবার</option><option>বৃহস্পতিবার</option>
-        </select>
-      </div>
-      <div>
-        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">সময়</label>
-        <select id="rt-time" style="width:100%;" onchange="toggleRtCustomTime(this)">
-          <option>ভোর (৫-৭টা)</option>
-          <option>সকাল (৭-৯টা)</option>
-          <option>সকাল (৯-১১টা)</option>
-          <option>দুপুর (১২-২টা)</option>
-          <option>বিকেল (৪-৬টা)</option>
-          <option>সন্ধ্যা (৬-৮টা)</option>
-          <option>রাত (৮-১০টা)</option>
-          <option>রাত (১০-১২টা)</option>
-          <option value="__custom__">+ Custom সময়</option>
-        </select>
-        <input type="text" id="rt-time-custom" placeholder="যেমন: ৩টা-৫টা" style="margin-top:4px;display:none;">
-      </div>
-      <div>
-        <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">সময়কাল</label>
-        <select id="rt-dur" style="width:100%;" onchange="toggleRtCustomDur(this)">
-          <option>৩০ মিনিট</option>
-          <option>৪৫ মিনিট</option>
-          <option>৬০ মিনিট</option>
-          <option>৯০ মিনিট</option>
-          <option>১২০ মিনিট</option>
-          <option value="__custom__">+ Custom সময়কাল</option>
-        </select>
-        <input type="text" id="rt-dur-custom" placeholder="যেমন: ৪৫ মিনিট" style="margin-top:4px;display:none;">
+        <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:var(--text-main);">বিষয় নির্বাচন করুন</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">যে বিষয়গুলো পড়তে চান সেগুলো select করুন</div>
       </div>
     </div>
-    <div style="margin-bottom:12px;">
-      <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">বিষয়</label>
-      <select id="rt-subj" style="width:100%;" onchange="toggleRtCustomSubj(this)">
-        <option value="bangla">বাংলা</option>
-        <option value="english">English</option>
-        <option value="physics">পদার্থবিজ্ঞান</option>
-        <option value="chemistry">রসায়ন</option>
-        <option value="math">উচ্চতর গণিত</option>
-        <option value="biology">জীববিজ্ঞান</option>
-        <option value="ict">ICT</option>
-        <optgroup label="── Class 6-8 ──">
-          <option value="bangla6">বাংলা (৬-৮)</option>
-          <option value="english6">English (৬-৮)</option>
-          <option value="math6">গণিত (৬-৮)</option>
-          <option value="science6">বিজ্ঞান (৬-৮)</option>
-          <option value="social6">সমাজ বিজ্ঞান (৬-৮)</option>
-          <option value="religion6">ধর্ম (৬-৮)</option>
-        </optgroup>
-        <option value="__custom__">+ Custom বিষয়</option>
-      </select>
-      <input type="text" id="rt-subj-custom" placeholder="বিষয়ের নাম লিখুন..." style="margin-top:8px;display:none;">
+    <div id="rt-subjects-list"></div>
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button class="btn rt-select-all-btn" onclick="rtSelectAllSubjects()"><i class="fa-solid fa-check-double"></i> সব Select</button>
+      <button class="btn rt-select-all-btn" onclick="rtClearAllSubjects()" style="border-color:var(--accent);color:var(--accent);background:rgba(255,0,60,0.06);"><i class="fa-solid fa-xmark"></i> Clear</button>
     </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="addRoutineSlot()">
-      <i class="fa-solid fa-plus"></i> যোগ করুন
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:18px;padding:13px;" onclick="rtGoToStep2()">
+      <i class="fa-solid fa-arrow-right"></i> পরবর্তী: অধ্যায় নির্বাচন
     </button>
   </div>
-  <div id="routine-list-container"></div>
+
+  <!-- STEP 2: Chapter Selection -->
+  <div class="rt-step" id="rt-step-2">
+    <div class="rt-step-header">
+      <div class="rt-step-num">2</div>
+      <div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:var(--text-main);">অধ্যায় নির্বাচন করুন</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">কোন কোন অধ্যায় পড়তে চান?</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="btn rt-select-all-btn" onclick="rtSelectAllChapters()"><i class="fa-solid fa-check-double"></i> সব Select</button>
+      <button class="btn rt-select-all-btn" onclick="rtClearAllChapters()" style="border-color:var(--accent);color:var(--accent);background:rgba(255,0,60,0.06);"><i class="fa-solid fa-xmark"></i> সব Clear</button>
+      <span id="rt-chapter-count" style="font-size:0.82rem;color:var(--primary);align-self:center;margin-left:auto;font-weight:600;"></span>
+    </div>
+    <div id="rt-chapters-list"></div>
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button class="btn" style="flex:1;justify-content:center;" onclick="rtGoToStep1()"><i class="fa-solid fa-arrow-left"></i> পেছনে</button>
+      <button class="btn btn-primary" style="flex:2;justify-content:center;" onclick="rtGoToStep3()"><i class="fa-solid fa-arrow-right"></i> পরবর্তী: Timeline</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Timeline Selection -->
+  <div class="rt-step" id="rt-step-3">
+    <div class="rt-step-header">
+      <div class="rt-step-num">3</div>
+      <div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:var(--text-main);">Timeline নির্বাচন করুন</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">কতদিনে পড়তে চান?</div>
+      </div>
+    </div>
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:6px;"><i class="fa-solid fa-calendar-plus" style="color:var(--primary);margin-right:6px;"></i>শুরুর তারিখ</label>
+          <input type="date" id="rt-start-date" style="width:100%;" oninput="rtUpdateTimeline()">
+        </div>
+        <div>
+          <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:6px;"><i class="fa-solid fa-calendar-check" style="color:var(--success);margin-right:6px;"></i>শেষের তারিখ</label>
+          <input type="date" id="rt-end-date" style="width:100%;" oninput="rtUpdateTimeline()">
+        </div>
+      </div>
+      <div id="rt-timeline-preview" style="display:none;background:rgba(0,240,255,0.06);border:1px solid rgba(0,240,255,0.2);border-radius:var(--radius-sm);padding:14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+          <div><div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--primary);" id="rt-days-count">-</div><div style="font-size:0.72rem;color:var(--text-muted);">Study Days</div></div>
+          <div><div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--secondary);" id="rt-chapters-count">-</div><div style="font-size:0.72rem;color:var(--text-muted);">Chapters</div></div>
+          <div><div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:var(--success);" id="rt-topics-count">-</div><div style="font-size:0.72rem;color:var(--text-muted);">Topics</div></div>
+        </div>
+        <div id="rt-load-info" style="margin-top:10px;font-size:0.8rem;color:var(--text-muted);text-align:center;"></div>
+      </div>
+      <div id="rt-timeline-warning" class="rt-warning-box" style="display:none;margin-top:14px;margin-bottom:0;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i><span id="rt-warning-text"></span></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn" style="flex:1;justify-content:center;" onclick="rtGoToStep2()"><i class="fa-solid fa-arrow-left"></i> পেছনে</button>
+      <button class="btn btn-primary" style="flex:2;justify-content:center;padding:13px;" onclick="rtGenerateRoutine()" id="rt-generate-btn">
+        <i class="fa-solid fa-magic-wand-sparkles"></i> Routine তৈরি করুন
+      </button>
+    </div>
+  </div>
+
+  <!-- GENERATED ROUTINE VIEW -->
+  <div class="rt-step" id="rt-step-4">
+    <div id="rt-gen-progress-area" style="margin-bottom:20px;">
+      <div class="rt-progress-summary" id="rt-stats-grid"></div>
+      <div class="glass" style="padding:14px 18px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:0.82rem;color:var(--text-muted);">সামগ্রিক অগ্রগতি</span>
+          <span id="rt-overall-pct" style="font-family:var(--font-display);font-weight:800;color:var(--primary);">0%</span>
+        </div>
+        <div style="height:8px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
+          <div id="rt-overall-fill" style="height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:10px;width:0%;transition:width 0.5s;"></div>
+        </div>
+      </div>
+    </div>
+    <div id="rt-routine-container"></div>
+  </div>
 </section>
         <!-- Friends Section -->
 <section id="view-friends" class="view-section">
@@ -2027,6 +2105,7 @@
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
         <div class="b-nav-item" onclick="switchView('friends',this)" style="position:relative;"><i class="fa-solid fa-user-group"></i>Friends<span id="bnav-friends-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;"></span></div>
+        <div class="b-nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i>Routine</div>
         <div class="b-nav-item" onclick="switchView('inbox',this)" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
     </nav>
@@ -2512,7 +2591,7 @@ function updateGreeting() {
 
 /* ---- NAVIGATION ---- */
 const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16 };
-const BNAV_INDEX = { dashboard:0, library:1, friends:2, inbox:3, pomodoro:4 };
+const BNAV_INDEX = { dashboard:0, library:1, friends:2, routine:3, inbox:4, pomodoro:5 };
 
 const VIEW_ID_MAP = {
     dashboard:0, todo:1, notes:2, pomodoro:3, revision:4,
@@ -3522,19 +3601,16 @@ function timerTick() {
             } else if (autoCycleEnabled) {
                 handleAutoCycleBreakEnd();
             } else {
-                showToast('Break over! Back to work. 💪', 'success');
-                document.getElementById('timer-status').innerText = 'Focus starting...';
+                // Custom Duration mode: after break ends → STOP. Do NOT auto-start next focus.
                 releaseWakeLock();
-                playFocusStartSound();
-                setTimeout(() => {
-                    timerMode = 'focus';
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    const fbtn = document.getElementById('mode-btn-focus'); if (fbtn) fbtn.classList.add('active');
-                    timeLeft = modes.focus;
-                    updateTimerDisplay(); setRing(modes.focus, modes.focus);
-                    document.getElementById('timer-status').innerText = 'Focusing...';
-                    toggleTimer();
-                }, 800);
+                showToast('Break complete! ☕ Timer stopped. Start manually when ready.', 'success');
+                document.getElementById('timer-status').innerText = 'Break complete — restart when ready';
+                timerMode = 'focus';
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                const fbtn2 = document.getElementById('mode-btn-focus'); if (fbtn2) fbtn2.classList.add('active');
+                timeLeft = modes.focus;
+                updateTimerDisplay(); setRing(modes.focus, modes.focus);
+                // Do NOT call toggleTimer() — user must manually restart
             }
         }
         setRing(0, modes[timerMode]);
@@ -4759,108 +4835,617 @@ function renderLeaderboard(entries, tab) {
 }
 
 /* ---- ROUTINE ---- */
-let routineData = { ssc:[], hsc:[], class6:[] };
-let curRoutineSeg = 'hsc';
+/* ===================== HSC ROUTINE GENERATOR ===================== */
 
-const RT_COLORS = {
-  bangla:'#00f0ff', english:'#00ff66',
-  physics:'#7000ff', chemistry:'#ff6b35',
-  math:'#ffcc00', biology:'#ff003c', ict:'#00bcd4'
-};
-const RT_DAYS = ['প্রতিদিন','শনিবার','রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার'];
-
-function switchRoutineSeg(seg) {
-  curRoutineSeg = seg;
-  ['ssc','hsc','class6'].forEach(s => {
-    const el = document.getElementById('btn-'+s);
-    if(el) el.className = 'btn' + (seg===s?' btn-primary':'');
-  });
-  renderRoutine();
-}
-function toggleRtCustomSubj(sel) {
-  const c = document.getElementById('rt-subj-custom');
-  if(c) c.style.display = sel.value==='__custom__' ? 'block' : 'none';
-}
-function toggleRtCustomTime(sel) {
-  const c = document.getElementById('rt-time-custom');
-  if(c) c.style.display = sel.value==='__custom__' ? 'block' : 'none';
-}
-function toggleRtCustomDur(sel) {
-  const c = document.getElementById('rt-dur-custom');
-  if(c) c.style.display = sel.value==='__custom__' ? 'block' : 'none';
-}
-
-function addRoutineSlot() {
-  const rtTime = document.getElementById('rt-time');
-  const rtDur = document.getElementById('rt-dur');
-  const rtSubj = document.getElementById('rt-subj');
-  const timeVal = rtTime.value === '__custom__' ? (document.getElementById('rt-time-custom').value.trim()||'Custom') : rtTime.value;
-  const durVal = rtDur.value === '__custom__' ? (document.getElementById('rt-dur-custom').value.trim()||'Custom') : rtDur.value;
-  const subjVal = rtSubj.value === '__custom__' ? (document.getElementById('rt-subj-custom').value.trim()||'Custom') : rtSubj.value;
-  const slot = {
-    id: Date.now().toString(),
-    day: document.getElementById('rt-day').value,
-    time: timeVal,
-    subj: subjVal,
-    dur: durVal
-  };
-  if (!routineData[curRoutineSeg]) routineData[curRoutineSeg] = [];
-  routineData[curRoutineSeg].push(slot);
-  saveRoutine();
-  renderRoutine();
-  showToast('Slot যোগ হয়েছে!', 'success');
-}
-
-function deleteRoutineSlot(id) {
-  routineData[curRoutineSeg] = routineData[curRoutineSeg].filter(x => x.id !== id);
-  saveRoutine();
-  renderRoutine();
-}
-
-function saveRoutine() {
-  try { localStorage.setItem('studyVault_routine_' + (currentUser||'default'), JSON.stringify(routineData)); } catch(e){}
-}
-
-function loadRoutine() {
-  try {
-    const raw = localStorage.getItem('studyVault_routine_' + (currentUser||'default'));
-    if (raw) routineData = JSON.parse(raw);
-  } catch(e){}
-}
-
-function renderRoutine() {
-  const c = document.getElementById('routine-list-container');
-  if (!c) return;
-  const data = routineData[curRoutineSeg] || [];
-  if (!data.length) {
-    c.innerHTML = '<div class="glass" style="padding:40px;text-align:center;color:var(--text-muted);">কোনো slot নেই। উপরে যোগ করুন!</div>';
-    return;
+/* ---- COMPLETE SUBJECT → CHAPTER → MOTHER TOPIC DATASET ---- */
+const RT_DATASET = {
+  'Physics': {
+    label: 'Physics (পদার্থবিজ্ঞান)',
+    color: '#7000ff',
+    icon: '⚛️',
+    chapters: [
+      { id:'phy1p1', name:'ভৌত জগৎ ও পরিমাপ', paper:'1st Paper', topics:['পরিমাপের ত্রুটি','মাত্রা ও সমীকরণ','Vernier ও Screw gauge'] },
+      { id:'phy1p2', name:'ভেক্টর', paper:'1st Paper', topics:['ভেক্টর সামান্তরিক সূত্র','ডট ও ক্রস গুণন','নদী-নৌকার অঙ্ক','আপেক্ষিক বেগ','ল্যামির সূত্র'] },
+      { id:'phy1p3', name:'গতিবিদ্যা', paper:'1st Paper', topics:['প্রাসের গতি (Projectiles)','পর্যায়বৃত্ত গতি','বেগ-সময় গ্রাফ'] },
+      { id:'phy1p4', name:'নিউটনীয় বলবিদ্যা', paper:'1st Paper', topics:['জড়তার ভ্রামক','কৌণিক ভরবেগ ও টর্ক','কেন্দ্রমুখী ও কেন্দ্রবিমুখী বল','ব্যাংকিং কোণ','রৈখিক ভরবেগের সংরক্ষণ ও সংঘর্ষ'] },
+      { id:'phy1p5', name:'কাজ, শক্তি ও ক্ষমতা', paper:'1st Paper', topics:['পরিবর্তনশীল বল দ্বারা কৃতকাজ','স্প্রিং ধ্রুবক','কর্মদক্ষতা (Efficiency)','কুয়ো খালি করার অঙ্ক','যান্ত্রিক শক্তির সংরক্ষণশীলতা'] },
+      { id:'phy1p6', name:'মহাকর্ষ ও অভিকর্ষ', paper:'1st Paper', topics:['g এর পরিবর্তন (উচ্চতা/গভীরতা/অক্ষাংশ)','মহাকর্ষীয় বিভব ও প্রাবল্য','মুক্তিবেগ','কৃত্রিম উপগ্রহ'] },
+      { id:'phy1p7', name:'পদার্থের গাঠনিক ধর্ম', paper:'1st Paper', topics:['ইয়ং-এর গুণাঙ্ক ও পীড়ন-বিকৃতি','সান্ত্রতা ও স্টোকসের সূত্র','পৃষ্ঠটান ও কৈশিকতা'] },
+      { id:'phy1p8', name:'পর্যায়বৃত্ত গতি', paper:'1st Paper', topics:['SHM এর ব্যবকলনীয় সমীকরণ','সরল দোলক','সেকেন্ড দোলক ও পাহাড়ের উচ্চতা','SHM এর শক্তি'] },
+      { id:'phy1p9', name:'তরঙ্গ', paper:'1st Paper', topics:['অগ্রগামী ও স্থির তরঙ্গ','তরঙ্গের উপরিপাতন','শব্দের তীব্রতা ও ডেসিবল','বীট (Beats)','ডপলার প্রভাব'] },
+      { id:'phy1p10', name:'আদর্শ গ্যাস ও গ্যাসের গতিতত্ত্ব', paper:'1st Paper', topics:['বয়েল, চার্লস, অ্যাভোগাড্রো সূত্র','PV=nRT','গ্যাসের গতিশক্তি ও Crms','আপেক্ষিক আর্দ্রতা ও শিশিরাঙ্ক'] },
+      { id:'phy2p1', name:'তাপগতিবিদ্যা', paper:'2nd Paper', topics:['তাপগতিবিদ্যার ১ম ও ২য় সূত্র','সমোষ্ণ ও রুদ্ধতাপীয় প্রক্রিয়া','কার্নো ইঞ্জিন ও রেফ্রিজারেটর','এনট্রপি'] },
+      { id:'phy2p2', name:'স্থির তড়িৎ', paper:'2nd Paper', topics:['কুলম্বের সূত্র ও তড়িৎ প্রাবল্য','তড়িৎ বিভব','গাউসের সূত্র','ধারক ও ধারকত্ব'] },
+      { id:'phy2p3', name:'চল তড়িৎ', paper:'2nd Paper', topics:['ওহমের সূত্র ও রোধের উষ্ণতা গুণাঙ্ক','Kirchhoff\'s laws','Wheatstone ও Meter Bridge','Potentiometer ও Shunt','জুলের তাপীয় ক্রিয়া'] },
+      { id:'phy2p4', name:'তড়িৎ প্রবাহের চৌম্বক ক্রিয়া', paper:'2nd Paper', topics:['বায়াট-সাভার সূত্র','অ্যাম্পিয়ারের সূত্র','Hall effect','Lorentz force'] },
+      { id:'phy2p5', name:'তাড়িতচৌম্বক আবেশ ও AC', paper:'2nd Paper', topics:['ফ্যারাডে ও লেঞ্জের সূত্র','স্বকীয় ও পারস্পরিক আবেশ','ট্রান্সফরমার','AC এর গড় ও RMS মান'] },
+      { id:'phy2p6', name:'জ্যামিতিক আলোকবিজ্ঞান', paper:'2nd Paper', topics:['প্রিজম ও ন্যূনতম বিচ্যুতি','লেন্স প্রস্তুতকারকের সমীকরণ','অণুবীক্ষণ ও দূরবীক্ষণ বিবর্ধন'] },
+      { id:'phy2p7', name:'ভৌত আলোকবিজ্ঞান', paper:'2nd Paper', topics:['হাইগেনসের নীতি','Young\'s double slit experiment','আলোর অপবর্তন','আলোর সমবর্তন'] },
+      { id:'phy2p8', name:'আধুনিক পদার্থবিজ্ঞানের সূচনা', paper:'2nd Paper', topics:['আপেক্ষিকতার বিশেষ তত্ত্ব','ফটোতড়িৎ ক্রিয়া ও কার্যআপেক্ষক','X-ray ও Compton ক্রিয়া','de Broglie তরঙ্গদৈর্ঘ্য','Heisenberg অনিশ্চয়তা'] },
+      { id:'phy2p9', name:'পরমাণুর মডেল ও নিউক্লিয়ার পদার্থবিজ্ঞান', paper:'2nd Paper', topics:['বোর মডেল ও হাইড্রোজেন বর্ণালী','তেজস্ক্রিয় ক্ষয় ও অর্ধায়ু','ভর ত্রুটি ও বন্ধন শক্তি'] },
+      { id:'phy2p10', name:'সেমিকন্ডাক্টর ও ইলেকট্রনিক্স', paper:'2nd Paper', topics:['p-n junction ও Rectification','Transistor (Biasing, Amplification)','Logic Gates (AND, OR, NOT, NAND, NOR, XOR)'] },
+      { id:'phy2p11', name:'জ্যোতির্বিজ্ঞান', paper:'2nd Paper', topics:['হাবলের সূত্র','Big Bang তত্ত্ব','কৃষ্ণগহ্বর'] }
+    ]
+  },
+  'Chemistry': {
+    label: 'Chemistry (রসায়ন)',
+    color: '#ff6b35',
+    icon: '🧪',
+    chapters: [
+      { id:'chem1p1', name:'ল্যাবরেটরির নিরাপদ ব্যবহার', paper:'1st Paper', topics:['ল্যাবরেটরি বিধি ও সুরক্ষা সামগ্রী','কাঁচের সামগ্রী পরিষ্কারকরণ','Primary ও Secondary Standard পদার্থ'] },
+      { id:'chem1p2', name:'গুণগত রসায়ন', paper:'1st Paper', topics:['কোয়ান্টাম সংখ্যা','ইলেকট্রন বিন্যাস (আউফবাউ, হুন্ড, পাউলি)','রাদারফোর্ড ও বোর মডেল','হাইড্রোজেন বর্ণালী','দ্রাব্যতা গুণফল (Ksp) ও সমআয়ন','শিখা পরীক্ষা ও ক্যাটায়ন-অ্যানায়ন শনাক্তকরণ','ক্রোম্যাটোগ্রাফি ও পাতন'] },
+      { id:'chem1p3', name:'মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন', paper:'1st Paper', topics:['s, p, d, f ব্লকের বৈশিষ্ট্য','পর্যায়বৃত্ত ধর্ম (আয়নিকরণ শক্তি, ইলেকট্রন আসক্তি)','অরবিটাল Hybridization','VSEPR তত্ত্ব ও অনুর আকৃতি','হাইড্রোজেন বন্ধন','ফাজানের নীতি'] },
+      { id:'chem1p4', name:'রাসায়নিক পরিবর্তন', paper:'1st Paper', topics:['গ্রীন কেমিস্ট্রি','রাসায়নিক সাম্যাবস্থা','Kp ও Kc এর রাশিমালা','লা-শাতেলিয়ার নীতি','অসভ্যাল্ডের লঘুকরণ সূত্র','pH ও বাফার দ্রবণ','বিক্রিয়ার হার ও সক্রিয়ণ শক্তি','হেজের সূত্র'] },
+      { id:'chem1p5', name:'কর্মমুখী রসায়ন', paper:'1st Paper', topics:['খাদ্য নিরাপত্তা ও Preservatives','ভিনেগার প্রস্তুতি','টয়লেট্রিজ ও প্রসাধনী রসায়ন'] },
+      { id:'chem2p1', name:'পরিবেশ রসায়ন', paper:'2nd Paper', topics:['বায়ুমণ্ডলের উপাদান ও ঘূর্ণিঝড়','বয়েল, চার্লস, ডালটন, গ্রাহামের সূত্র','আদর্শ ও বাস্তব গ্যাস (Van der Waals)','অম্ল-ক্ষারক তত্ত্ব','পানির দূষক (DO, BOD, COD)'] },
+      { id:'chem2p2', name:'জৈব রসায়ন', paper:'2nd Paper', topics:['সমগোত্রীয় শ্রেণী ও IUPAC নামকরণ','Isomerism','জৈব বিক্রিয়ার Mechanism (Electrophile, Nucleophile)','Alkane, Alkene, Alkyne','Alkyl Halide ও SN1/SN2','Alcohol, Aldehyde, Ketone, Carboxylic Acid','Benzene ও Aromatic যৌগ (নাইট্রেশন, Friedel-Crafts)','কার্যকরী মূলক শনাক্তকরণ'] },
+      { id:'chem2p3', name:'পরিমাণগত রসায়ন', paper:'2nd Paper', topics:['Molarity, ppm, শতকরা ঘনমাত্রা','Titration ও নির্দেশক','Redox বিক্রিয়া সমতাকরণ','Iodometry/Iodimetry','Beer-Lambert সূত্র'] },
+      { id:'chem2p4', name:'তড়িৎ রসায়ন', paper:'2nd Paper', topics:['পরিবাহিতা ও Faraday\'s Law (W=ZIt)','Galvanic কোষ ও কোষ বিক্রিয়া','Standard Cell Potential ও Nernst সমীকরণ','Dry Cell, Li-ion, Fuel Cell','ধাতুর ক্ষয় ও ক্ষয়রোধ'] },
+      { id:'chem2p5', name:'অর্থনৈতিক রসায়ন', paper:'2nd Paper', topics:['কাঁচ, সিরামিক, সিমেন্ট, কাগজ ও চামড়া শিল্প','কয়লা ও প্রাকৃতিক গ্যাস','শিল্প বর্জ্য ও পরিবেশ দূষণ'] }
+    ]
+  },
+  'Higher Math': {
+    label: 'Higher Math (উচ্চতর গণিত)',
+    color: '#ffcc00',
+    icon: '📐',
+    chapters: [
+      { id:'hm1p1', name:'ম্যাট্রিক্স ও নির্ণায়ক', paper:'1st Paper', topics:['বিভিন্ন প্রকার ম্যাট্রিক্স','ম্যাট্রিক্সের গুণন','বিপরীত ম্যাট্রিক্স','নির্ণায়কের ধর্মাবলী','Cramer\'s Rule'] },
+      { id:'hm1p2', name:'ভেক্টর', paper:'1st Paper', topics:['বিন্দুর অবস্থান ভেক্টর','Dot ও Cross গুণনের জ্যামিতিক প্রয়োগ','ভেক্টরের সাহায্যে ক্ষেত্রফল নির্ণয়'] },
+      { id:'hm1p3', name:'সরলরেখা', paper:'1st Paper', topics:['কার্তেসীয় ও পোলার স্থানাঙ্ক','অন্তরবিভক্তি ও বহির্বিভক্তি','ত্রিভুজের ক্ষেত্রফল','সরলরেখার বিভিন্ন সমীকরণ','দুটি রেখার কোণ ও লম্ব দূরত্ব'] },
+      { id:'hm1p4', name:'বৃত্ত', paper:'1st Paper', topics:['বৃত্তের আদর্শ ও সাধারণ সমীকরণ','অক্ষকে স্পর্শ করার শর্ত','বৃত্তের জ্যা ও স্পর্শকের সমীকরণ','দুটি বৃত্তের সাধারণ জ্যা'] },
+      { id:'hm1p5', name:'বিন্যাস ও সমাবেশ', paper:'1st Paper', topics:['বিন্যাসের নিয়মাবলী (শব্দ গঠন)','সমাবেশের নিয়মাবলী (কমিটি গঠন)','বিন্যাস ও সমাবেশের মিশ্র সমস্যা'] },
+      { id:'hm1p6', name:'ত্রিকোণমিতিক অনুপাত', paper:'1st Paper', topics:['সংযুক্ত কোণের অনুপাত','যৌগিক ও গুণিতক কোণের সূত্র','ত্রিকোণমিতিক মান নির্ণয় ও প্রমাণ'] },
+      { id:'hm1p7', name:'সংযুক্ত কোণের ত্রিকোণমিতি', paper:'1st Paper', topics:['A+B+C=π রূপান্তর','সাইন ও কোসাইন সূত্র'] },
+      { id:'hm1p8', name:'ফাংশন ও ফাংশনের লেখচিত্র', paper:'1st Paper', topics:['ডোমেন ও রেঞ্জ নির্ণয়','এক-এক ও সার্বিক ফাংশন','বিপরীত ফাংশন'] },
+      { id:'hm1p9', name:'অন্তরীকরণ', paper:'1st Paper', topics:['সীমার ধারণা ও L\'Hopital\'s rule','মূল নিয়মে অন্তরজ','পর্যায়ক্রমিক অন্তরীকরণ','Maxima & Minima'] },
+      { id:'hm1p10', name:'যোগজীকরণ', paper:'1st Paper', topics:['অনির্দিষ্ট যোগজ (প্রতিস্থাপন, আংশিক ভগ্নাংশ, u.v)','Definite Integral','বক্ররেখা দ্বারা আবদ্ধ ক্ষেত্রফল'] },
+      { id:'hm2p1', name:'বাস্তব সংখ্যা ও অসমতা', paper:'2nd Paper', topics:['বাস্তব সংখ্যার ধর্ম','পরমমান সংবলিত অসমতার সমাধান'] },
+      { id:'hm2p2', name:'জটিল সংখ্যা', paper:'2nd Paper', topics:['মডুলাস ও আর্গুমেন্ট','কার্তেসীয় ও পোলার আকার','এককের কাল্পনিক ঘনমূল ω','বর্গমূল ও ঘনমূল'] },
+      { id:'hm2p3', name:'বহুপদী ও সমীকরণ', paper:'2nd Paper', topics:['দ্বিঘাত সমীকরণের মূল ও সহগ','মূলের প্রকৃতি নির্ণয়','সাধারণ মূল থাকার শর্ত','নতুন সমীকরণ গঠন'] },
+      { id:'hm2p4', name:'দ্বিপদী বিস্তৃতি', paper:'2nd Paper', topics:['Pascal\'s triangle ও দ্বিপদী উপপাদ্য','সাধারণ পদ (r+1 তম)','x-বর্জিত পদ','অসীম দ্বিপদী বিস্তৃতি'] },
+      { id:'hm2p5', name:'কণিক', paper:'2nd Paper', topics:['Parabola, Ellipse, Hyperbola','উৎকেন্দ্রিকতা e','উপকেন্দ্র ও নিয়ামক রেখা','শীর্ষবিন্দুর স্থানাঙ্ক'] },
+      { id:'hm2p6', name:'বিপরীত ত্রিকোণমিতি ও সমীকরণ', paper:'2nd Paper', topics:['বিপরীত ত্রিকোণমিতিক রূপান্তর ও প্রমাণ','ত্রিকোণমিতিক সমীকরণের সাধারণ সমাধান'] },
+      { id:'hm2p7', name:'স্থিতিবিদ্যা', paper:'2nd Paper', topics:['বলের সামান্তরিক সূত্র','ল্যামির উপপাদ্য','সদৃশ ও অসদৃশ সমান্তরাল বল','বলের ভ্রামক ও যুগল'] },
+      { id:'hm2p8', name:'গতিবিদ্যা (Particle Motion)', paper:'2nd Paper', topics:['সরলরেখায় কণার গতি','খাড়া ঊর্ধ্বমুখী ও নিম্নমুখী গতি','প্রাসের গতি (উচ্চতা, বিচরণকাল, পাল্লা)'] },
+      { id:'hm2p9', name:'বিস্তার পরিমাপ ও সম্ভাবনা', paper:'2nd Paper', topics:['গড় ব্যবধান, ভেদাঙ্ক ও পরিমিত ব্যবধান','সম্ভাবনার মৌলিক সূত্র','শর্তাধীন সম্ভাবনা ও স্বাধীন ঘটনা','মুদ্রা, ছক্কা ও তাস সমস্যা'] }
+    ]
+  },
+  'Biology': {
+    label: 'Biology (জীববিজ্ঞান)',
+    color: '#00ff66',
+    icon: '🧬',
+    chapters: [
+      { id:'bio1p1', name:'কোষ ও এর গঠন', paper:'Botany (1st)', topics:['Plasma Membrane (Fluid Mosaic Model)','Chloroplast ও Mitochondria','DNA Double Helix ও Replication','Transcription ও Translation'] },
+      { id:'bio1p2', name:'কোষ বিভাজন', paper:'Botany (1st)', topics:['Mitosis এর পর্যায়','Meiosis-1 Prophase-1 উপপর্যায়','Crossing Over'] },
+      { id:'bio1p3', name:'কোষ রসায়ন', paper:'Botany (1st)', topics:['Carbohydrate (Glucose, Sucrose)','Amino Acid ও Protein গঠন','Lipid','Enzyme কার্যপদ্ধতি'] },
+      { id:'bio1p4', name:'অণুজীব', paper:'Botany (1st)', topics:['Virus (T2 Bacteriophage, HIV)','TMV','Bacteria (গঠন ও গুরুত্ব)','Plasmodium জীবনচক্র'] },
+      { id:'bio1p5', name:'শৈবাল ও ছত্রাক', paper:'Botany (1st)', topics:['Ulothrix গঠন ও জনন','Agaricus গঠন ও গুরুত্ব','লাইকেন'] },
+      { id:'bio1p6', name:'Bryophyta ও Pteridophyta', paper:'Botany (1st)', topics:['Riccia গঠন ও জনন','Pteris গঠন ও জীবনচক্র (জনুঃক্রম)'] },
+      { id:'bio1p7', name:'Gymnosperms ও Angiosperms', paper:'Botany (1st)', topics:['Cycas এর বৈশিষ্ট্য','Malvaceae ও Poaceae গোত্রের বৈশিষ্ট্য','পুষ্পসংকেত ও পুষ্পপ্রতীক'] },
+      { id:'bio1p8', name:'টিস্যু ও টিস্যুতন্ত্র', paper:'Botany (1st)', topics:['ভাজক টিস্যুর শ্রেণীবিভাগ','Epidermal, Ground ও Vascular টিস্যুতন্ত্র','একবীজপত্রী উদ্ভিদের অন্তর্গঠন'] },
+      { id:'bio1p9', name:'উদ্ভিদ শারীরতত্ত্ব', paper:'Botany (1st)', topics:['খনিজ লবণ পরিশোষণ','Transpiration','Photosynthesis (C3 ও C4 চক্র)','Respiration (Glycolysis, Krebs Cycle)'] },
+      { id:'bio1p10', name:'উদ্ভিদ প্রজনন', paper:'Botany (1st)', topics:['পুং ও স্ত্রী Gametophyte বিকাশ','Double Fertilization','কৃত্রিম প্রজনন'] },
+      { id:'bio1p11', name:'জীবপ্রযুক্তি', paper:'Botany (1st)', topics:['Tissue Culture','Recombinant DNA (Gene Cloning, Insulin)','GMO ও Interferon'] },
+      { id:'bio1p12', name:'জীবের পরিবেশ ও সংরক্ষণ', paper:'Botany (1st)', topics:['বাস্তুতন্ত্র ও খাদ্যশৃঙ্খল','মরুজ ও জলজ উদ্ভিদের অভিযোজন','জীববৈচিত্র্য সংরক্ষণ (In-situ & Ex-situ)'] },
+      { id:'bio2p1', name:'প্রাণীর বিভিন্নতা ও শ্রেণীবিভাগ', paper:'Zoology (2nd)', topics:['শ্রেণীবিভাগের ভিত্তি (সংগঠন, প্রতিসাম্যতা, সিলোম)','নন-কর্ডাটার ৯টি পর্বের বৈশিষ্ট্য','Chordata পর্বের উপপর্ব'] },
+      { id:'bio2p2', name:'প্রাণীর পরিচিতি', paper:'Zoology (2nd)', topics:['Hydra (গঠন, Nematocyst, চলন)','ঘাসফড়িং (মুখোপাঙ্গ, Ommatidium, রূপান্তর)','রুই মাছ (রক্তসংবহন, ফুলকা, পটকা)'] },
+      { id:'bio2p3', name:'পরিপাক ও শোষণ', paper:'Zoology (2nd)', topics:['পৌষ্টিকনালী ও পৌষ্টিক গ্রন্থির গঠন','শর্করা, প্রোটিন ও Lipid পরিপাক','Liver ও Pancreas এর ভূমিকা','স্থূলতা'] },
+      { id:'bio2p4', name:'রক্ত ও সংবহন', paper:'Zoology (2nd)', topics:['রক্তের উপাদান ও তঞ্চন','হৃদপিণ্ডের গঠন ও রক্ত সংবহন','Cardiac Cycle','হৃদরোগ (Angina, Heart Attack)'] },
+      { id:'bio2p5', name:'শ্বাসক্রিয়া ও শ্বসন', paper:'Zoology (2nd)', topics:['শ্বসনতন্ত্রের গঠন','O2 ও CO2 পরিবহন','Sinusitis, Otitis Media','ধূমপানের ক্ষতিকর প্রভাব'] },
+      { id:'bio2p6', name:'বর্জ্য ও নিষ্কাশন', paper:'Zoology (2nd)', topics:['Kidney গঠন','Nephron ও মূত্র উৎপাদন','Ultrafiltration ও Osmoregulation','Dialysis'] },
+      { id:'bio2p7', name:'চলন ও অঙ্গচালনা', paper:'Zoology (2nd)', topics:['কঙ্কালতন্ত্র (অক্ষীয় ও উপাঙ্গীয়)','Haversian System','পেশী টিস্যু ও টান Mechanism','অস্থিভঙ্গ ও মচকানো'] },
+      { id:'bio2p8', name:'সমন্বয় ও নিয়ন্ত্রণ', paper:'Zoology (2nd)', topics:['মস্তিষ্কের গঠন ও কাজ','চোখ ও কানের গঠন','প্রধান হরমোন গ্রন্থি ও হরমোন'] },
+      { id:'bio2p9', name:'মানব প্রজনন', paper:'Zoology (2nd)', topics:['পুং ও স্ত্রী প্রজননতন্ত্রের গঠন','Gametogenesis','Menstrual Cycle','ভ্রূণ বিকাশ ও Placenta'] },
+      { id:'bio2p10', name:'মানবদেহের প্রতিরক্ষা', paper:'Zoology (2nd)', topics:['প্রতিরক্ষার স্তরসমূহ (১ম, ২য়, ৩য়)','Antibody গঠন ও প্রকারভেদ','Vaccine এর ভূমিকা'] },
+      { id:'bio2p11', name:'জিনতত্ত্ব ও বিবর্তন', paper:'Zoology (2nd)', topics:['Mendel\'s সূত্র ও ব্যতিক্রম','Sex-linked Disorder (বর্ণান্ধতা, Haemophilia)','Lamarckism ও Darwinism'] },
+      { id:'bio2p12', name:'প্রাণীর আচরণ', paper:'Zoology (2nd)', topics:['সহজাত আচরণ (Taxis, Reflex, Instinct)','অর্জিত আচরণ (Pavlov\'s Experiment)','মৌমাছির সামাজিক আচরণ'] }
+    ]
+  },
+  'ICT': {
+    label: 'ICT',
+    color: '#00bcd4',
+    icon: '💻',
+    chapters: [
+      { id:'ict1', name:'বিশ্ব ও বাংলাদেশ প্রেক্ষিত', paper:'ICT', topics:['VR (Virtual Reality)','AI (কৃত্রিম বুদ্ধিমত্তা)','Robotics','Cryosurgery','Biometrics','Bioinformatics','Genetic Engineering','Nanotechnology'] },
+      { id:'ict2', name:'কমিউনিকেশন সিস্টেমস ও নেটওয়ার্কিং', paper:'ICT', topics:['Data Transmission Mode ও Method','তার মাধ্যম (Coaxial, Twisted, Fiber optic)','Mobile Technology (1G to 5G)','Network Topology (Bus, Star, Ring, Mesh, Tree, Hybrid)','Cloud Computing'] },
+      { id:'ict3', name:'সংখ্যা পদ্ধতি ও ডিজিটাল ডিভাইস', paper:'ICT', topics:['সংখ্যা পদ্ধতির রূপান্তর','2\'s Complement','Binary Code','Boolean Algebra ও De Morgan\'s Theorem','Logic Gate বাস্তবায়ন','Encoder, Decoder, Adder'] },
+      { id:'ict4', name:'ওয়েব ডিজাইন ও HTML', paper:'ICT', topics:['ওয়েবসাইটের কাঠামো','HTML মৌলিক ট্যাগ','Text Formatting ও Hyperlink','Image, Table, Form','ওয়েবসাইট Publishing'] },
+      { id:'ict5', name:'প্রোগ্রামিং ভাষা (C Language)', paper:'ICT', topics:['Algorithm ও Flowchart','Data Type, Input-Output (scanf, printf)','Operator, if-else, switch','Loop (for, while, do-while)','Array ও Function'] },
+      { id:'ict6', name:'DBMS', paper:'ICT', topics:['Relational Database Model','Data Type, Primary Key ও Foreign Key','Database Relationship (1:1, 1:M, M:M)','SQL Query (SELECT, INSERT, UPDATE, DELETE)','Data Security'] }
+    ]
+  },
+  'Bangla': {
+    label: 'Bangla (বাংলা)',
+    color: '#00f0ff',
+    icon: '📖',
+    chapters: [
+      { id:'ban1p1', name:'গদ্য (Prose)', paper:'1st Paper', topics:['অপরিচিতা','চাষার দুক্ষু','আমার পথ','মানব-কল্যাণ','মাসি-পিসি','বায়ান্নর দিনগুলো','রেইনকোট'] },
+      { id:'ban1p2', name:'পদ্য (Poetry)', paper:'1st Paper', topics:['বিভীষণের প্রতি মেঘনাদ','সোনার তরী','বিদ্রোহী','প্রতিদান','১৮ বছর বয়স','ফেব্রুয়ারি ১৯৬৯','আমি কিংবদন্তির কথা বলছি'] },
+      { id:'ban1p3', name:'সহপাঠ', paper:'1st Paper', topics:['লালসালু (উপন্যাস)','সিরাজউদ্দৌলা (নাটক)'] },
+      { id:'ban2p1', name:'ব্যাকরণ (Grammar)', paper:'2nd Paper', topics:['বাংলা উচ্চারণের নিয়ম','বাংলা বানানের নিয়ম','ব্যাকরণিক শব্দশ্রেণী','শব্দ গঠন (উপসর্গ ও সমাস)','বাক্য তত্ত্ব','ভাষার অপপ্রয়োগ ও শুদ্ধপ্রয়োগ'] },
+      { id:'ban2p2', name:'নির্মিতি (Composition)', paper:'2nd Paper', topics:['পারিভাষিক শব্দ/অনুবাদ','দিনলিপি/প্রতিবেদন','বৈদ্যুতিন চিঠি/আবেদনপত্র','সারাংশ/ভাব-সম্প্রসারণ','সংলাপ/ক্ষুদে গল্প','প্রবন্ধ রচনা'] }
+    ]
+  },
+  'English': {
+    label: 'English',
+    color: '#ff003c',
+    icon: '🇬🇧',
+    chapters: [
+      { id:'eng1p1', name:'Textual Themes (EFT)', paper:'1st Paper', topics:['History Makers (Mandela, Mujib)','Adolescence','Human Rights','Diaspora','Environment & Nature','Art & Music','Tours & Travels'] },
+      { id:'eng1p2', name:'Reading & Grammar Test', paper:'1st Paper', topics:['Flow Chart','Information Transfer','Summarizing','Cloze Test with/without Clues','Rearranging'] },
+      { id:'eng1p3', name:'Guided Writing', paper:'1st Paper', topics:['Paragraph','Story Completion','Informal Letters/Emails','Graphs & Charts Analysis','Theme Writing'] },
+      { id:'eng2p1', name:'Grammar (Core Contextual)', paper:'2nd Paper', topics:['Articles & Prepositions','Special Words & Phrases','Completing Sentences','Right Form of Verbs','Narrative Style (Direct/Indirect)','Modifiers','Sentence Connectors','Synonyms & Antonyms','Punctuation'] },
+      { id:'eng2p2', name:'Composition', paper:'2nd Paper', topics:['Formal Letters / Applications / Complaints','Paragraph Writing (Different types)','Free Writing / Composition'] }
+    ]
   }
-  const groups = {};
-  RT_DAYS.forEach(d => {
-    const slots = data.filter(x => x.day === d);
-    if (slots.length) groups[d] = slots;
+};
+
+/* ---- ROUTINE STATE ---- */
+let _rtState = {
+  step: 1,
+  selectedSubjects: [],
+  selectedChapters: [],
+  startDate: '',
+  endDate: '',
+  generatedRoutine: null,
+  completionMap: {}
+};
+
+/* ---- FIREBASE-SAFE SAVE/LOAD ---- */
+function _rtSave() {
+  try {
+    const key = 'sv_hsc_routine_v2_' + (currentUser || 'default');
+    const payload = JSON.stringify({ state: _rtState });
+    localStorage.setItem(key, payload);
+    // Also persist to Firebase if available
+    if (typeof firestore !== 'undefined' && currentUser) {
+      import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ doc, setDoc }) => {
+        setDoc(doc(firestore, 'users', currentUser, 'appData', 'hscRoutineV2'), {
+          state: JSON.stringify(_rtState), updatedAt: Date.now()
+        }, { merge: true }).catch(() => {});
+      }).catch(() => {});
+    }
+  } catch(e) {}
+}
+
+function _rtLoad() {
+  try {
+    const key = 'sv_hsc_routine_v2_' + (currentUser || 'default');
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.state) _rtState = { ..._rtState, ...parsed.state };
+    }
+  } catch(e) {}
+}
+
+/* ---- INIT & RENDER ---- */
+function loadRoutine() { _rtLoad(); }
+function renderRoutine() { _rtRender(); }
+
+function _rtRender() {
+  _rtUpdateProgressBar();
+  // Decide which step to show
+  if (_rtState.generatedRoutine && _rtState.generatedRoutine.length > 0) {
+    _rtShowStep(4);
+    _rtRenderGeneratedRoutine();
+    document.getElementById('rt-delete-btn').style.display = 'inline-flex';
+    document.getElementById('rt-regenerate-btn').style.display = 'inline-flex';
+  } else {
+    document.getElementById('rt-delete-btn').style.display = 'none';
+    document.getElementById('rt-regenerate-btn').style.display = 'none';
+    _rtShowStep(_rtState.step || 1);
+    if (_rtState.step === 1) _rtRenderSubjects();
+    if (_rtState.step === 2) _rtRenderChapters();
+    if (_rtState.step === 3) _rtRenderTimeline();
+  }
+}
+
+function _rtShowStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('rt-step-' + i);
+    if (el) el.classList.toggle('rt-active', i === n);
+  }
+  _rtUpdateProgressBar(n);
+}
+
+function _rtUpdateProgressBar(step) {
+  const s = step || _rtState.step || 1;
+  for (let i = 1; i <= 3; i++) {
+    const seg = document.getElementById('rt-prog-' + i);
+    if (seg) seg.classList.toggle('done', i <= s);
+  }
+}
+
+/* ---- STEP 1: SUBJECTS ---- */
+function _rtRenderSubjects() {
+  const container = document.getElementById('rt-subjects-list');
+  if (!container) return;
+  container.innerHTML = '';
+  Object.keys(RT_DATASET).forEach(subj => {
+    const data = RT_DATASET[subj];
+    const isSel = _rtState.selectedSubjects.includes(subj);
+    const div = document.createElement('div');
+    div.className = 'rt-subject-card' + (isSel ? ' rt-sel' : '');
+    div.onclick = () => _rtToggleSubject(subj, div);
+    div.innerHTML = `
+      <div class="rt-cb"></div>
+      <span style="font-size:1.4rem;">${data.icon}</span>
+      <div style="flex:1;">
+        <div style="font-weight:700;color:var(--text-main);font-size:0.95rem;">${data.label}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${data.chapters.length} অধ্যায় • ${data.chapters.reduce((a,c)=>a+c.topics.length,0)} টপিক</div>
+      </div>
+      <div style="width:10px;height:10px;border-radius:50%;background:${data.color};flex-shrink:0;box-shadow:0 0 8px ${data.color};"></div>
+    `;
+    container.appendChild(div);
   });
-  let html = '';
-  Object.keys(groups).forEach(day => {
-    html += `<div class="glass" style="padding:16px;margin-bottom:14px;">
-      <h3 style="margin-bottom:12px;color:var(--text-main);font-size:1rem;">${day}</h3>`;
-    groups[day].forEach(slot => {
-      const color = RT_COLORS[slot.subj] || 'var(--primary)';
-      const subjMap = {bangla:'বাংলা',english:'English',physics:'পদার্থবিজ্ঞান',chemistry:'রসায়ন',math:'উচ্চতর গণিত',biology:'জীববিজ্ঞান',ict:'ICT',bangla6:'বাংলা (৬-৮)',english6:'English (৬-৮)',math6:'গণিত (৬-৮)',science6:'বিজ্ঞান (৬-৮)',social6:'সমাজ বিজ্ঞান (৬-৮)',religion6:'ধর্ম (৬-৮)'};
-      const subjName = subjMap[slot.subj] || slot.subj;
-      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-left:4px solid ${color};background:rgba(255,255,255,0.04);border-radius:var(--radius-sm);margin-bottom:8px;">
-        <div>
-          <div style="font-weight:600;color:var(--text-main);">${subjName}</div>
-          <div style="font-size:0.78rem;color:var(--text-muted);">${slot.time} • ${slot.dur}</div>
+}
+
+function _rtToggleSubject(subj, el) {
+  const idx = _rtState.selectedSubjects.indexOf(subj);
+  if (idx >= 0) _rtState.selectedSubjects.splice(idx, 1);
+  else _rtState.selectedSubjects.push(subj);
+  el.classList.toggle('rt-sel', _rtState.selectedSubjects.includes(subj));
+}
+
+function rtSelectAllSubjects() {
+  _rtState.selectedSubjects = Object.keys(RT_DATASET);
+  _rtRenderSubjects();
+}
+function rtClearAllSubjects() {
+  _rtState.selectedSubjects = [];
+  _rtRenderSubjects();
+}
+
+function rtGoToStep1() {
+  _rtState.step = 1;
+  _rtShowStep(1);
+  _rtRenderSubjects();
+}
+
+function rtGoToStep2() {
+  if (!_rtState.selectedSubjects.length) { showToast('কমপক্ষে একটি বিষয় select করুন', 'error'); return; }
+  _rtState.step = 2;
+  _rtShowStep(2);
+  _rtRenderChapters();
+}
+
+/* ---- STEP 2: CHAPTERS ---- */
+function _rtRenderChapters() {
+  const container = document.getElementById('rt-chapters-list');
+  if (!container) return;
+  container.innerHTML = '';
+  _rtState.selectedSubjects.forEach(subj => {
+    const data = RT_DATASET[subj];
+    const group = document.createElement('div');
+    group.className = 'rt-subj-group';
+    group.innerHTML = `<div class="rt-subj-group-title" style="color:${data.color};">${data.icon} ${data.label}</div>`;
+    data.chapters.forEach(ch => {
+      const isSel = _rtState.selectedChapters.includes(ch.id);
+      const item = document.createElement('div');
+      item.className = 'rt-chapter-item' + (isSel ? ' rt-sel' : '');
+      item.onclick = () => _rtToggleChapter(ch.id, item);
+      item.innerHTML = `
+        <div class="rt-cb2"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:var(--text-main);font-size:0.88rem;">${ch.name}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">${ch.paper} • ${ch.topics.length} টপিক</div>
         </div>
-        <button class="icon-btn danger" onclick="deleteRoutineSlot('${slot.id}')"><i class="fa-solid fa-trash"></i></button>
+      `;
+      group.appendChild(item);
+    });
+    container.appendChild(group);
+  });
+  _rtUpdateChapterCount();
+}
+
+function _rtToggleChapter(chId, el) {
+  const idx = _rtState.selectedChapters.indexOf(chId);
+  if (idx >= 0) _rtState.selectedChapters.splice(idx, 1);
+  else _rtState.selectedChapters.push(chId);
+  el.classList.toggle('rt-sel', _rtState.selectedChapters.includes(chId));
+  _rtUpdateChapterCount();
+}
+
+function _rtUpdateChapterCount() {
+  const el = document.getElementById('rt-chapter-count');
+  if (el) el.textContent = _rtState.selectedChapters.length + ' অধ্যায় selected';
+}
+
+function rtSelectAllChapters() {
+  _rtState.selectedChapters = [];
+  _rtState.selectedSubjects.forEach(subj => {
+    RT_DATASET[subj].chapters.forEach(ch => _rtState.selectedChapters.push(ch.id));
+  });
+  _rtRenderChapters();
+}
+function rtClearAllChapters() {
+  _rtState.selectedChapters = [];
+  _rtRenderChapters();
+}
+
+function rtGoToStep3() {
+  if (!_rtState.selectedChapters.length) { showToast('কমপক্ষে একটি অধ্যায় select করুন', 'error'); return; }
+  _rtState.step = 3;
+  _rtShowStep(3);
+  _rtRenderTimeline();
+}
+
+/* ---- STEP 3: TIMELINE ---- */
+function _rtRenderTimeline() {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const startEl = document.getElementById('rt-start-date');
+  const endEl = document.getElementById('rt-end-date');
+  if (startEl && !startEl.value) startEl.value = _rtState.startDate || todayStr;
+  if (endEl && !endEl.value) endEl.value = _rtState.endDate || '';
+  rtUpdateTimeline();
+}
+
+function rtUpdateTimeline() {
+  const startEl = document.getElementById('rt-start-date');
+  const endEl = document.getElementById('rt-end-date');
+  if (!startEl || !endEl) return;
+  const startStr = startEl.value;
+  const endStr = endEl.value;
+  _rtState.startDate = startStr;
+  _rtState.endDate = endStr;
+  const preview = document.getElementById('rt-timeline-preview');
+  const warning = document.getElementById('rt-timeline-warning');
+  if (!startStr || !endStr) { if(preview) preview.style.display='none'; if(warning) warning.style.display='none'; return; }
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if (end <= start) { if(preview) preview.style.display='none'; if(warning) warning.style.display='block'; document.getElementById('rt-warning-text').textContent='শেষের তারিখ শুরুর তারিখের পরে হতে হবে।'; return; }
+  const days = Math.round((end - start) / (1000*60*60*24)) + 1;
+  const totalTopics = _rtState.selectedChapters.reduce((acc, chId) => {
+    for (const subj of Object.keys(RT_DATASET)) {
+      const ch = RT_DATASET[subj].chapters.find(c => c.id === chId);
+      if (ch) { acc += ch.topics.length; break; }
+    }
+    return acc;
+  }, 0);
+  const chapCount = _rtState.selectedChapters.length;
+  if (preview) {
+    preview.style.display = 'block';
+    document.getElementById('rt-days-count').textContent = days;
+    document.getElementById('rt-chapters-count').textContent = chapCount;
+    document.getElementById('rt-topics-count').textContent = totalTopics;
+    const topicsPerDay = (totalTopics / days).toFixed(1);
+    document.getElementById('rt-load-info').textContent = 'প্রতিদিন গড়ে ' + topicsPerDay + ' টপিক পড়তে হবে';
+  }
+  if (warning) {
+    if (days < chapCount) {
+      warning.style.display = 'block';
+      document.getElementById('rt-warning-text').textContent = 'দিন সংখ্যা (' + days + ') অধ্যায় সংখ্যার (' + chapCount + ') চেয়ে কম। End date বাড়ানোর পরামর্শ দেওয়া হচ্ছে।';
+    } else {
+      warning.style.display = 'none';
+    }
+  }
+}
+
+/* ---- ROUTINE GENERATION ENGINE ---- */
+function rtGenerateRoutine() {
+  const startStr = _rtState.startDate;
+  const endStr = _rtState.endDate;
+  if (!startStr || !endStr) { showToast('তারিখ নির্বাচন করুন', 'error'); return; }
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if (end <= start) { showToast('শেষের তারিখ শুরুর তারিখের পরে হতে হবে', 'error'); return; }
+
+  // Build full topic list grouped by chapter
+  const allTopicItems = [];
+  // Preserve subject order for balanced distribution
+  _rtState.selectedSubjects.forEach(subj => {
+    RT_DATASET[subj].chapters.forEach(ch => {
+      if (!_rtState.selectedChapters.includes(ch.id)) return;
+      ch.topics.forEach(topic => {
+        allTopicItems.push({ subject: subj, chapter: ch.name, topic, chId: ch.id });
+      });
+    });
+  });
+
+  const days = Math.round((end - start) / (1000*60*60*24)) + 1;
+
+  // Distribute topics evenly across days
+  // Strategy: fill days one by one keeping chapters together for each day
+  const chapterGroups = {};
+  _rtState.selectedSubjects.forEach(subj => {
+    RT_DATASET[subj].chapters.forEach(ch => {
+      if (!_rtState.selectedChapters.includes(ch.id)) return;
+      chapterGroups[ch.id] = { subject: subj, chapter: ch.name, topics: [...ch.topics], color: RT_DATASET[subj].color };
+    });
+  });
+
+  const chapterQueue = Object.entries(chapterGroups); // [[chId, {subject,chapter,topics,color}]]
+  const routine = [];
+
+  // Calculate topics per day: ceil(totalTopics / days) capped at 8
+  const totalTopics = allTopicItems.length;
+  const rawPerDay = Math.ceil(totalTopics / days);
+  const topicsPerDay = Math.min(rawPerDay, 8); // max 8 topics/day to avoid overload
+
+  let chapterPointer = 0;
+  let topicPointer = 0;
+  let currentChKey = chapterQueue.length ? chapterQueue[0][0] : null;
+  let currentTopicIdx = 0;
+
+  for (let d = 0; d < days; d++) {
+    const dateObj = new Date(start);
+    dateObj.setDate(dateObj.getDate() + d);
+    const dateStr = dateObj.toISOString().split('T')[0];
+    const dayItems = [];
+    let topicsAdded = 0;
+
+    while (topicsAdded < topicsPerDay && chapterPointer < chapterQueue.length) {
+      const [chId, chData] = chapterQueue[chapterPointer];
+      const remainingTopics = chData.topics.slice(currentTopicIdx);
+      if (remainingTopics.length === 0) {
+        chapterPointer++;
+        currentTopicIdx = 0;
+        continue;
+      }
+      // Try to fit remaining topics of this chapter if they fit
+      const canTake = topicsPerDay - topicsAdded;
+      const take = Math.min(canTake, remainingTopics.length);
+      for (let t = 0; t < take; t++) {
+        dayItems.push({ subject: chData.subject, chapter: chData.chapter, topic: remainingTopics[t], chId, id: chId + '_' + (currentTopicIdx + t) + '_' + d, color: chData.color });
+      }
+      topicsAdded += take;
+      currentTopicIdx += take;
+      if (currentTopicIdx >= chData.topics.length) {
+        chapterPointer++;
+        currentTopicIdx = 0;
+      }
+      if (topicsAdded >= topicsPerDay) break;
+    }
+
+    if (dayItems.length > 0) {
+      routine.push({ date: dateStr, items: dayItems });
+    } else if (chapterPointer < chapterQueue.length) {
+      // Edge case: still have chapters but somehow 0 items — skip
+    }
+    if (chapterPointer >= chapterQueue.length) break;
+  }
+
+  _rtState.generatedRoutine = routine;
+  _rtState.completionMap = {};
+  _rtSave();
+  _rtShowStep(4);
+  document.getElementById('rt-delete-btn').style.display = 'inline-flex';
+  document.getElementById('rt-regenerate-btn').style.display = 'inline-flex';
+  _rtRenderGeneratedRoutine();
+  showToast('🎉 Routine তৈরি হয়েছে! ' + routine.length + ' দিনের plan ready.', 'success');
+}
+
+/* ---- RENDER GENERATED ROUTINE ---- */
+function _rtRenderGeneratedRoutine() {
+  const container = document.getElementById('rt-routine-container');
+  if (!container || !_rtState.generatedRoutine) return;
+
+  // Stats
+  _rtUpdateStats();
+
+  const today = new Date().toISOString().split('T')[0];
+  let html = '';
+  // Virtual scroll: render all but use requestAnimationFrame for batching
+  _rtState.generatedRoutine.forEach((day, dayIdx) => {
+    const dateObj = new Date(day.date + 'T00:00:00');
+    const dayNames = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
+    const dayName = dayNames[dateObj.getDay()];
+    const isToday = day.date === today;
+    const isPast = day.date < today;
+    const doneTodayCount = day.items.filter(it => _rtState.completionMap[it.id]).length;
+    const allDone = doneTodayCount === day.items.length;
+    const borderColor = allDone ? 'var(--success)' : isToday ? 'var(--primary)' : 'var(--glass-border)';
+
+    html += `<div class="rt-day-card" style="border-color:${borderColor}${isToday ? ';box-shadow:0 0 16px rgba(0,240,255,0.15)' : ''};">
+      <div class="rt-day-header">
+        <div>
+          <div class="rt-day-title">${isToday ? '📍 ' : ''}Day ${dayIdx + 1} — ${dayName}</div>
+          <div class="rt-day-date">${day.date}${isToday ? ' (আজ)' : ''}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.75rem;color:${allDone?'var(--success)':'var(--text-muted)'};">${doneTodayCount}/${day.items.length} done</div>
+          ${allDone ? '<div style="font-size:0.7rem;color:var(--success);">✅ সম্পন্ন</div>' : ''}
+        </div>
+      </div>`;
+
+    day.items.forEach(it => {
+      const isDone = !!_rtState.completionMap[it.id];
+      html += `<div class="rt-topic-row" style="border-left:3px solid ${it.color || 'var(--primary)'};">
+        <div class="rt-topic-check${isDone?' done':''}" onclick="rtToggleTopic('${it.id}')" title="Mark complete"></div>
+        <div style="flex:1;min-width:0;">
+          <div class="rt-topic-label${isDone?' done-label':''}" style="font-size:0.86rem;">${it.topic}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:1px;">${it.subject} › ${it.chapter}</div>
+        </div>
+        <span class="rt-subj-pill" style="background:${it.color+'22'};color:${it.color};">${it.subject}</span>
       </div>`;
     });
     html += '</div>';
   });
-  c.innerHTML = html;
+
+  if (!html) html = '<div class="glass" style="padding:40px;text-align:center;color:var(--text-muted);">কোনো routine data নেই।</div>';
+  container.innerHTML = html;
 }
+
+function _rtUpdateStats() {
+  const grid = document.getElementById('rt-stats-grid');
+  if (!grid || !_rtState.generatedRoutine) return;
+  const totalTopics = _rtState.generatedRoutine.reduce((a,d)=>a+d.items.length,0);
+  const doneTopics = Object.values(_rtState.completionMap).filter(Boolean).length;
+  const totalDays = _rtState.generatedRoutine.length;
+  const doneDays = _rtState.generatedRoutine.filter(d=>d.items.every(it=>_rtState.completionMap[it.id])).length;
+  const pct = totalTopics > 0 ? Math.round((doneTopics/totalTopics)*100) : 0;
+  grid.innerHTML = `
+    <div class="rt-stat-box"><div class="rt-stat-num" style="color:var(--primary);">${doneTopics}</div><div class="rt-stat-label">সম্পন্ন টপিক</div></div>
+    <div class="rt-stat-box"><div class="rt-stat-num" style="color:var(--text-muted);">${totalTopics - doneTopics}</div><div class="rt-stat-label">বাকি টপিক</div></div>
+    <div class="rt-stat-box"><div class="rt-stat-num" style="color:var(--success);">${doneDays}</div><div class="rt-stat-label">সম্পন্ন দিন</div></div>
+    <div class="rt-stat-box"><div class="rt-stat-num" style="color:var(--warning);">${totalDays}</div><div class="rt-stat-label">মোট দিন</div></div>
+  `;
+  const fill = document.getElementById('rt-overall-fill');
+  const pctEl = document.getElementById('rt-overall-pct');
+  if (fill) fill.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = pct + '%';
+}
+
+function rtToggleTopic(topicId) {
+  _rtState.completionMap[topicId] = !_rtState.completionMap[topicId];
+  _rtSave();
+  // Update just this row without full re-render (performance)
+  const check = document.querySelector(`.rt-topic-check[onclick="rtToggleTopic('${topicId}')"]`);
+  const label = check ? check.nextElementSibling?.querySelector('.rt-topic-label') : null;
+  if (check) check.classList.toggle('done', !!_rtState.completionMap[topicId]);
+  if (label) label.classList.toggle('done-label', !!_rtState.completionMap[topicId]);
+  _rtUpdateStats();
+  // Update day-level done count
+  const row = check ? check.closest('.rt-topic-row') : null;
+  const card = row ? row.closest('.rt-day-card') : null;
+  if (card) {
+    const header = card.querySelector('.rt-day-header');
+    const countEl = header ? header.querySelector('div[style*="text-align:right"] div') : null;
+    const rows = card.querySelectorAll('.rt-topic-row');
+    const checks = card.querySelectorAll('.rt-topic-check.done');
+    if (countEl) countEl.textContent = checks.length + '/' + rows.length + ' done';
+    if (checks.length === rows.length) {
+      card.style.borderColor = 'var(--success)';
+    } else {
+      card.style.borderColor = 'var(--glass-border)';
+    }
+  }
+}
+
+function rtDeleteRoutine() {
+  if (!confirm('Routine মুছে ফেলবেন? সব progress হারিয়ে যাবে।')) return;
+  _rtState.generatedRoutine = null;
+  _rtState.completionMap = {};
+  _rtState.step = 1;
+  _rtSave();
+  document.getElementById('rt-delete-btn').style.display = 'none';
+  document.getElementById('rt-regenerate-btn').style.display = 'none';
+  _rtShowStep(1);
+  _rtRenderSubjects();
+  showToast('Routine মুছে ফেলা হয়েছে।', 'success');
+}
+
+function rtStartOver() {
+  _rtState.generatedRoutine = null;
+  _rtState.completionMap = {};
+  _rtState.step = 1;
+  _rtSave();
+  document.getElementById('rt-delete-btn').style.display = 'none';
+  document.getElementById('rt-regenerate-btn').style.display = 'none';
+  _rtShowStep(1);
+  _rtRenderSubjects();
+}
+
+// Legacy stubs — no longer used but kept to avoid reference errors
+function addRoutineSlot() {}
+function deleteRoutineSlot() {}
+function saveRoutine() { _rtSave(); }
+function switchRoutineSeg() {}
+function toggleRtCustomSubj() {}
+function toggleRtCustomTime() {}
+function toggleRtCustomDur() {}
 /* ---- INSTITUTION AUTOCOMPLETE ---- */
 const INSTITUTIONS = [
 "Adamjee Cantonment College","Agrabad Government Colony High School","Ahsanullah University of Science and Technology",
