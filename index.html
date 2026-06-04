@@ -1598,11 +1598,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
         <div>
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:6px;"><i class="fa-solid fa-calendar-plus" style="color:var(--primary);margin-right:6px;"></i>শুরুর তারিখ</label>
-          <input type="date" id="rt-start-date" style="width:100%;" oninput="rtUpdateTimeline()">
+          <input type="date" id="rt-start-date" style="width:100%;" oninput="rtUpdateTimeline()" onchange="rtUpdateTimeline()">
         </div>
         <div>
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:6px;"><i class="fa-solid fa-calendar-check" style="color:var(--success);margin-right:6px;"></i>শেষের তারিখ</label>
-          <input type="date" id="rt-end-date" style="width:100%;" oninput="rtUpdateTimeline()">
+          <input type="date" id="rt-end-date" style="width:100%;" oninput="rtUpdateTimeline()" onchange="rtUpdateTimeline()">
         </div>
       </div>
       <div id="rt-timeline-preview" style="display:none;background:rgba(0,240,255,0.06);border:1px solid rgba(0,240,255,0.2);border-radius:var(--radius-sm);padding:14px;">
@@ -2240,7 +2240,7 @@ const LANG = {
         goalTracker:'Goal Tracker', saveGoals:'Save Goals',
         settingsProfile:'Settings & Profile', saveChanges:'Save Changes',
         logout:'Logout', darkMode:'Dark Mode', soundEffects:'Sound Effects',
-        home:'Home', pdfs:'PDFs', board:'Board', tasks:'Tasks', timer:'Timer',
+        home:'Home', pdfs:'PDFs', friends:'Friends', routine:'Routine', inbox:'Inbox', timer:'Timer',
         allCaughtUp:'All caught up!', noResults:'No results.',
         taskAdded:'Task added', taskRequired:'Task title required',
         noteSaved:'Note saved!', noteTitleReq:'Note title required',
@@ -2267,7 +2267,7 @@ const LANG = {
         goalTracker:'লক্ষ্য ট্র্যাকার', saveGoals:'লক্ষ্য সংরক্ষণ',
         settingsProfile:'সেটিংস ও প্রোফাইল', saveChanges:'পরিবর্তন সংরক্ষণ',
         logout:'লগআউট', darkMode:'ডার্ক মোড', soundEffects:'শব্দ প্রভাব',
-        home:'হোম', pdfs:'PDF', board:'বোর্ড', tasks:'কাজ', timer:'টাইমার',
+        home:'হোম', pdfs:'PDF', friends:'বন্ধু', routine:'রুটিন', inbox:'ইনবক্স', timer:'টাইমার',
         allCaughtUp:'সব শেষ! 🎉', noResults:'কিছু পাওয়া যায়নি।',
         taskAdded:'কাজ যোগ হয়েছে', taskRequired:'কাজের শিরোনাম দরকার',
         noteSaved:'নোট সংরক্ষিত!', noteTitleReq:'নোটের শিরোনাম দরকার',
@@ -2290,8 +2290,17 @@ function applyLang() {
     });
     // Bottom nav
     const bNavItems = document.querySelectorAll('#bottom-nav .b-nav-item');
-    const bKeys = ['home','pdfs','board','tasks','timer'];
-    bNavItems.forEach((el,i) => { const span = el.querySelector('span') || el.childNodes[el.childNodes.length-1]; if(span && span.nodeType===3) el.childNodes[el.childNodes.length-1].textContent = t(bKeys[i]); });
+    const bKeys = ['home','pdfs','friends','routine','inbox','timer'];
+    bNavItems.forEach((el,i) => {
+      if (!bKeys[i]) return;
+      const nodes = el.childNodes;
+      for (let n = nodes.length - 1; n >= 0; n--) {
+        if (nodes[n].nodeType === 3 && nodes[n].textContent.trim()) {
+          nodes[n].textContent = t(bKeys[i]);
+          break;
+        }
+      }
+    });
 }
 
 let appData = {
@@ -5014,7 +5023,12 @@ function _rtLoad() {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed.state) _rtState = { ..._rtState, ...parsed.state };
+      if (parsed.state) {
+        _rtState = { ..._rtState, ...parsed.state };
+        if (!Array.isArray(_rtState.selectedSubjects)) _rtState.selectedSubjects = [];
+        if (!Array.isArray(_rtState.selectedChapters)) _rtState.selectedChapters = [];
+        if (typeof _rtState.completionMap !== 'object' || Array.isArray(_rtState.completionMap)) _rtState.completionMap = {};
+      }
     }
   } catch(e) {}
 }
@@ -5082,10 +5096,12 @@ function _rtRenderSubjects() {
 }
 
 function _rtToggleSubject(subj, el) {
+  if (!Array.isArray(_rtState.selectedSubjects)) _rtState.selectedSubjects = [];
   const idx = _rtState.selectedSubjects.indexOf(subj);
   if (idx >= 0) _rtState.selectedSubjects.splice(idx, 1);
   else _rtState.selectedSubjects.push(subj);
   el.classList.toggle('rt-sel', _rtState.selectedSubjects.includes(subj));
+  _rtSave();
 }
 
 function rtSelectAllSubjects() {
@@ -5140,11 +5156,13 @@ function _rtRenderChapters() {
 }
 
 function _rtToggleChapter(chId, el) {
+  if (!Array.isArray(_rtState.selectedChapters)) _rtState.selectedChapters = [];
   const idx = _rtState.selectedChapters.indexOf(chId);
   if (idx >= 0) _rtState.selectedChapters.splice(idx, 1);
   else _rtState.selectedChapters.push(chId);
   el.classList.toggle('rt-sel', _rtState.selectedChapters.includes(chId));
   _rtUpdateChapterCount();
+  _rtSave();
 }
 
 function _rtUpdateChapterCount() {
@@ -5190,6 +5208,7 @@ function rtUpdateTimeline() {
   const endStr = endEl.value;
   _rtState.startDate = startStr;
   _rtState.endDate = endStr;
+  _rtSave();
   const preview = document.getElementById('rt-timeline-preview');
   const warning = document.getElementById('rt-timeline-warning');
   if (!startStr || !endStr) { if(preview) preview.style.display='none'; if(warning) warning.style.display='none'; return; }
@@ -5234,6 +5253,12 @@ function rtGenerateRoutine() {
 
   // Build full topic list grouped by chapter
   const allTopicItems = [];
+  if (!Array.isArray(_rtState.selectedSubjects) || _rtState.selectedSubjects.length === 0) {
+    showToast('কমপক্ষে একটি বিষয় select করুন', 'error'); return;
+  }
+  if (!Array.isArray(_rtState.selectedChapters) || _rtState.selectedChapters.length === 0) {
+    showToast('কমপক্ষে একটি অধ্যায় select করুন', 'error'); return;
+  }
   // Preserve subject order for balanced distribution
   _rtState.selectedSubjects.forEach(subj => {
     RT_DATASET[subj].chapters.forEach(ch => {
