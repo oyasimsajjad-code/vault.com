@@ -1297,15 +1297,42 @@
                 </div>
                 <div class="timer-custom">
                     <h4><i class="fa-solid fa-sliders"></i> Custom Durations (minutes)</h4>
-                    
-                    
-                    
-                    
                     <div class="timer-custom-row">
                         <div class="timer-custom-item"><label>Focus</label><input type="number" id="custom-focus" min="1" max="120" value="25"></div>
                         <div class="timer-custom-item"><label>Short Break</label><input type="number" id="custom-short" min="1" max="60" value="5"></div>
                         <div class="timer-custom-item"><label>Long Break</label><input type="number" id="custom-long" min="1" max="60" value="15"></div>
                         <button class="btn btn-primary" onclick="applyCustomTimer()" style="padding:9px 16px;">Apply</button>
+                    </div>
+                </div>
+                <!-- Smart Pomodoro Flow -->
+                <div class="timer-custom" id="smart-flow-panel" style="margin-top:14px;border-color:rgba(0,240,255,0.25);">
+                    <h4 style="color:var(--primary);"><i class="fa-solid fa-rocket"></i> Smart Pomodoro Flow</h4>
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:12px;">Set a total target and the system auto-divides it into sessions.</p>
+                    <div class="timer-custom-row" style="margin-bottom:10px;">
+                        <div class="timer-custom-item"><label>Total Target (min)</label><input type="number" id="sf-total" min="1" max="720" value="300" oninput="sfUpdatePreview()"></div>
+                        <div class="timer-custom-item"><label>Focus Duration (min)</label><input type="number" id="sf-focus" min="1" max="240" value="50" oninput="sfUpdatePreview()"></div>
+                        <div class="timer-custom-item"><label>Break Duration (min)</label><input type="number" id="sf-break" min="0" max="120" value="10" oninput="sfUpdatePreview()"></div>
+                    </div>
+                    <div id="sf-preview" style="font-size:0.8rem;color:var(--primary);margin-bottom:12px;padding:8px 10px;background:rgba(0,240,255,0.06);border-radius:8px;border:1px solid rgba(0,240,255,0.15);">
+                        5 sessions · 50 min focus · 10 min break
+                    </div>
+                    <button class="btn btn-primary" onclick="startSmartFlow()" style="width:100%;justify-content:center;"><i class="fa-solid fa-play"></i> Start Smart Flow</button>
+                    <!-- Progress tracker (hidden until flow is active) -->
+                    <div id="sf-tracker" style="display:none;margin-top:14px;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;border:1px solid rgba(0,240,255,0.2);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <span style="font-size:0.82rem;color:var(--text-muted);">Session</span>
+                            <span id="sf-session-label" style="font-size:0.92rem;font-weight:700;color:var(--primary);">1 / 5</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <span style="font-size:0.82rem;color:var(--text-muted);">Remaining</span>
+                            <span id="sf-remaining-label" style="font-size:0.82rem;color:var(--text-secondary);">300 min left</span>
+                        </div>
+                        <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;margin-bottom:10px;">
+                            <div id="sf-progress-fill" style="height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:10px;width:0%;transition:width 0.5s;"></div>
+                        </div>
+                        <div id="sf-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
+                        <button class="btn" id="sf-skip-break-btn" style="display:none;width:100%;justify-content:center;border-color:var(--warning);color:var(--warning);margin-bottom:6px;" onclick="sfSkipBreak()"><i class="fa-solid fa-forward"></i> Skip Break</button>
+                        <button class="btn" onclick="sfReset()" style="width:100%;justify-content:center;font-size:0.8rem;color:var(--text-muted);"><i class="fa-solid fa-xmark"></i> Cancel Flow</button>
                     </div>
                 </div>
             </div>
@@ -2012,6 +2039,7 @@
     <div class="focus-bg"></div>
     <button class="exit-focus" onclick="exitFocusMode()"><i class="fa-solid fa-compress"></i> Exit Focus</button>
     <div class="focus-quote" id="fm-quote">"Deep work is the superpower of the 21st century."</div>
+    <div id="fm-sf-status" style="display:none;font-size:1rem;color:rgba(255,255,255,0.6);margin-bottom:10px;font-family:var(--font-display);letter-spacing:1px;"></div>
     <div class="focus-time" id="fm-time">25:00</div>
     <div style="display:flex;gap:20px;margin-top:28px;">
         <button class="timer-btn btn-play" onclick="toggleTimer()"><i class="fa-solid fa-play" id="fm-play-icon"></i></button>
@@ -3136,15 +3164,143 @@ document.addEventListener('visibilitychange', async () => {
 // Microsoft-style auto-block config
 let _msBlock = { enabled: false, totalMins: 0, blockFocus: 50, blockBreak: 10, blocksDone: 0, totalBlocks: 0, completedMins: 0 };
 
+// ── Smart Pomodoro Flow state ──
+let _sf = { active: false, totalMins: 300, focusMins: 50, breakMins: 10, totalSessions: 0, sessionsDone: 0, completedMins: 0, phase: 'focus' };
+
+function sfUpdatePreview() {
+    const total = parseInt(document.getElementById('sf-total').value) || 300;
+    const focus = parseInt(document.getElementById('sf-focus').value) || 50;
+    const brk   = parseInt(document.getElementById('sf-break').value);
+    const sessions = Math.ceil(total / focus);
+    const brkTxt = brk === 0 ? 'no breaks' : brk + ' min break';
+    const prev = document.getElementById('sf-preview');
+    if (prev) prev.innerText = sessions + ' sessions · ' + focus + ' min focus · ' + brkTxt;
+}
+
+function startSmartFlow() {
+    const total = parseInt(document.getElementById('sf-total').value) || 300;
+    const focus = parseInt(document.getElementById('sf-focus').value) || 50;
+    const brk   = parseInt(document.getElementById('sf-break').value);
+    if (isNaN(brk) || brk < 0) { showToast('Break must be ≥ 0 min', 'error'); return; }
+    if (focus < 1) { showToast('Focus duration must be ≥ 1 min', 'error'); return; }
+    if (total < focus) { showToast('Total target must be ≥ focus duration', 'error'); return; }
+    stopTimer();
+    _msBlock.enabled = false;
+    _sf.active       = true;
+    _sf.totalMins    = total;
+    _sf.focusMins    = focus;
+    _sf.breakMins    = brk;
+    _sf.totalSessions= Math.ceil(total / focus);
+    _sf.sessionsDone = 0;
+    _sf.completedMins= 0;
+    _sf.phase        = 'focus';
+    // Sync normal timer settings so the ring/display match
+    modes.focus = focus * 60;
+    modes.short = Math.max(1, brk) * 60;
+    appData.timerSettings.focus = focus;
+    appData.timerSettings.short = Math.max(1, brk);
+    // Reset to focus mode
+    timerMode = 'focus';
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    const fbtn = document.getElementById('mode-btn-focus');
+    if (fbtn) fbtn.classList.add('active');
+    timeLeft = modes.focus;
+    updateTimerDisplay(); setRing(modes.focus, modes.focus);
+    sfRenderTracker();
+    document.getElementById('sf-tracker').style.display = 'block';
+    document.getElementById('timer-status').innerText = 'Session 1/' + _sf.totalSessions + ' — Focus!';
+    sfUpdateFmStatus();
+    showToast('Smart Flow started! ' + _sf.totalSessions + ' sessions · ' + total + ' min total 🚀', 'success');
+    setTimeout(() => toggleTimer(), 600);
+}
+
+function sfRenderTracker() {
+    const lbl  = document.getElementById('sf-session-label');
+    const rem  = document.getElementById('sf-remaining-label');
+    const fill = document.getElementById('sf-progress-fill');
+    const dots = document.getElementById('sf-dots');
+    if (lbl)  lbl.innerText  = (_sf.sessionsDone + 1) + ' / ' + _sf.totalSessions;
+    const remainMins = _sf.totalMins - _sf.completedMins;
+    if (rem)  rem.innerText  = Math.max(0, remainMins) + ' min left';
+    const pct = Math.min(100, Math.round(_sf.completedMins / _sf.totalMins * 100));
+    if (fill) fill.style.width = pct + '%';
+    if (dots) {
+        dots.innerHTML = '';
+        const show = Math.min(_sf.totalSessions, 20);
+        for (let i = 0; i < show; i++) {
+            const d = document.createElement('div');
+            const done = i < _sf.sessionsDone;
+            const cur  = i === _sf.sessionsDone;
+            d.style.cssText = 'width:13px;height:13px;border-radius:50%;flex-shrink:0;border:2px solid '
+                + (done ? 'var(--success)' : cur ? 'var(--primary)' : 'var(--glass-border)')
+                + ';background:' + (done ? 'var(--success)' : cur ? 'rgba(0,240,255,0.3)' : 'transparent') + ';';
+            dots.appendChild(d);
+        }
+        if (_sf.totalSessions > 20) {
+            const more = document.createElement('span');
+            more.style.cssText = 'font-size:0.72rem;color:var(--text-muted);align-self:center;';
+            more.innerText = '+' + (_sf.totalSessions - 20) + ' more';
+            dots.appendChild(more);
+        }
+    }
+}
+
+function sfUpdateFmStatus() {
+    const el = document.getElementById('fm-sf-status');
+    if (!el) return;
+    if (_sf.active) {
+        const phaseLabel = _sf.phase === 'break' ? '☕ Break' : '🎯 Focus';
+        el.innerText = phaseLabel + ' · Session ' + (_sf.sessionsDone + (_sf.phase === 'break' ? 0 : 0) + 1) + '/' + _sf.totalSessions;
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+function sfSkipBreak() {
+    if (!_sf.active || _sf.phase !== 'break') return;
+    stopTimer();
+    document.getElementById('sf-skip-break-btn').style.display = 'none';
+    _sfStartNextFocus();
+}
+
+function _sfStartNextFocus() {
+    _sf.phase = 'focus';
+    timerMode = 'focus';
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    const fbtn = document.getElementById('mode-btn-focus');
+    if (fbtn) fbtn.classList.add('active');
+    modes.focus = _sf.focusMins * 60;
+    timeLeft = modes.focus;
+    updateTimerDisplay(); setRing(modes.focus, modes.focus);
+    sfRenderTracker();
+    document.getElementById('timer-status').innerText = 'Session ' + (_sf.sessionsDone + 1) + '/' + _sf.totalSessions + ' — Focus!';
+    sfUpdateFmStatus();
+    setTimeout(() => toggleTimer(), 800);
+}
+
+function sfReset() {
+    stopTimer();
+    _sf.active = false;
+    _sf.phase  = 'focus';
+    document.getElementById('sf-tracker').style.display = 'none';
+    document.getElementById('sf-skip-break-btn').style.display = 'none';
+    const el = document.getElementById('fm-sf-status');
+    if (el) el.style.display = 'none';
+    document.getElementById('timer-status').innerText = 'Ready to focus';
+    showToast('Smart Flow cancelled.', 'success');
+}
+
 function applyCustomTimer() {
     const f=parseInt(document.getElementById('custom-focus').value)||25;
     const s=parseInt(document.getElementById('custom-short').value)||5;
     const l=parseInt(document.getElementById('custom-long').value)||15;
     if(f<1||s<1||l<1){showToast('Durations must be ≥1 min','error');return;}
     stopTimer();
+    // Cancel any active smart flow when manual settings are applied
+    if (_sf.active) { _sf.active = false; document.getElementById('sf-tracker').style.display = 'none'; const fms = document.getElementById('fm-sf-status'); if (fms) fms.style.display = 'none'; }
     appData.timerSettings={focus:f,short:s,long:l};
     modes.focus=f*60; modes.short=s*60; modes.long=l*60;
-    // Auto-detect long session (>90 min) → enable Microsoft-style blocks
     _msBlock.enabled = false;
     timeLeft=modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode],modes[timerMode]);
     saveAppData(); showToast('Timer settings saved!','success');
@@ -3219,6 +3375,47 @@ function _startNextMsBlock() {
     document.getElementById('timer-status').innerText = `Block ${_msBlock.blocksDone + 1}/${_msBlock.totalBlocks} — focus!`;
     setTimeout(() => toggleTimer(), 800);
 }
+// ── Smart Flow: called when a focus session completes ──
+function _sfOnFocusDone() {
+    _sf.sessionsDone++;
+    _sf.completedMins += _sf.focusMins;
+    sfRenderTracker();
+    const remaining = _sf.totalMins - _sf.completedMins;
+    if (remaining <= 0 || _sf.sessionsDone >= _sf.totalSessions) {
+        // All sessions complete
+        _sf.active = false;
+        document.getElementById('sf-tracker').style.display = 'none';
+        const fms = document.getElementById('fm-sf-status'); if (fms) fms.style.display = 'none';
+        showToast('🏆 All ' + _sf.totalSessions + ' sessions complete! Total ' + _sf.totalMins + ' min done!', 'success');
+        document.getElementById('timer-status').innerText = 'Smart Flow complete! 🏆';
+        playSessionCompleteSound();
+        return;
+    }
+    // Start break (if breakMins > 0)
+    if (_sf.breakMins > 0) {
+        _sf.phase = 'break';
+        modes.short = _sf.breakMins * 60;
+        timerMode = 'short';
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        const sbtn = document.getElementById('mode-btn-short'); if (sbtn) sbtn.classList.add('active');
+        timeLeft = modes.short;
+        updateTimerDisplay(); setRing(modes.short, modes.short);
+        document.getElementById('sf-skip-break-btn').style.display = 'flex';
+        document.getElementById('timer-status').innerText = 'Break — session ' + (_sf.sessionsDone + 1) + '/' + _sf.totalSessions + ' next';
+        sfUpdateFmStatus();
+        showToast('Session ' + _sf.sessionsDone + ' done! ' + remaining + ' min left. Break starting...', 'success');
+        setTimeout(() => toggleTimer(), 800);
+    } else {
+        // Zero-break mode: go straight to next focus
+        showToast('Session ' + _sf.sessionsDone + ' done! ' + remaining + ' min left. Next session starting...', 'success');
+        _sfStartNextFocus();
+    }
+}
+// ── Smart Flow: called when a break timer completes ──
+function _sfOnBreakDone() {
+    document.getElementById('sf-skip-break-btn').style.display = 'none';
+    _sfStartNextFocus();
+}
 
 function resetTimer() {
     if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
@@ -3226,6 +3423,17 @@ function resetTimer() {
     _msBlock.enabled = false;
     const skipBtn = document.getElementById('ms-skip-break-btn');
     if (skipBtn) skipBtn.remove();
+    // Reset Smart Flow state
+    if (_sf.active) {
+        _sf.active = false;
+        _sf.phase  = 'focus';
+        const sfTracker = document.getElementById('sf-tracker');
+        if (sfTracker) sfTracker.style.display = 'none';
+        const sfSkip = document.getElementById('sf-skip-break-btn');
+        if (sfSkip) sfSkip.style.display = 'none';
+        const fms = document.getElementById('fm-sf-status');
+        if (fms) fms.style.display = 'none';
+    }
     clearInterval(timerInt); timerInt = null; isRunning = false;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
     document.getElementById('fm-play-icon').className = 'fa-solid fa-play';
@@ -3282,6 +3490,8 @@ function timerTick() {
                         toggleTimer();
                     }, 800);
                 }
+            } else if (_sf.active) {
+                _sfOnFocusDone();
             } else {
                 showToast('Focus session complete! 🎉', 'success');
                 document.getElementById('timer-status').innerText = 'Session done!';
@@ -3293,7 +3503,9 @@ function timerTick() {
             playBreakEndSound();
             const skipBtn = document.getElementById('ms-skip-break-btn');
             if (skipBtn) skipBtn.remove();
-            if (_msBlock.enabled) {
+            if (_sf.active && _sf.phase === 'break') {
+                _sfOnBreakDone();
+            } else if (_msBlock.enabled) {
                 showToast('Break over! Starting next block ⚡', 'success');
                 _startNextMsBlock();
             } else {
@@ -6571,6 +6783,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const cycleBefore = document.getElementById('cycle-before-long');
     if (cycleGoal) cycleGoal.addEventListener('input', updateCyclePreview);
     if (cycleBefore) cycleBefore.addEventListener('input', updateCyclePreview);
+    // Initialize Smart Flow preview
+    sfUpdatePreview();
     const volEl = document.getElementById('sound-volume');
     if (volEl) {
         volEl.value = appData.settings.soundVolume || 70;
