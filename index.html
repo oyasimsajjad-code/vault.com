@@ -5067,6 +5067,28 @@ function _rtLoad() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed.state) _rtState = { ..._rtState, ...parsed.state };
+      return; // localStorage-এ পেয়েছি, Firestore call দরকার নেই
+    }
+    // localStorage-এ নেই → Firestore থেকে load করো (নতুন device)
+    if (typeof firestore !== 'undefined' && currentUser) {
+      import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js')
+        .then(({ doc, getDoc }) => {
+          return getDoc(doc(firestore, 'users', currentUser, 'appData', 'hscRoutineV2'));
+        })
+        .then(snap => {
+          if (snap && snap.exists()) {
+            const data = snap.data();
+            if (data.state) {
+              const parsed = JSON.parse(data.state);
+              _rtState = { ..._rtState, ...parsed };
+              // localStorage-এও cache করে রাখো
+              localStorage.setItem(key, JSON.stringify({ state: _rtState }));
+              // UI re-render
+              _rtRender();
+            }
+          }
+        })
+        .catch(() => {});
     }
   } catch(e) {}
 }
@@ -5142,10 +5164,14 @@ function _rtToggleSubject(subj, el) {
 
 function rtSelectAllSubjects() {
   _rtState.selectedSubjects = Object.keys(RT_DATASET);
+  _rtSave();
   _rtRenderSubjects();
 }
 function rtClearAllSubjects() {
   _rtState.selectedSubjects = [];
+  _rtState.selectedChapters = [];
+  _rtState.paperSelections  = {};
+  _rtSave();
   _rtRenderSubjects();
 }
 
