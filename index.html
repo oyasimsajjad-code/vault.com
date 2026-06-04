@@ -3444,10 +3444,10 @@ function timerTick() {
     if(timeLeft>0){
         timeLeft--; updateTimerDisplay(); setRing(timeLeft,modes[timerMode]);
     } else {
+        _partialSaved = true;
         stopTimer(); playSound();
         document.title="Study Vault | Time's up!";
         if (timerMode === 'focus') {
-            _partialSaved = true;
             const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
             const mins = _msBlock.enabled ? _msBlock.blockFocus : (appData.timerSettings.focus || 25);
             const today = _getLocalDateStr();
@@ -3492,10 +3492,21 @@ function timerTick() {
                 }
             } else if (_sf.active) {
                 _sfOnFocusDone();
+            } else if (autoCycleEnabled) {
+                startAutoCycleBreak();
             } else {
-                showToast('Focus session complete! 🎉', 'success');
-                document.getElementById('timer-status').innerText = 'Session done!';
-                if (autoCycleEnabled) startAutoCycleBreak();
+                showToast('Focus session complete! 🎉 Break starting...', 'success');
+                document.getElementById('timer-status').innerText = 'Break time!';
+                playBreakStartSound();
+                setTimeout(() => {
+                    timerMode = 'short';
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    const sbtn = document.getElementById('mode-btn-short'); if (sbtn) sbtn.classList.add('active');
+                    timeLeft = modes.short;
+                    updateTimerDisplay(); setRing(modes.short, modes.short);
+                    document.getElementById('timer-status').innerText = 'On break...';
+                    toggleTimer();
+                }, 800);
             }
             checkAchievements();
             _partialSaved = false;
@@ -3508,11 +3519,22 @@ function timerTick() {
             } else if (_msBlock.enabled) {
                 showToast('Break over! Starting next block ⚡', 'success');
                 _startNextMsBlock();
+            } else if (autoCycleEnabled) {
+                handleAutoCycleBreakEnd();
             } else {
                 showToast('Break over! Back to work. 💪', 'success');
-                document.getElementById('timer-status').innerText = 'Break done!';
+                document.getElementById('timer-status').innerText = 'Focus starting...';
                 releaseWakeLock();
-                if (autoCycleEnabled) handleAutoCycleBreakEnd();
+                playFocusStartSound();
+                setTimeout(() => {
+                    timerMode = 'focus';
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    const fbtn = document.getElementById('mode-btn-focus'); if (fbtn) fbtn.classList.add('active');
+                    timeLeft = modes.focus;
+                    updateTimerDisplay(); setRing(modes.focus, modes.focus);
+                    document.getElementById('timer-status').innerText = 'Focusing...';
+                    toggleTimer();
+                }, 800);
             }
         }
         setRing(0, modes[timerMode]);
