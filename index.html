@@ -1598,11 +1598,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
         <div>
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:6px;"><i class="fa-solid fa-calendar-plus" style="color:var(--primary);margin-right:6px;"></i>শুরুর তারিখ</label>
-          <input type="date" id="rt-start-date" style="width:100%;" oninput="rtUpdateTimeline()" onchange="rtUpdateTimeline()">
+          <input type="date" id="rt-start-date" style="width:100%;" oninput="rtUpdateTimeline()">
         </div>
         <div>
           <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:6px;"><i class="fa-solid fa-calendar-check" style="color:var(--success);margin-right:6px;"></i>শেষের তারিখ</label>
-          <input type="date" id="rt-end-date" style="width:100%;" oninput="rtUpdateTimeline()" onchange="rtUpdateTimeline()">
+          <input type="date" id="rt-end-date" style="width:100%;" oninput="rtUpdateTimeline()">
         </div>
       </div>
       <div id="rt-timeline-preview" style="display:none;background:rgba(0,240,255,0.06);border:1px solid rgba(0,240,255,0.2);border-radius:var(--radius-sm);padding:14px;">
@@ -5023,12 +5023,7 @@ function _rtLoad() {
     const raw = localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed.state) {
-        _rtState = { ..._rtState, ...parsed.state };
-        if (!Array.isArray(_rtState.selectedSubjects)) _rtState.selectedSubjects = [];
-        if (!Array.isArray(_rtState.selectedChapters)) _rtState.selectedChapters = [];
-        if (typeof _rtState.completionMap !== 'object' || Array.isArray(_rtState.completionMap)) _rtState.completionMap = {};
-      }
+      if (parsed.state) _rtState = { ..._rtState, ...parsed.state };
     }
   } catch(e) {}
 }
@@ -5204,7 +5199,6 @@ function rtUpdateTimeline() {
   const endStr = endEl.value;
   _rtState.startDate = startStr;
   _rtState.endDate = endStr;
-  _rtSave();
   const preview = document.getElementById('rt-timeline-preview');
   const warning = document.getElementById('rt-timeline-warning');
   if (!startStr || !endStr) { if(preview) preview.style.display='none'; if(warning) warning.style.display='none'; return; }
@@ -5249,12 +5243,6 @@ function rtGenerateRoutine() {
 
   // Build full topic list grouped by chapter
   const allTopicItems = [];
-  if (!Array.isArray(_rtState.selectedSubjects) || _rtState.selectedSubjects.length === 0) {
-    showToast('কমপক্ষে একটি বিষয় select করুন', 'error'); return;
-  }
-  if (!Array.isArray(_rtState.selectedChapters) || _rtState.selectedChapters.length === 0) {
-    showToast('কমপক্ষে একটি অধ্যায় select করুন', 'error'); return;
-  }
   // Preserve subject order for balanced distribution
   _rtState.selectedSubjects.forEach(subj => {
     RT_DATASET[subj].chapters.forEach(ch => {
