@@ -9750,7 +9750,7 @@ window._fcmToken = token;
 window._fbSendPushToUser = async function(toUid, title, body, data = {}) {
     // This calls a Cloud Function — set up as described in Step 4
     try {
-        await fetch('https://us-central1-studyvault-1102b.cloudfunctions.net/sendPushNotification', {
+        await fetch('https://studyvault-functions.vercel.app/sendPushNotification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ toUid, title, body, data })
