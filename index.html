@@ -4699,32 +4699,7 @@ function _saveOneSignalToken() {
         }
     } catch(e) { console.warn('_saveOneSignalToken error:', e); }
 }
-    try {
-        const saveId = (id) => {
-            if (!id || !window._fbFirestore || !window._fbAuth || !window._fbAuth.currentUser) return;
-            import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
-                setDoc(doc(window._fbFirestore, 'osTokens', window._fbAuth.currentUser.uid), {
-                    playerId: id, updatedAt: Date.now()
-                });
-                console.log('OneSignal ID saved:', id);
-            });
-        };
-
-        if (typeof window.plugins !== 'undefined' && window.plugins.OneSignal) {
-            // Median APK — try all possible ID fields
-            window.plugins.OneSignal.getDeviceState(state => {
-                console.log('OneSignal device state:', JSON.stringify(state));
-                const id = state && (state.userId || state.onesignalId || state.pushToken || state.externalUserId);
-                saveId(id);
-            });
-        } else if (window.OneSignal) {
-            // Browser
-            window.OneSignal.push(function() {
-                window.OneSignal.getUserId(function(userId) { saveId(userId); });
-            });
-        }
-    } catch(e) { console.warn('_saveOneSignalToken error:', e); }
-}
+    
 
 async function requestPushPermission() {
     if (!('Notification' in window)) return;
