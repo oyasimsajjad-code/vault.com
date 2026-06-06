@@ -9723,6 +9723,12 @@ async function initFCM() {
         });
         _fcmToken = token;
 window._fcmToken = token;
+try {
+    if (window.OneSignal) {
+        window.OneSignal.login(auth.currentUser.uid);
+        window.OneSignal.User.addTag('uid', auth.currentUser.uid);
+    }
+} catch(e) {}
 // OneSignal UID tag
 try {
     if (window.OneSignal) {
