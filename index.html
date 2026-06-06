@@ -9445,7 +9445,7 @@ window._fbSendMessage = async function(toUid, text) {
         lastMsg: text.length > 50 ? text.substring(0,50)+'...' : text,
         lastTimestamp: Date.now(), unread: 1
     });
-    if (window._fbSendPushToUser) window._fbSendPushToUser(toUid, myName + ' sent you a message 💬', text.length > 80 ? text.substring(0,80)+'...' : text);
+    _sendOneSignalNotification(toUid, '💬 ' + myName, text.length > 80 ? text.substring(0,80)+'...' : text);
     // Refresh own presence on every message send so the other side sees "Active now" immediately
     if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true);
 };
@@ -9604,7 +9604,7 @@ window._fbSendImage = async function(toUid, blob, fileName) {
         uid, name: myName, dp: myDp,
         lastMsg: '📷 Photo', lastTimestamp: Date.now(), unread: 1
     });
-    if (window._fbSendPushToUser) window._fbSendPushToUser(toUid, myName + ' sent a photo 📷', 'New photo message');
+    _sendOneSignalNotification(toUid, '📷 ' + myName, 'New photo message');
 };
 
 window._fbLoadConversations = async function() {
