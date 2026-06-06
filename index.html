@@ -9723,6 +9723,12 @@ async function initFCM() {
         });
         _fcmToken = token;
 window._fcmToken = token;
+// OneSignal UID tag
+try {
+    if (window.OneSignal) {
+        window.OneSignal.login(auth.currentUser.uid);
+    }
+} catch(e) {}
 
         // Save token to Firestore
         if (token && auth.currentUser) {
