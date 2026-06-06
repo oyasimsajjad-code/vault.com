@@ -9662,6 +9662,7 @@ async function initFCM() {
             serviceWorkerRegistration: await navigator.serviceWorker.getRegistration()
         });
         _fcmToken = token;
+window._fcmToken = token;
 
         // Save token to Firestore
         if (token && auth.currentUser) {
