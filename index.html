@@ -2525,6 +2525,7 @@ function saveAppData() {
 async function startApp() {
     screens.main.classList.remove('hidden');
     setTimeout(requestPushPermission, 3000);
+    setTimeout(_saveOneSignalToken, 5000);
     // Load verified users (non-blocking)
     setTimeout(loadVerifiedUsers, 1000);
     const _authOv = document.getElementById('firebase-auth-overlay');
@@ -4644,6 +4645,61 @@ function showToast(msg,type='success') {
     c.appendChild(t);
     setTimeout(()=>{t.style.animation='fadeOutT 0.3s ease forwards';setTimeout(()=>t.remove(),300);},3000);
 }
+/* ---- OneSignal Push Notification Helper ---- */
+const _OS_APP_ID = 'e912442b-3a96-45f2-95a7-5ac233155ca4';
+const _OS_REST_KEY = 'os_v2_app_5ejeikz2szc7ffnhllbdgfk4usj23ep7sbdeeinvu52v3efc4tvuygaeibzrmster4gku4lkuycj6mxim64mbk3i7dp2n6auyul6q5i';
+
+async function _sendOneSignalNotification(toUid, title, body) {
+    try {
+        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const snap = await getDoc(doc(window._fbFirestore, 'osTokens', toUid));
+        if (!snap.exists()) return;
+        const playerId = snap.data().playerId;
+        if (!playerId) return;
+        await fetch('https://onesignal.com/api/v1/notifications', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic ' + _OS_REST_KEY
+            },
+            body: JSON.stringify({
+                app_id: _OS_APP_ID,
+                include_player_ids: [playerId],
+                headings: { en: title },
+                contents: { en: body }
+            })
+        });
+    } catch(e) { console.warn('OneSignal push error:', e); }
+}
+
+function _saveOneSignalToken() {
+    try {
+        if (typeof window.plugins !== 'undefined' && window.plugins.OneSignal) {
+            window.plugins.OneSignal.getDeviceState(state => {
+                if (state && state.userId && window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
+                    import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
+                        setDoc(doc(window._fbFirestore, 'osTokens', window._fbAuth.currentUser.uid), {
+                            playerId: state.userId, updatedAt: Date.now()
+                        });
+                    });
+                }
+            });
+        } else if (window.OneSignal) {
+            window.OneSignal.push(function() {
+                window.OneSignal.getUserId(function(userId) {
+                    if (userId && window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
+                        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
+                            setDoc(doc(window._fbFirestore, 'osTokens', window._fbAuth.currentUser.uid), {
+                                playerId: userId, updatedAt: Date.now()
+                            });
+                        });
+                    }
+                });
+            });
+        }
+    } catch(e) {}
+}
+
 async function requestPushPermission() {
     if (!('Notification' in window)) return;
     if (Notification.permission === 'default') {
@@ -6005,6 +6061,8 @@ async function sendFriendRequest(toUid, toName) {
         await window._fbSendFriendRequest(toUid, toName);
         sentRequests.push({ toUid, toName, timestamp: Date.now() });
         showToast('Friend request পাঠানো হয়েছে! 📨', 'success');
+        const myName = appData.profile.name || 'কেউ';
+        _sendOneSignalNotification(toUid, '👥 Friend Request', myName + ' আপনাকে friend request পাঠিয়েছে!');
         // Re-render search
         const input = document.getElementById('friend-search-input');
         if (input) searchUsersForFriend(input.value);
@@ -6590,6 +6648,8 @@ async function sendMessage() {
         conversations[currentChatUid].lastTimestamp = Date.now();
         playSound();
         renderInbox();
+        const myName = appData.profile.name || 'কেউ';
+        _sendOneSignalNotification(currentChatUid, '💬 ' + myName, text.substring(0, 100));
     } catch(e) { showToast('Message পাঠানো যায়নি','error'); input.value = text; }
 }
 
