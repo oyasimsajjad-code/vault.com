@@ -12,13 +12,19 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || payload.data?.title || 'StudyVault';
-  const body = payload.notification?.body || payload.data?.body || '';
+messaging.onBackgroundMessage(function(payload) {
+  const title = payload.notification?.title || 'StudyVault';
+  const body  = payload.notification?.body  || '';
   self.registration.showNotification(title, {
-    body,
-    icon: '/icon.png',
-    badge: '/badge.png',
-    data: payload.data || {}
+    body:  body,
+    icon:  '/icon-192.png',
+    badge: '/icon-192.png'
   });
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow('https://oyasimsajjad-code.github.io/vault.com/')
+  );
 });
