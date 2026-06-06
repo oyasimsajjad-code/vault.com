@@ -4673,35 +4673,33 @@ async function _sendOneSignalNotification(toUid, title, body) {
 }
 
 function _saveOneSignalToken() {
-    const uid = window._fbAuth?.currentUser?.uid;
-    if (!uid || !window._fbFirestore) return;
-    const saveToFirestore = (id) => {
-        if (!id) return;
-        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
-            setDoc(doc(window._fbFirestore, 'osTokens', uid), { playerId: id, updatedAt: Date.now() });
-            console.log('osToken saved:', id);
-        });
-    };
     try {
+        const uid = window._fbAuth && window._fbAuth.currentUser ? window._fbAuth.currentUser.uid : null;
+        if (!uid) return;
+
         if (typeof window.plugins !== 'undefined' && window.plugins.OneSignal) {
-            const os = window.plugins.OneSignal;
-            // Try every known field
-            const id1 = os.User?.pushSubscription?.id
-                || os.User?.pushSubscription?.token
-                || os.User?.onesignalId;
-            if (id1) { saveToFirestore(id1); return; }
-            // fallback to getDeviceState
-            try {
-                os.getDeviceState(s => {
-                    console.log('getDeviceState:', JSON.stringify(s));
-                    const id2 = s?.onesignalId || s?.userId || s?.subscriptionId || s?.pushToken || s?.id;
-                    saveToFirestore(id2);
-                });
-            } catch(e2) { console.warn('getDeviceState err:', e2); }
+            window.plugins.OneSignal.getDeviceState(state => {
+                console.log('OS state:', JSON.stringify(state));
+                if (state) {
+                    // Save tag for filtering
+                    window.plugins.OneSignal.User.addTag('uid', uid);
+try { window.plugins.OneSignal.login(uid); } catch(e) {}
+                    // Also save playerId to Firestore
+                    const id = state.userId || state.onesignalId;
+                    if (id && window._fbFirestore) {
+                        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
+                            setDoc(doc(window._fbFirestore, 'osTokens', uid), {
+                                playerId: id, updatedAt: Date.now()
+                            });
+                        });
+                    }
+                }
+            });
+        } else if (window.OneSignal) {
+            window.OneSignal.sendTag('uid', uid);
         }
     } catch(e) { console.warn('_saveOneSignalToken error:', e); }
 }
-                
     
 
 async function requestPushPermission() {
@@ -9764,11 +9762,12 @@ try {
 
 // Expose FCM sender for server-side or Cloud Functions use
 window._fbSendPushToUser = async function(toUid, title, body, data = {}) {
+    // This calls a Cloud Function — set up as described in Step 4
     try {
         await fetch('https://studyvault-functions.vercel.app/sendPushNotification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ toUid, title, body })
+            body: JSON.stringify({ toUid, title, body, data })
         });
     } catch(e) { console.warn('Push send error:', e); }
 };
