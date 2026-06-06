@@ -4682,7 +4682,8 @@ function _saveOneSignalToken() {
                 console.log('OS state:', JSON.stringify(state));
                 if (state) {
                     // Save tag for filtering
-                    window.plugins.OneSignal.sendTag('uid', uid);
+                    window.plugins.OneSignal.User.addTag('uid', uid);
+try { window.plugins.OneSignal.login(uid); } catch(e) {}
                     // Also save playerId to Firestore
                     const id = state.userId || state.onesignalId;
                     if (id && window._fbFirestore) {
