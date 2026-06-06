@@ -9748,6 +9748,23 @@ window._fcmToken = token;
 
 // Expose FCM sender for server-side or Cloud Functions use
 window._fbSendPushToUser = async function(toUid, title, body, data = {}) {
+    try {
+        // OneSignal REST API দিয়ে push
+        await fetch('https://onesignal.com/api/v1/notifications', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic j23ep7sbdeeinvu52v3efc4tv'
+            },
+            body: JSON.stringify({
+                app_id: 'e912442b-3a96-45f2-95a7-5ac233155ca4',
+                filters: [{ field: 'tag', key: 'uid', relation: '=', value: toUid }],
+                headings: { en: title },
+                contents: { en: body }
+            })
+        });
+    } catch(e) { console.warn('Push send error:', e); }
+};
     // This calls a Cloud Function — set up as described in Step 4
     try {
         await fetch('https://studyvault-functions.vercel.app/sendPushNotification', {
