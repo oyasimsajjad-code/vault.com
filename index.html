@@ -4663,10 +4663,25 @@ function _saveOneSignalToken() {
     try {
         const uid = window._fbAuth?.currentUser?.uid;
         if (!uid) return;
-        // Median official method
         if (typeof median !== 'undefined' && median.onesignal) {
             median.onesignal.login({ externalId: uid });
             console.log('median.onesignal.login called:', uid);
+        } else {
+            // median not ready yet — retry every 3 seconds up to 10 times
+            let attempts = 0;
+            const retry = setInterval(() => {
+                attempts++;
+                const currentUid = window._fbAuth?.currentUser?.uid;
+                if (!currentUid) { clearInterval(retry); return; }
+                if (typeof median !== 'undefined' && median.onesignal) {
+                    median.onesignal.login({ externalId: currentUid });
+                    console.log('median.onesignal.login called (retry ' + attempts + '):', currentUid);
+                    clearInterval(retry);
+                } else if (attempts >= 10) {
+                    console.warn('median.onesignal not available after 10 retries');
+                    clearInterval(retry);
+                }
+            }, 3000);
         }
     } catch(e) { console.warn('_saveOneSignalToken error:', e); }
 }
