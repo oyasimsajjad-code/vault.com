@@ -1263,6 +1263,17 @@
                 <h2 class="section-title">Focus Timer</h2>
                 <button class="btn btn-primary" onclick="enterFocusMode()"><i class="fa-solid fa-expand"></i> Deep Focus Mode</button>
             </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;margin-bottom:10px;background:rgba(0,240,255,0.05);border:1px solid rgba(0,240,255,0.15);border-radius:12px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-sun" style="color:var(--primary);font-size:0.9rem;"></i>
+                    <span style="font-size:0.85rem;font-weight:600;color:var(--text-main);">Screen Awake During Focus</span>
+                </div>
+                <label style="position:relative;display:inline-block;width:42px;height:22px;flex-shrink:0;cursor:pointer;">
+                    <input type="checkbox" id="setting-wakelock" onchange="toggleWakeLockSetting()" style="opacity:0;width:0;height:0;">
+                    <span id="wakelock-track" style="position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:22px;transition:0.3s;"></span>
+                    <span id="wakelock-knob" style="position:absolute;left:3px;top:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:0.3s;"></span>
+                </label>
+            </div>
             <div class="glass timer-container">
                 <div class="timer-modes">
                     <button class="mode-btn active" id="mode-btn-focus" onclick="setTimerMode('focus',this)">Focus</button>
