@@ -4673,15 +4673,31 @@ async function _sendOneSignalNotification(toUid, title, body) {
 }
 
 function _saveOneSignalToken() {
+    const uid = window._fbAuth?.currentUser?.uid;
+    if (!uid || !window._fbFirestore) return;
+    const saveToFirestore = (id) => {
+        if (!id) return;
+        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
+            setDoc(doc(window._fbFirestore, 'osTokens', uid), { playerId: id, updatedAt: Date.now() });
+            console.log('osToken saved:', id);
+        });
+    };
     try {
-        const uid = window._fbAuth?.currentUser?.uid;
-        if (!uid) return;
         if (typeof window.plugins !== 'undefined' && window.plugins.OneSignal) {
-            try { window.plugins.OneSignal.login(uid); } catch(e) {}
-            console.log('OneSignal login() called with uid:', uid);
-        }
-        if (window.OneSignal) {
-            try { window.OneSignal.login(uid); } catch(e) {}
+            const os = window.plugins.OneSignal;
+            // Try every known field
+            const id1 = os.User?.pushSubscription?.id
+                || os.User?.pushSubscription?.token
+                || os.User?.onesignalId;
+            if (id1) { saveToFirestore(id1); return; }
+            // fallback to getDeviceState
+            try {
+                os.getDeviceState(s => {
+                    console.log('getDeviceState:', JSON.stringify(s));
+                    const id2 = s?.onesignalId || s?.userId || s?.subscriptionId || s?.pushToken || s?.id;
+                    saveToFirestore(id2);
+                });
+            } catch(e2) { console.warn('getDeviceState err:', e2); }
         }
     } catch(e) { console.warn('_saveOneSignalToken error:', e); }
 }
@@ -9749,22 +9765,11 @@ try {
 // Expose FCM sender for server-side or Cloud Functions use
 window._fbSendPushToUser = async function(toUid, title, body, data = {}) {
     try {
-        const res = await fetch('https://onesignal.com/api/v1/notifications', {
+        await fetch('https://studyvault-functions.vercel.app/sendPushNotification', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic os_v2_app_5ejeikz2szc7ffnhllbdgfk4usj23ep7sbdeeinvu52v3efc4tvuygaeibzrmster4gku4lkuycj6mxim64mbk3i7dp2n6auyul6q5i'
-            },
-            body: JSON.stringify({
-                app_id: 'e912442b-3a96-45f2-95a7-5ac233155ca4',
-                include_aliases: { external_id: [toUid] },
-                target_channel: 'push',
-                headings: { en: title },
-                contents: { en: body }
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ toUid, title, body })
         });
-        const json = await res.json();
-        console.log('OneSignal send result:', JSON.stringify(json));
     } catch(e) { console.warn('Push send error:', e); }
 };
 const origSwitch = window.switchView;
