@@ -4651,23 +4651,10 @@ const _OS_REST_KEY = 'os_v2_app_5ejeikz2szc7ffnhllbdgfk4usj23ep7sbdeeinvu52v3efc
 
 async function _sendOneSignalNotification(toUid, title, body) {
     try {
-        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-        const snap = await getDoc(doc(window._fbFirestore, 'osTokens', toUid));
-        if (!snap.exists()) return;
-        const playerId = snap.data().playerId;
-        if (!playerId) return;
-        await fetch('https://onesignal.com/api/v1/notifications', {
+        await fetch('https://studyvault-functions.vercel.app/sendPushNotification', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + _OS_REST_KEY
-            },
-            body: JSON.stringify({
-                app_id: _OS_APP_ID,
-                include_player_ids: [playerId],
-                headings: { en: title },
-                contents: { en: body }
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ toUid, title, body })
         });
     } catch(e) { console.warn('OneSignal push error:', e); }
 }
