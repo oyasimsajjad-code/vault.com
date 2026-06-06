@@ -4675,35 +4675,13 @@ async function _sendOneSignalNotification(toUid, title, body) {
 function _saveOneSignalToken() {
     try {
         const uid = window._fbAuth?.currentUser?.uid;
-        if (!uid || !window._fbFirestore) return;
-
+        if (!uid) return;
         if (typeof window.plugins !== 'undefined' && window.plugins.OneSignal) {
-            // নতুন OneSignal v5 SDK — pushSubscription.id সরাসরে নাও
-            const sub = window.plugins.OneSignal.User && window.plugins.OneSignal.User.pushSubscription;
-            const osId = sub && sub.id;
-            if (osId) {
-                import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
-                    setDoc(doc(window._fbFirestore, 'osTokens', uid), {
-                        playerId: osId, updatedAt: Date.now()
-                    });
-                    console.log('✅ OneSignal sub ID saved:', osId);
-                });
-            } else {
-                // fallback: getDeviceState
-                try {
-                    window.plugins.OneSignal.getDeviceState(state => {
-                        console.log('OS state:', JSON.stringify(state));
-                        const id = state && (state.onesignalId || state.userId || state.subscriptionId);
-                        if (!id) { console.warn('No OneSignal ID found in state'); return; }
-                        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
-                            setDoc(doc(window._fbFirestore, 'osTokens', uid), {
-                                playerId: id, updatedAt: Date.now()
-                            });
-                            console.log('✅ OneSignal ID saved (fallback):', id);
-                        });
-                    });
-                } catch(e2) { console.warn('getDeviceState failed:', e2); }
-            }
+            try { window.plugins.OneSignal.login(uid); } catch(e) {}
+            console.log('OneSignal login() called with uid:', uid);
+        }
+        if (window.OneSignal) {
+            try { window.OneSignal.login(uid); } catch(e) {}
         }
     } catch(e) { console.warn('_saveOneSignalToken error:', e); }
 }
@@ -9771,11 +9749,6 @@ try {
 // Expose FCM sender for server-side or Cloud Functions use
 window._fbSendPushToUser = async function(toUid, title, body, data = {}) {
     try {
-        const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-        const snap = await getDoc(doc(window._fbFirestore, 'osTokens', toUid));
-        if (!snap.exists()) { console.warn('No osToken for', toUid); return; }
-        const playerId = snap.data().playerId;
-        if (!playerId) return;
         const res = await fetch('https://onesignal.com/api/v1/notifications', {
             method: 'POST',
             headers: {
@@ -9784,7 +9757,8 @@ window._fbSendPushToUser = async function(toUid, title, body, data = {}) {
             },
             body: JSON.stringify({
                 app_id: 'e912442b-3a96-45f2-95a7-5ac233155ca4',
-                include_player_ids: [playerId],
+                include_aliases: { external_id: [toUid] },
+                target_channel: 'push',
                 headings: { en: title },
                 contents: { en: body }
             })
