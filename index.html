@@ -4674,30 +4674,30 @@ async function _sendOneSignalNotification(toUid, title, body) {
 
 function _saveOneSignalToken() {
     try {
+        const saveId = (id) => {
+            if (!id || !window._fbFirestore || !window._fbAuth || !window._fbAuth.currentUser) return;
+            import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
+                setDoc(doc(window._fbFirestore, 'osTokens', window._fbAuth.currentUser.uid), {
+                    playerId: id, updatedAt: Date.now()
+                });
+                console.log('OneSignal ID saved:', id);
+            });
+        };
+
         if (typeof window.plugins !== 'undefined' && window.plugins.OneSignal) {
+            // Median APK — try all possible ID fields
             window.plugins.OneSignal.getDeviceState(state => {
-                if (state && state.userId && window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
-                    import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
-                        setDoc(doc(window._fbFirestore, 'osTokens', window._fbAuth.currentUser.uid), {
-                            playerId: state.userId, updatedAt: Date.now()
-                        });
-                    });
-                }
+                console.log('OneSignal device state:', JSON.stringify(state));
+                const id = state && (state.userId || state.onesignalId || state.pushToken || state.externalUserId);
+                saveId(id);
             });
         } else if (window.OneSignal) {
+            // Browser
             window.OneSignal.push(function() {
-                window.OneSignal.getUserId(function(userId) {
-                    if (userId && window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
-                        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
-                            setDoc(doc(window._fbFirestore, 'osTokens', window._fbAuth.currentUser.uid), {
-                                playerId: userId, updatedAt: Date.now()
-                            });
-                        });
-                    }
-                });
+                window.OneSignal.getUserId(function(userId) { saveId(userId); });
             });
         }
-    } catch(e) {}
+    } catch(e) { console.warn('_saveOneSignalToken error:', e); }
 }
 
 async function requestPushPermission() {
@@ -9445,7 +9445,7 @@ window._fbSendMessage = async function(toUid, text) {
         lastMsg: text.length > 50 ? text.substring(0,50)+'...' : text,
         lastTimestamp: Date.now(), unread: 1
     });
-    _sendOneSignalNotification(toUid, '💬 ' + myName, text.length > 80 ? text.substring(0,80)+'...' : text);
+    if (window._fbSendPushToUser) window._fbSendPushToUser(toUid, '💬 ' + myName, text.length > 80 ? text.substring(0,80)+'...' : text);
     // Refresh own presence on every message send so the other side sees "Active now" immediately
     if (auth.currentUser) fbUpdatePresence(auth.currentUser.uid, true);
 };
@@ -9604,7 +9604,7 @@ window._fbSendImage = async function(toUid, blob, fileName) {
         uid, name: myName, dp: myDp,
         lastMsg: '📷 Photo', lastTimestamp: Date.now(), unread: 1
     });
-    _sendOneSignalNotification(toUid, '📷 ' + myName, 'New photo message');
+    if (window._fbSendPushToUser) window._fbSendPushToUser(toUid, '📷 ' + myName, 'New photo message');
 };
 
 window._fbLoadConversations = async function() {
