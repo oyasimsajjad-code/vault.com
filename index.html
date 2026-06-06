@@ -4707,27 +4707,7 @@ function _saveOneSignalToken() {
         }
     } catch(e) { console.warn('_saveOneSignalToken error:', e); }
 }
-                console.log('OS state:', JSON.stringify(state));
-                if (state) {
-                    // Save tag for filtering
-                    window.plugins.OneSignal.User.addTag('uid', uid);
-try { window.plugins.OneSignal.login(uid); } catch(e) {}
-                    // Also save playerId to Firestore
-                    const id = state.userId || state.onesignalId;
-                    if (id && window._fbFirestore) {
-                        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ setDoc, doc }) => {
-                            setDoc(doc(window._fbFirestore, 'osTokens', uid), {
-                                playerId: id, updatedAt: Date.now()
-                            });
-                        });
-                    }
-                }
-            });
-        } else if (window.OneSignal) {
-            window.OneSignal.sendTag('uid', uid);
-        }
-    } catch(e) { console.warn('_saveOneSignalToken error:', e); }
-}
+                
     
 
 async function requestPushPermission() {
