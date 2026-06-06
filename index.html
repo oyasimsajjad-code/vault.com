@@ -3460,21 +3460,24 @@ function _recordStudyTime(mins, subj) {
     checkAndUpdateStreak(today);
 }
 
+let _partialSaved = false;
+let _lastSavedSecs = 0;
 function savePartialSession() {
     if (!isRunning || timerMode !== 'focus') return;
     const totalSecs = modes['focus'];
     const elapsedSecs = totalSecs - timeLeft;
-    if (elapsedSecs < 30) return;
-    const elapsedMins = Math.round(elapsedSecs / 60);
-    if (elapsedMins < 1) return;
+    const newSecs = elapsedSecs - _lastSavedSecs;
+    if (newSecs < 30) return;
+    const newMins = Math.round(newSecs / 60);
+    if (newMins < 1) return;
     const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
-    _recordStudyTime(elapsedMins, subj);
+    _recordStudyTime(newMins, subj);
+    _lastSavedSecs = elapsedSecs;
     saveAppData();
     if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
-    showToast('Partial session saved: ' + elapsedMins + ' min recorded 📊', 'success');
+    showToast('Partial session saved: ' + newMins + ' min recorded 📊', 'success');
     _partialSaved = true;
 }
-let _partialSaved = false;
 function stopTimer() {
     if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
     _partialSaved = false;
@@ -3486,7 +3489,7 @@ function toggleTimer() {
     if(isRunning){
         stopTimer(); document.getElementById('timer-status').innerText='Paused';
     } else {
-        if (timeLeft <= 0) { timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]); }
+        if (timeLeft <= 0) { timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]); _lastSavedSecs = 0; }
         isRunning = true;
         _partialSaved = false;
         document.getElementById('play-icon').className = 'fa-solid fa-pause';
@@ -3687,6 +3690,13 @@ function toggleWakeLockSetting() {
     if (!appData.settings.keepScreenAwake) releaseWakeLock();
     showToast(appData.settings.keepScreenAwake ? 'Screen will stay awake during focus 🌞' : 'Screen wake lock disabled', 'success');
 }
+function enableDeepFocusWakeLock() {
+    appData.settings.keepScreenAwake = true;
+    saveAppData();
+    const wlCb = document.getElementById('setting-wakelock');
+    if (wlCb) wlCb.checked = true;
+    requestWakeLock();
+}
 
 let autoCycleEnabled = false;
 let autoCycleData = { totalGoalMins: 120, cyclesDone: 0, totalCycles: 8, cyclesBeforeLong: 4, totalCompletedMins: 0 };
@@ -3782,6 +3792,7 @@ function enterFocusMode() {
     const qs=["Deep work is the superpower of the 21st century.","Starve your distractions, feed your focus.","Success is the sum of small efforts repeated day in and day out.","Focus on being productive instead of busy.","The secret to getting ahead is getting started.","Great things never come from comfort zones.","You don't need more time, you need more focus.","Work hard in silence; let success make the noise."];
     document.getElementById('fm-quote').innerText='"'+qs[Math.floor(Math.random()*qs.length)]+'"';
     if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+    requestWakeLock();
 }
 function exitFocusMode() {
     if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
