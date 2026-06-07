@@ -161,10 +161,10 @@
         .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: rgba(255,255,255,0.08); flex-shrink: 0; cursor: pointer; transition: transform 0.15s; position: relative; }
         .hm-cell:hover { transform: scale(1.35); z-index: 10; }
         .hm-cell.hm-0 { background: rgba(255,255,255,0.06); }
-        .hm-cell.hm-1 { background: rgba(0,220,120,0.2); }
-        .hm-cell.hm-2 { background: rgba(0,220,120,0.4); }
-        .hm-cell.hm-3 { background: rgba(0,220,120,0.6); }
-        .hm-cell.hm-4 { background: rgba(0,220,120,0.75); }
+        .hm-cell.hm-1 { background: rgba(255,60,60,0.35); }
+        .hm-cell.hm-2 { background: rgba(255,140,0,0.55); }
+        .hm-cell.hm-3 { background: rgba(255,220,0,0.55); }
+        .hm-cell.hm-4 { background: rgba(255,220,0,0.75); }
         .hm-cell.hm-5 { background: rgba(0,220,120,0.95); box-shadow: 0 0 5px rgba(0,220,120,0.5); }
         .hm-cell.hm-future { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.02); }
         .hm-tooltip { position: fixed; background: rgba(10,10,20,0.95); border: 1px solid rgba(0,220,120,0.3); color: #fff; font-size: 0.72rem; padding: 5px 10px; border-radius: 6px; pointer-events: none; z-index: 9999; white-space: nowrap; display: none; }
@@ -1734,14 +1734,14 @@
         <!-- Study With Islam Section -->
 <section id="view-islamdash" class="view-section">
   <div class="section-header">
-    <h2 class="section-title"><span style="margin-right:10px;">☪️</span>Study With Islam</h2>
+    <h2 class="section-title">Study With Islam</h2>
   </div>
 
   <!-- Hero Dashboard Card -->
   <div class="islam-hero glass">
     <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(0,220,120,0.15);">
       <div style="font-size:0.68rem;font-weight:700;letter-spacing:2px;color:#00dc78;text-transform:uppercase;margin-bottom:7px;">✦ Daily Reminder</div>
-      <div style="font-size:0.88rem;font-weight:600;color:var(--text-main);line-height:1.7;font-style:italic;word-break:break-word;overflow-wrap:break-word;">"Chase your goals, but remember: real success is impossible without Allah's grace."</div>
+      <div id="isl-daily-reminder" style="font-size:0.88rem;font-weight:600;color:var(--text-main);line-height:1.7;font-style:italic;word-break:break-word;overflow-wrap:break-word;"></div>
     </div>
     <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">📊 Today's Progress</div>
     <div class="islam-progress-grid">
@@ -10368,7 +10368,7 @@ function islCalcHeatmapStats() {
   // Year
   const start = new Date(today.getFullYear(), 0, 1);
   let yearTotal = 0, yearDays = 0;
-  const d = new Date(start);
+  const d = new Date(today.getFullYear(), 0, 1);
   while (d <= today) {
     const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     const rec = islState.salahHistory[key];
@@ -10466,7 +10466,7 @@ function islRenderDuas() {
       <div style="margin-top:8px;"><span class="ref-text">${dua.ref}</span></div>
       <div class="dua-btns">
         <button class="dua-btn" onclick="window.islCopyDua(${dua.num-1})">📋 Copy</button>
-        <button class="dua-btn" onclick="window.islSaveDua(${dua.num-1})">💾 Save</button>
+        <button class="dua-btn" onclick="window.islSaveDua(${dua.num-1})">💾 Bookmark</button>
       </div>`;
     list.appendChild(card);
   });
@@ -10556,25 +10556,45 @@ function islamSwitchTab(tab, el) {
   if (tab === 'stats') islRenderStats();
 }
 
+/* ── DAILY REMINDER ── */
+const ISL_REMINDERS = [
+  '"Chase your goals, but remember: real success is impossible without Allah\'s grace."',
+  '"وَقُل رَّبِّ زِدْنِي عِلْمًا — My Lord, increase me in knowledge."',
+  '"Pray before you study. Seek Allah\'s help in every task."',
+  '"The best among you are those who learn the Quran and teach it." — Bukhari',
+  '"Verily, with hardship comes ease." — Surah Ash-Sharh: 5',
+  '"Make dua before you begin — Allah opens doors that no human can."',
+  '"Knowledge is not about memorizing but about fearing Allah."',
+  '"Whoever travels a path seeking knowledge, Allah will ease for them a path to Jannah." — Muslim',
+];
+
+function islRenderReminder() {
+  const el = document.getElementById('isl-daily-reminder');
+  if (!el) return;
+  const idx = new Date().getDate() % ISL_REMINDERS.length;
+  el.textContent = ISL_REMINDERS[idx];
+}
+
 /* ── FULL RENDER ── */
 function islRenderAll() {
   islRenderHero();
   islRenderSalah();
   islRenderAyah();
   islRenderHadith();
+  islRenderReminder();
 }
 
 /* ── EXPOSE TO GLOBAL SCOPE (module fix) ── */
 window.initIslamDash = initIslamDash;
 window.islamSwitchTab = islamSwitchTab;
 window.islToggleSalah = islToggleSalah;
-window.islNextAyah = islNextAyah;
-window.islPrevAyah = islPrevAyah;
+window.islNextAyah = function() { islAyahNav(1); };
+window.islPrevAyah = function() { islAyahNav(-1); };
 window.islToggleAyahRead = islToggleAyahRead;
 window.islAyahNav = islAyahNav;
 window.islHadithNav = islHadithNav;
-window.islNextHadith = islNextHadith;
-window.islPrevHadith = islPrevHadith;
+window.islNextHadith = function() { islHadithNav(1); };
+window.islPrevHadith = function() { islHadithNav(-1); };
 window.islToggleHadithRead = islToggleHadithRead;
 window.islCopyDua = islCopyDua;
 window.islSaveDua = islSaveDua;
