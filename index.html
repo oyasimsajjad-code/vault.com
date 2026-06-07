@@ -1776,17 +1776,7 @@
     <div class="islam-tab" onclick="islamSwitchTab('stats',this)">📈 Statistics</div>
   </div>
 
-  <!-- Islamic Reminder Cards -->
-  <div style="margin-bottom:20px;">
-    <div class="reminder-scroll">
-      <div class="reminder-card"><div class="r-icon">🕌</div><div class="r-text">Pray Before You Study</div></div>
-      <div class="reminder-card"><div class="r-icon">📖</div><div class="r-text">Start With Quran</div></div>
-      <div class="reminder-card"><div class="r-icon">🤲</div><div class="r-text">Make Dua Before Learning</div></div>
-      <div class="reminder-card"><div class="r-icon">⏰</div><div class="r-text">Protect Your Time</div></div>
-      <div class="reminder-card"><div class="r-icon">🎯</div><div class="r-text">Study With Discipline</div></div>
-      <div class="reminder-card"><div class="r-icon">💡</div><div class="r-text">Seek Knowledge Always</div></div>
-    </div>
-  </div>
+  
 
   <!-- SUB: Salah Tracker -->
   <div class="islam-sub active" id="isl-sub-salah">
@@ -10560,7 +10550,7 @@ const ISL_REMINDERS = [
 function islRenderReminder() {
   const el = document.getElementById('isl-daily-reminder');
   if (!el) return;
-  const idx = new Date().getDate() % ISL_REMINDERS.length;
+  const idx = Math.floor(Math.random() * ISL_REMINDERS.length);
   el.textContent = ISL_REMINDERS[idx];
 }
 
