@@ -1806,25 +1806,31 @@
 
   <!-- SUB: Yearly Heatmap -->
   <div class="islam-sub" id="isl-sub-heatmap">
-    <div class="glass" style="padding:22px;margin-bottom:16px;">
-      <h3 style="color:var(--text-main);margin-bottom:6px;">📊 Yearly Prayer Heatmap</h3>
-      <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;">Each cell = 1 day | 🟩 5/5 &nbsp; 🟨 3-4 &nbsp; 🟧 1-2 &nbsp; 🟥 0</p>
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <h3 style="color:var(--text-main);margin-bottom:4px;">🗓️ নামাজের হিস্ট্রি</h3>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px;">প্রতিটি বক্স = ১ দিনের নামাজ</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <span style="font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:rgba(0,220,120,0.8);display:inline-block;"></span> ৫/৫ পরিপূর্ণ</span>
+        <span style="font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:rgba(255,220,0,0.65);display:inline-block;"></span> ৩-৪টি</span>
+        <span style="font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:rgba(255,140,0,0.55);display:inline-block;"></span> ১-২টি</span>
+        <span style="font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:rgba(255,60,60,0.35);display:inline-block;"></span> পড়া হয়নি</span>
+      </div>
       <div class="islam-heatmap-wrap">
         <div id="isl-heatmap-months" class="hm-months"></div>
         <div id="isl-heatmap" class="islam-heatmap"></div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;text-align:center;">
-        <div class="glass" style="padding:14px;">
-          <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:#00dc78;" id="isl-hm-week">0%</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);">This Week</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;text-align:center;">
+        <div class="glass" style="padding:14px;border-radius:12px;">
+          <div style="font-size:1.5rem;font-weight:800;color:#00dc78;" id="isl-hm-week">0%</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">এই সপ্তাহ</div>
         </div>
-        <div class="glass" style="padding:14px;">
-          <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:#00dc78;" id="isl-hm-month">0%</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);">This Month</div>
+        <div class="glass" style="padding:14px;border-radius:12px;">
+          <div style="font-size:1.5rem;font-weight:800;color:#00dc78;" id="isl-hm-month">0%</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">এই মাস</div>
         </div>
-        <div class="glass" style="padding:14px;">
-          <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:#00dc78;" id="isl-hm-year">0%</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);">This Year</div>
+        <div class="glass" style="padding:14px;border-radius:12px;">
+          <div style="font-size:1.5rem;font-weight:800;color:#00dc78;" id="isl-hm-year">0%</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">এই বছর</div>
         </div>
       </div>
     </div>
@@ -2361,8 +2367,8 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
-        <div class="b-nav-item" onclick="switchView('routine',this)"><span style="font-size:1.05rem;line-height:1;">📅</span>Routine</div>
-      <div class="b-nav-item" onclick="switchView('islamdash',this)"><span style="font-size:1.05rem;line-height:1;">☪️</span>Islam</div>
+        <div class="b-nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i>Routine</div>
+        <div class="b-nav-item" onclick="switchView('islamdash',this)"><i class="fa-solid fa-mosque"></i>Islam</div>
         <div class="b-nav-item" onclick="switchView('inbox',this)" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
     </nav>
