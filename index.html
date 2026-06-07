@@ -135,6 +135,97 @@
         body.light-mode .pdf-card:hover { border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,80,0.12); }
         body.light-mode .note-editor { background: rgba(255,255,255,0.7); }
         body.light-mode .note-toolbar button { background: rgba(0,0,80,0.07); border-color: var(--input-border); color: var(--text-main); }
+        /* ── ISLAM DASHBOARD ── */
+        .islam-hero { background: linear-gradient(135deg, rgba(0,180,100,0.18) 0%, rgba(0,120,70,0.12) 50%, rgba(0,80,40,0.08) 100%); border: 1px solid rgba(0,200,100,0.2); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .islam-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(0,220,120,0.15), transparent 70%); pointer-events: none; }
+        .islam-progress-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 18px; }
+        @media (min-width: 600px) { .islam-progress-grid { grid-template-columns: repeat(4, 1fr); } }
+        .islam-prog-card { background: rgba(0,0,0,0.2); border-radius: var(--radius-md); padding: 14px; text-align: center; border: 1px solid rgba(0,200,100,0.15); }
+        body.light-mode .islam-prog-card { background: rgba(0,180,80,0.07); }
+        .islam-prog-card .prog-icon { font-size: 1.5rem; margin-bottom: 6px; }
+        .islam-prog-card .prog-val { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: #00dc78; }
+        .islam-prog-card .prog-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+        /* Salah Tracker */
+        .salah-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .salah-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--glass-bg); border: 1px solid var(--glass-border); cursor: pointer; transition: border-color 0.2s, background 0.2s; user-select: none; }
+        .salah-item.done { background: rgba(0,220,120,0.1); border-color: #00dc78; }
+        .salah-cb { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s, border-color 0.2s; }
+        .salah-item.done .salah-cb { background: #00dc78; border-color: #00dc78; }
+        .salah-item.done .salah-cb::after { content: '✓'; color: #000; font-size: 13px; font-weight: 900; }
+        .salah-name { font-weight: 600; font-size: 0.92rem; }
+        /* Heatmap */
+        .islam-heatmap-wrap { overflow-x: auto; padding-bottom: 8px; }
+        .islam-heatmap { display: flex; flex-direction: column; gap: 3px; }
+        .hm-row { display: flex; gap: 3px; align-items: center; }
+        .hm-label { font-size: 0.62rem; color: var(--text-muted); width: 24px; flex-shrink: 0; text-align: right; margin-right: 4px; }
+        .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: rgba(255,0,0,0.25); flex-shrink: 0; cursor: pointer; transition: transform 0.1s; position: relative; }
+        .hm-cell:hover { transform: scale(1.4); z-index: 10; }
+        .hm-cell.hm-0 { background: rgba(255,60,60,0.35); }
+        .hm-cell.hm-1 { background: rgba(255,140,0,0.55); }
+        .hm-cell.hm-2 { background: rgba(255,140,0,0.55); }
+        .hm-cell.hm-3 { background: rgba(255,220,0,0.65); }
+        .hm-cell.hm-4 { background: rgba(255,220,0,0.65); }
+        .hm-cell.hm-5 { background: rgba(0,220,120,0.8); box-shadow: 0 0 4px rgba(0,220,120,0.5); }
+        .hm-cell.hm-future { background: rgba(255,255,255,0.04); }
+        .hm-tooltip { position: fixed; background: rgba(10,10,20,0.95); border: 1px solid rgba(0,220,120,0.3); color: #fff; font-size: 0.72rem; padding: 5px 10px; border-radius: 6px; pointer-events: none; z-index: 9999; white-space: nowrap; display: none; }
+        body.light-mode .hm-tooltip { background: rgba(255,255,255,0.97); color: var(--text-main); border-color: #00dc78; }
+        .hm-months { display: flex; gap: 3px; margin-bottom: 4px; padding-left: 28px; }
+        .hm-month-lbl { font-size: 0.62rem; color: var(--text-muted); }
+        /* Ayah & Hadith Cards */
+        .quran-card, .hadith-card { background: linear-gradient(135deg, rgba(0,180,100,0.1), rgba(0,100,60,0.06)); border: 1px solid rgba(0,200,100,0.18); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; }
+        .arabic-text { font-size: 1.6rem; line-height: 2; text-align: right; direction: rtl; color: #00dc78; font-weight: 600; margin-bottom: 14px; word-break: break-word; }
+        .pronunciation-text { font-size: 0.88rem; color: var(--text-secondary); font-style: italic; margin-bottom: 8px; line-height: 1.6; }
+        .meaning-text { font-size: 0.9rem; color: var(--text-main); line-height: 1.7; margin-bottom: 8px; }
+        .ref-text { font-size: 0.75rem; color: var(--text-muted); padding: 4px 10px; background: rgba(0,220,120,0.08); border-radius: 20px; display: inline-block; }
+        .read-checkbox { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 12px 16px; background: rgba(255,255,255,0.04); border-radius: var(--radius-sm); border: 1px dashed rgba(0,220,120,0.3); cursor: pointer; user-select: none; }
+        .read-checkbox.checked { background: rgba(0,220,120,0.08); border-color: #00dc78; }
+        .read-cb-box { width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--text-muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .read-checkbox.checked .read-cb-box { background: #00dc78; border-color: #00dc78; }
+        .read-checkbox.checked .read-cb-box::after { content: '✓'; color: #000; font-size: 12px; font-weight: 900; }
+        .card-nav-btns { display: flex; gap: 10px; margin-top: 14px; }
+        .card-nav-btns button { flex: 1; padding: 10px; border-radius: var(--radius-sm); background: rgba(0,220,120,0.1); border: 1px solid rgba(0,220,120,0.2); color: #00dc78; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.85rem; }
+        .card-nav-btns button:hover { background: rgba(0,220,120,0.2); }
+        /* Duas */
+        .dua-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 20px; margin-bottom: 14px; }
+        .dua-card:hover { border-color: rgba(0,220,120,0.3); }
+        .dua-num { font-size: 0.72rem; color: #00dc78; font-weight: 700; margin-bottom: 8px; }
+        .dua-btns { display: flex; gap: 8px; margin-top: 12px; }
+        .dua-btn { padding: 7px 14px; border-radius: var(--radius-sm); background: rgba(0,220,120,0.1); border: 1px solid rgba(0,220,120,0.2); color: #00dc78; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .dua-btn:hover { background: rgba(0,220,120,0.22); }
+        /* Achievements */
+        .islam-badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+        .islam-badge { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 18px 14px; text-align: center; transition: border-color 0.2s; }
+        .islam-badge.earned { border-color: #00dc78; background: rgba(0,220,120,0.07); }
+        .islam-badge.locked { opacity: 0.45; filter: grayscale(0.6); }
+        .islam-badge-icon { font-size: 2rem; margin-bottom: 8px; }
+        .islam-badge-name { font-size: 0.8rem; font-weight: 600; color: var(--text-main); }
+        .islam-badge-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; }
+        /* Stats */
+        .islam-stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        @media (min-width: 600px) { .islam-stat-grid { grid-template-columns: repeat(3, 1fr); } }
+        .islam-stat-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 18px; text-align: center; }
+        .islam-stat-val { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #00dc78; }
+        .islam-stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+        /* Reminder Cards */
+        .reminder-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+        .reminder-card { flex-shrink: 0; min-width: 160px; background: linear-gradient(135deg, rgba(0,180,100,0.15), rgba(0,80,40,0.1)); border: 1px solid rgba(0,200,100,0.2); border-radius: var(--radius-md); padding: 18px 14px; text-align: center; }
+        .reminder-card .r-icon { font-size: 1.8rem; margin-bottom: 8px; }
+        .reminder-card .r-text { font-size: 0.82rem; font-weight: 600; color: var(--text-main); line-height: 1.4; }
+        /* Section tabs inside Islam */
+        .islam-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .islam-tab { padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.2s, color 0.2s; }
+        .islam-tab.active { background: rgba(0,220,120,0.15); border-color: #00dc78; color: #00dc78; }
+        .islam-sub { display: none; }
+        .islam-sub.active { display: block; }
+        body.light-mode .islam-hero { background: linear-gradient(135deg, rgba(0,160,80,0.1), rgba(0,100,50,0.06)); }
+        body.light-mode .arabic-text { color: #007a3d; }
+        body.light-mode .islam-prog-card .prog-val { color: #007a3d; }
+        body.light-mode .dua-btn, body.light-mode .card-nav-btns button { color: #007a3d; background: rgba(0,160,80,0.08); border-color: rgba(0,160,80,0.18); }
+        body.light-mode .islam-badge.earned { border-color: #007a3d; background: rgba(0,160,80,0.06); }
+        body.light-mode .islam-stat-val { color: #007a3d; }
+        body.light-mode .ref-text { background: rgba(0,160,80,0.08); }
+        body.light-mode .hm-cell.hm-5 { background: rgba(0,160,80,0.8); }
+
         body.light-mode .timer-custom { background: rgba(255,255,255,0.5); border-color: var(--glass-border); }
         body.light-mode .timer-modes { background: rgba(0,0,80,0.07); }
         body.light-mode ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
@@ -1046,6 +1137,8 @@
             <div class="nav-item" onclick="switchView('vault',this);closeMobileDrawer()"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             
                          <div class="nav-item" onclick="switchView('groupfocus',this);closeMobileDrawer()"><i class="fa-solid fa-users"></i> Group Focus</div>
+            <div class="nav-item" onclick="switchView('friends',this);closeMobileDrawer()"><i class="fa-solid fa-user-group"></i> Friends</div>
+            <div class="nav-item" onclick="switchView('islamdash',this);closeMobileDrawer()"><span style="margin-right:6px;">☪️</span> Study With Islam</div>
             <div class="nav-item" onclick="switchView('profile',this);closeMobileDrawer()"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <div class="drawer-footer">
@@ -1084,7 +1177,10 @@
             <div class="nav-item" onclick="switchView('achievements',this)"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
             <div class="nav-item" onclick="switchView('leaderboard',this)"><i class="fa-solid fa-ranking-star"></i> Leaderboard</div>
-                        <div class="nav-item" onclick="switchView('groupfocus',this)"><i class="fa-solid fa-users"></i> Group Focus</div>            <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
+                        <div class="nav-item" onclick="switchView('groupfocus',this)"><i class="fa-solid fa-users"></i> Group Focus</div>
+            <div class="nav-item" onclick="switchView('friends',this)"><i class="fa-solid fa-user-group"></i> Friends</div>
+            <div class="nav-item" onclick="switchView('islamdash',this)"><span style="margin-right:6px;">☪️</span> Study With Islam</div>
+            <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
         <footer>
             <p>Developed by<br><a href="https://oyasimsajjad-code.github.io/myprofile.com/" target="_blank">Oyasim Sajjad</a></p>
@@ -1703,6 +1799,172 @@
     <div id="rt-routine-container"></div>
   </div>
 </section>
+        <!-- Study With Islam Section -->
+<section id="view-islamdash" class="view-section">
+  <div class="section-header">
+    <h2 class="section-title"><span style="margin-right:10px;">☪️</span>Study With Islam</h2>
+  </div>
+
+  <!-- Hero Dashboard Card -->
+  <div class="islam-hero glass">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <span style="font-size:2rem;">☪️</span>
+      <div>
+        <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;">Study With Islam</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">Today's Progress</div>
+      </div>
+    </div>
+    <div class="islam-progress-grid">
+      <div class="islam-prog-card">
+        <div class="prog-icon">🕌</div>
+        <div class="prog-val" id="isl-salah-prog">0/5</div>
+        <div class="prog-label">Salah Today</div>
+      </div>
+      <div class="islam-prog-card">
+        <div class="prog-icon">📖</div>
+        <div class="prog-val" id="isl-ayah-prog">0</div>
+        <div class="prog-label">Ayat Read</div>
+      </div>
+      <div class="islam-prog-card">
+        <div class="prog-icon">📚</div>
+        <div class="prog-val" id="isl-hadith-prog">0</div>
+        <div class="prog-label">Hadith Read</div>
+      </div>
+      <div class="islam-prog-card">
+        <div class="prog-icon">🔥</div>
+        <div class="prog-val" id="isl-streak-prog">0</div>
+        <div class="prog-label">Day Streak</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Islamic Reminder Cards -->
+  <div style="margin-bottom:20px;">
+    <div class="reminder-scroll">
+      <div class="reminder-card"><div class="r-icon">🕌</div><div class="r-text">Pray Before You Study</div></div>
+      <div class="reminder-card"><div class="r-icon">📖</div><div class="r-text">Start With Quran</div></div>
+      <div class="reminder-card"><div class="r-icon">🤲</div><div class="r-text">Make Dua Before Learning</div></div>
+      <div class="reminder-card"><div class="r-icon">⏰</div><div class="r-text">Protect Your Time</div></div>
+      <div class="reminder-card"><div class="r-icon">🎯</div><div class="r-text">Study With Discipline</div></div>
+      <div class="reminder-card"><div class="r-icon">💡</div><div class="r-text">Seek Knowledge Always</div></div>
+    </div>
+  </div>
+
+  <!-- Section Tabs -->
+  <div class="islam-tabs">
+    <div class="islam-tab active" onclick="islamSwitchTab('salah',this)">🕌 Salah</div>
+    <div class="islam-tab" onclick="islamSwitchTab('heatmap',this)">📊 Heatmap</div>
+    <div class="islam-tab" onclick="islamSwitchTab('ayah',this)">📖 Ayah</div>
+    <div class="islam-tab" onclick="islamSwitchTab('hadith',this)">📚 Hadith</div>
+    <div class="islam-tab" onclick="islamSwitchTab('duas',this)">🧠 Study Duas</div>
+    <div class="islam-tab" onclick="islamSwitchTab('badges',this)">🏅 Achievements</div>
+    <div class="islam-tab" onclick="islamSwitchTab('stats',this)">📈 Statistics</div>
+  </div>
+
+  <!-- SUB: Salah Tracker -->
+  <div class="islam-sub active" id="isl-sub-salah">
+    <div class="glass" style="padding:22px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="color:var(--text-main);">🕌 Daily Salah Tracker</h3>
+        <div id="isl-salah-pct-badge" style="font-family:var(--font-display);font-size:1rem;font-weight:800;color:#00dc78;background:rgba(0,220,120,0.1);padding:4px 14px;border-radius:20px;border:1px solid rgba(0,220,120,0.25);">0%</div>
+      </div>
+      <div class="salah-grid" id="isl-salah-grid"></div>
+    </div>
+  </div>
+
+  <!-- SUB: Yearly Heatmap -->
+  <div class="islam-sub" id="isl-sub-heatmap">
+    <div class="glass" style="padding:22px;margin-bottom:16px;">
+      <h3 style="color:var(--text-main);margin-bottom:6px;">📊 Yearly Prayer Heatmap</h3>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:16px;">Each cell = 1 day | 🟩 5/5 &nbsp; 🟨 3-4 &nbsp; 🟧 1-2 &nbsp; 🟥 0</p>
+      <div class="islam-heatmap-wrap">
+        <div id="isl-heatmap-months" class="hm-months"></div>
+        <div id="isl-heatmap" class="islam-heatmap"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;text-align:center;">
+        <div class="glass" style="padding:14px;">
+          <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:#00dc78;" id="isl-hm-week">0%</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">This Week</div>
+        </div>
+        <div class="glass" style="padding:14px;">
+          <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:#00dc78;" id="isl-hm-month">0%</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">This Month</div>
+        </div>
+        <div class="glass" style="padding:14px;">
+          <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:#00dc78;" id="isl-hm-year">0%</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">This Year</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB: Ayah -->
+  <div class="islam-sub" id="isl-sub-ayah">
+    <div class="quran-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <h3 style="color:var(--text-main);">📖 Today's Ayah</h3>
+        <div style="font-size:0.78rem;color:var(--text-muted);" id="isl-ayah-counter">Ayah 1 of 50</div>
+      </div>
+      <div class="arabic-text" id="isl-ayah-arabic"></div>
+      <div class="pronunciation-text" id="isl-ayah-pronounce"></div>
+      <div class="meaning-text" id="isl-ayah-bangla"></div>
+      <div class="meaning-text" style="color:var(--text-secondary);" id="isl-ayah-english"></div>
+      <div style="margin-top:8px;"><span class="ref-text" id="isl-ayah-ref"></span></div>
+      <div class="read-checkbox" id="isl-ayah-check" onclick="islToggleAyahRead()">
+        <div class="read-cb-box"></div>
+        <span style="font-size:0.85rem;color:var(--text-muted);">আমি আজকের আয়াতটি মনোযোগ দিয়ে পড়েছি</span>
+      </div>
+      <div class="card-nav-btns">
+        <button onclick="islAyahNav(-1)">← Previous</button>
+        <button onclick="islAyahNav(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB: Hadith -->
+  <div class="islam-sub" id="isl-sub-hadith">
+    <div class="hadith-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <h3 style="color:var(--text-main);">📚 Today's Hadith</h3>
+        <div style="font-size:0.78rem;color:var(--text-muted);" id="isl-hadith-counter">Hadith 1 of 20</div>
+      </div>
+      <div style="font-size:0.75rem;font-weight:700;color:#00dc78;margin-bottom:10px;" id="isl-hadith-cat"></div>
+      <div class="meaning-text" id="isl-hadith-text" style="font-size:1rem;line-height:1.75;"></div>
+      <div style="margin-top:12px;"><span class="ref-text" id="isl-hadith-ref"></span></div>
+      <div class="read-checkbox" id="isl-hadith-check" onclick="islToggleHadithRead()">
+        <div class="read-cb-box"></div>
+        <span style="font-size:0.85rem;color:var(--text-muted);">আমি আজকের হাদিসটি মনোযোগ দিয়ে পড়েছি</span>
+      </div>
+      <div class="card-nav-btns">
+        <button onclick="islHadithNav(-1)">← Previous</button>
+        <button onclick="islHadithNav(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB: Study Duas -->
+  <div class="islam-sub" id="isl-sub-duas">
+    <h3 style="color:var(--text-main);margin-bottom:16px;">🧠 Study Duas</h3>
+    <div id="isl-duas-list"></div>
+  </div>
+
+  <!-- SUB: Achievements -->
+  <div class="islam-sub" id="isl-sub-badges">
+    <h3 style="color:var(--text-main);margin-bottom:16px;">🏅 Islamic Achievements</h3>
+    <div class="islam-badge-grid" id="isl-badge-grid"></div>
+  </div>
+
+  <!-- SUB: Statistics -->
+  <div class="islam-sub" id="isl-sub-stats">
+    <h3 style="color:var(--text-main);margin-bottom:16px;">📈 Islamic Statistics</h3>
+    <div class="islam-stat-grid" id="isl-stat-grid"></div>
+  </div>
+
+</section>
+
+<!-- Heatmap Tooltip -->
+<div class="hm-tooltip" id="hm-tooltip"></div>
+
         <!-- Friends Section -->
 <section id="view-friends" class="view-section">
   <div class="section-header">
@@ -2167,8 +2429,7 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
-        <div class="b-nav-item" onclick="switchView('friends',this)" style="position:relative;"><i class="fa-solid fa-user-group"></i>Friends<span id="bnav-friends-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;"></span></div>
-        <div class="b-nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i>Routine</div>
+        <div class="b-nav-item" onclick="switchView('islamdash',this)"><span style="font-size:1.05rem;line-height:1;">☪️</span>Islam</div>
         <div class="b-nav-item" onclick="switchView('inbox',this)" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
     </nav>
@@ -2663,14 +2924,14 @@ function updateGreeting() {
 }
 
 /* ---- NAVIGATION ---- */
-const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16 };
-const BNAV_INDEX = { dashboard:0, library:1, friends:2, routine:3, inbox:4, pomodoro:5 };
+const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16, islamdash:17 };
+const BNAV_INDEX = { dashboard:0, library:1, islamdash:2, inbox:3, pomodoro:4 };
 
 const VIEW_ID_MAP = {
     dashboard:0, todo:1, notes:2, pomodoro:3, revision:4,
     analytics:5, goals:6, achievements:7, vault:8, routine:9,
     leaderboard:10, groupfocus:11, profile:12,
-    challenge:-1, library:-1, friends:-1, inbox:-1, admin:-1
+    challenge:-1, library:-1, friends:-1, inbox:-1, admin:-1, islamdash:-1
 };
 
 function syncNavHighlight(viewId) {
@@ -2725,6 +2986,7 @@ function switchView(viewId, navEl) {
             loadFriendsList().then(renderFriendsSection);
         }
     }
+    if (viewId === 'islamdash') { initIslamDash(); }
     if (viewId === 'inbox') {
         renderInbox();
         setTimeout(() => {
@@ -9805,6 +10067,575 @@ window.switchView = function(viewId, navEl) {
     if (typeof origSwitch === 'function') origSwitch(viewId, navEl);
     logEvent(analytics, 'page_view', { page_title: viewId });
 };
+
+/* ============================================================
+   ☪️  STUDY WITH ISLAM  —  Full Feature Module
+   ============================================================ */
+
+/* ── LOCAL DATABASES ── */
+const ISL_AYAT = [
+  { id:1, arabic:'وَقُل رَّبِّ زِدْنِي عِلْمًا', pronounce:'ওয়া কুল রাব্বি যিদনী ইলমা।', bangla:'"আর বলো— হে আমার প্রতিপালক! আমার জ্ঞান বৃদ্ধি করে দিন।"', english:'"And say, \'My Lord, increase me in knowledge.\'"', ref:'সূরা ত্বহা: ১১৪' },
+  { id:2, arabic:'اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ', pronounce:'ইকরা বিইছমি রাব্বিকাল্লাযী খালাক্ব।', bangla:'"পাঠ করো তোমার প্রতিপালকের নামে, যিনি সৃষ্টি করেছেন।"', english:'"Recite in the name of your Lord who created."', ref:'সূরা আল-আলাক: ১' },
+  { id:3, arabic:'الَّذِي عَلَّمَ بِالْقَلَمِ', pronounce:'আল্লাযী আল্লামা বিল ক্বালাম।', bangla:'"যিনি কলমের সাহায্যে শিক্ষা দিয়েছেন।"', english:'"Who taught by the pen."', ref:'সূরা আল-আলাক: ৪' },
+  { id:4, arabic:'عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ', pronounce:'আল্লামাল ইনছানা মা লাম ইয়া\'লাম।', bangla:'"তিনি মানুষকে শিক্ষা দিয়েছেন যা সে জানত না।"', english:'"Taught man that which he knew not."', ref:'সূরা আল-আলাক: ৫' },
+  { id:5, arabic:'قُلْ هَلْ يَسْتَوِي الَّذِينَ يَعْلَمُونَ وَالَّذِينَ لَا يَعْلَمُونَ', pronounce:'কুল হাল ইয়াছতাবিল্লাযীনা ইয়া\'লামূনা ওয়াল্লাযীনা লা ইয়া\'লামূন।', bangla:'"বলো, যারা জানে আর যারা জানে না, তারা কি সমান হতে পারে?"', english:'"Say, \'Are those who know equal to those who do not know?\'"', ref:'সূরা আয-যুমার: ৯' },
+  { id:6, arabic:'يَرْفَعِ اللَّهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ', pronounce:'ইয়ারফায়িল্লাহুল্লাযীনা আমানূ মিনকুম ওয়াল্লাযীনা ঊতুল ইলমা দারাজাত।', bangla:'"আল্লাহ তাদের মর্যাদা বহুগুণ বাড়িয়ে দেবেন যারা ঈমান এনেছে ও জ্ঞান লাভ করেছে।"', english:'"Allah will raise those who have believed and those who were given knowledge, by degrees."', ref:'সূরা আল-মুজাদালাহ: ১১' },
+  { id:7, arabic:'وَأَن لَّيْسَ لِلْإِنسَانِ إِلَّا مَا سَعَىٰ', pronounce:'ওয়া আল লাইছা লিল ইনছানি ইল্লা মা ছা\'আ।', bangla:'"মানুষ কেবল তা-ই পায়, যার জন্য সে চেষ্টা করে।"', english:'"And that there is not for man except that for which he strives."', ref:'সূরা আন-নাজম: ৩৯' },
+  { id:8, arabic:'فَإِذَا فَرَغْتَ فَانصَبْ', pronounce:'ফাইযা ফারাগ্বতা ফানছ্বাব।', bangla:'"তুমি যখনই অবসর পাবে, তখনই কঠোর পরিশ্রমে নিয়োজিত হও।"', english:'"So when you have finished [your duties], labor to toil."', ref:'সূরা আশ-শারহ: ৭' },
+  { id:9, arabic:'فَإِنَّ مَعَ الْعُسْرِ يُسْرًا', pronounce:'ফাইন্না মাআল উছরি ইয়ুছরা।', bangla:'"নিশ্চয়ই কষ্টের সাথেই স্বস্তি রয়েছে।"', english:'"For indeed, with hardship [will be] ease."', ref:'সূরা আশ-শারহ: ৫' },
+  { id:10, arabic:'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ', pronounce:'আলা বিযিক্রিল্লাহি তাত্বমাইন্নুল কুলূব।', bangla:'"জেনে রাখো, আল্লাহর স্মরণের মাধ্যমেই অন্তরসমূহ প্রশান্ত হয়।"', english:'"Unquestionably, by the remembrance of Allah hearts are assured."', ref:'সূরা আর-রাদ: ২৮' },
+  { id:11, arabic:'وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ', pronounce:'ওয়া মাইঁ ইয়াতাওয়াক্কাল আলাল্লাহি ফাহুয়া হাছবুহ।', bangla:'"যে ব্যক্তি আল্লাহর ওপর ভরসা করে, তার জন্য আল্লাহই যথেষ্ট।"', english:'"And whoever relies upon Allah — then He is sufficient for him."', ref:'সূরা আত-তালাক: ৩' },
+  { id:12, arabic:'لَا تَحْزَنْ إِنَّ اللَّهَ مَعَنَا', pronounce:'লা তাহযান ইন্নাল্লাহা মাআনা।', bangla:'"হতাশ হইয়ো না, নিশ্চয়ই আল্লাহ আমাদের সাথে আছেন।"', english:'"Do not grieve; indeed Allah is with us."', ref:'সূরা আত-তাওবাহ: ৪০' },
+  { id:13, arabic:'لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا', pronounce:'লা ইউকাল্লিফুল্লাহু নাফছান ইল্লা উছআহা।', bangla:'"আল্লাহ কাউকে তার সাধ্যের অতীত কার্যভার দেন না।"', english:'"Allah does not charge a soul except with that within its capacity."', ref:'সূরা আল-বাকারাহ: ২৮৬' },
+  { id:14, arabic:'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ', pronounce:'হাছবুনাল্লাহু ওয়া নি\'মাল ওয়াকীল।', bangla:'"আল্লাহই আমাদের জন্য যথেষ্ট এবং তিনি কতই না উত্তম কর্মবিধায়ক।"', english:'"Sufficient for us is Allah, and [He is] the best Disposer of affairs."', ref:'সূরা আলি ইমরান: ১৭৩' },
+  { id:15, arabic:'وَاللَّهُ مَعَ الصَّابِرِينَ', pronounce:'ওয়াল্লাহু মাআস্স্বাবিরীন।', bangla:'"আল্লাহ ধৈর্যশীলদের সাথে আছেন।"', english:'"And Allah is with the patient."', ref:'সূরা আল-বাকারাহ: ২৪৯' },
+  { id:16, arabic:'وَقُولُوا لِلنَّاسِ حُسْنًا', pronounce:'ওয়া কূলূ লিন্নাছি হুছনা।', bangla:'"আর মানুষের সাথে সুন্দর ও নম্রভাবে কথা বলো।"', english:'"And speak to people good [words]."', ref:'সূরা আল-বাকারাহ: ৮৩' },
+  { id:17, arabic:'وَالْعَصْرِ ۝ إِنَّ الْإِنسَانَ لَفِي خُسْرٍ', pronounce:'ওয়াল আছর। ইনাল ইনছানা লাফী খুছর।', bangla:'"সময়ের শপথ! নিশ্চয়ই মানুষ চরম ক্ষতির মধ্যে রয়েছে।"', english:'"By time, Indeed, mankind is in loss."', ref:'সূরা আল-আছর: ১-২' },
+  { id:18, arabic:'لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ', pronounce:'লাইঁ শাকারতুম লাআযীদান্নাকুম।', bangla:'"যদি তোমরা কৃতজ্ঞতা প্রকাশ করো, তবে আমি অবশ্যই তোমাদের নেয়ামত বাড়িয়ে দেব।"', english:'"If you are grateful, I will surely increase you [in favor]."', ref:'সূরা ইব্রাহিম: ৭' },
+  { id:19, arabic:'قَدْ أَفْلَحَ مَن زَكَّاهَا', pronounce:'ক্বাদ আফলাহা মান যাক্কাহা।', bangla:'"সফলকাম হয়েছে সেই ব্যক্তি, যে নিজের আত্মাকে পরিশুদ্ধ করেছে।"', english:'"He has succeeded who purifies it."', ref:'সূরা আশ-শামস: ৯' },
+  { id:20, arabic:'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ', pronounce:'ইহদিনাছ ছ্বিরাত্বাল মুছতাক্বীম।', bangla:'"আমাদেরকে সরল সঠিক পথ প্রদর্শন করুন।"', english:'"Guide us to the straight path."', ref:'সূরা আল-ফাতিহা: ৬' },
+  { id:21, arabic:'إِنَّ أَكْرَمَكُمْ عِندِ اللَّهِ أَتْقَاكُمْ', pronounce:'ইন্না আকরামাকুম ইনদিল্লাহি আতক্বাকুম।', bangla:'"আল্লাহর কাছে সবচেয়ে মর্যাদাবান সেই ব্যক্তি যে বেশি তাকওয়াবান।"', english:'"Indeed, the most noble of you in the sight of Allah is the most righteous of you."', ref:'সূরা আল-হুজুরাত: ১৩' },
+  { id:22, arabic:'وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا', pronounce:'ওয়াল্লাযীনা জাহাদূ ফীনা লানাহদিয়ান্নাহুম ছুবুলানা।', bangla:'"যারা আমার পথে সর্বাত্মক চেষ্টা করে, আমি তাদের পথ দেখাব।"', english:'"And those who strive for Us — We will surely guide them to Our ways."', ref:'সূরা আল-আনকাবুত: ৬৯' },
+  { id:23, arabic:'فَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ خَيْرًا يَرَهُ', pronounce:'ফামান ইয়া\'মাল মিছক্বালা যাররাতিন খাইরাইঁ ইয়ারাহ।', bangla:'"কেউ অণু পরিমাণ সৎকাজ করলে সে তা দেখতে পাবে।"', english:'"So whoever does an atom\'s weight of good will see it."', ref:'সূরা আয-যিলযাল: ৭' },
+  { id:24, arabic:'إِنَّ اللَّهَ لَا يُضِيعُ أَجْرَ الْمُحْسِنِينَ', pronounce:'ইন্নাল্লাহা লা ইয়ুদ্বীউ আজরাল মুহছিনীন।', bangla:'"নিশ্চয়ই আল্লাহ সৎকর্মপরায়ণদের শ্রমফল নষ্ট করেন না।"', english:'"Indeed, Allah does not allow to be lost the reward of the doers of good."', ref:'সূরা আত-তাওবাহ: ১২০' },
+  { id:25, arabic:'وَبِالْوَالِدَيْنِ إِحْسَانًا', pronounce:'ওয়া বিল ওয়ালিদাইনি ইহছানা।', bangla:'"এবং পিতা-মাতার সাথে উত্তম ও সদয় ব্যবহার করো।"', english:'"And to parents, good treatment."', ref:'সূরা আল-ইসরা: ২৩' },
+  { id:26, arabic:'لَا تَقْنَطُوا مِن رَّحْمَةِ اللَّهِ', pronounce:'লা তাক্বনাতূ মির রাহমাতিল্লাহ।', bangla:'"তোমরা আল্লাহর রহমত থেকে নিরাশ হইয়ো না।"', english:'"Do not despair of the mercy of Allah."', ref:'সূরা আয-যুমার: ৫৩' },
+  { id:27, arabic:'وَهُوَ مَعَكُمْ أَيْنَ مَا كُنتُمْ', pronounce:'ওয়া হুয়া মাআকুম আইনা মা কুনতুম।', bangla:'"তোমরা যেখানেই থাকো না কেন, তিনি তোমাদের সাথেই আছেন।"', english:'"And He is with you wherever you are."', ref:'সূরা আল-হাদীদ: ৪' },
+  { id:28, arabic:'يُرِيدُ اللَّهُ بِكُمُ الْيُسْرَ وَلَا يُرِيدُ بِكُمُ الْعُسْرَ', pronounce:'ইউরীদুল্লাহু বিকুমুল ইয়ুছরা ওয়া লা ইউরীদু বিকুমুল উছর।', bangla:'"আল্লাহ তোমাদের জন্য সহজ করতে চান এবং কঠিন করতে চান না।"', english:'"Allah intends for you ease and does not intend for you hardship."', ref:'সূরা আল-বাকারাহ: ১৮৫' },
+  { id:29, arabic:'وَإِنَّكَ لَعَلَىٰ خُلُقٍ عَظِيمٍ', pronounce:'ওয়া ইন্নাকা লাআলা খুলুক্বিন আযীম।', bangla:'"আর নিশ্চয়ই আপনি মহান চরিত্রের ওপর অধিষ্ঠিত।"', english:'"And indeed, you are of a great moral character."', ref:'সূরা আল-কালাম: ৪' },
+  { id:30, arabic:'وَمَا الْحَيَاةُ الدُّنْيَا إِلَّا مَتَاعُ الْغُرُورِ', pronounce:'ওয়ামাল হায়াতুদ দুনইয়া ইল্লা মাতাউল গুরূর।', bangla:'"পার্থিব জীবন ধোঁকার বস্তু ছাড়া আর কিছুই নয়।"', english:'"And what is the worldly life except the enjoyment of delusion."', ref:'সূরা আল-ইমরান: ১৮৫' },
+  { id:31, arabic:'إِنَّ الْحَسَنَاتِ يُذْهِبْنَ السَّيِّئَاتِ', pronounce:'ইন্নাল হাছানাতি ইয়ুযহিবনাস ছাইয়িআত।', bangla:'"নিশ্চয়ই সৎ কাজ অসৎ কাজকে মিটিয়ে দেয়।"', english:'"Indeed, good deeds do away with misdeeds."', ref:'সূরা হূদ: ১১৪' },
+  { id:32, arabic:'وَمَا خَلَقْتُ الْجِنَّ وَالْإِنسَ إِلَّا لِيَعْبُدُونِ', pronounce:'ওয়ামা খালাক্বতুল জিন্না ওয়াল ইনছা ইল্লা লিইয়া\'বুদূন।', bangla:'"আমি জিন ও মানুষকে কেবল আমার ইবাদতের জন্যই সৃষ্টি করেছি।"', english:'"And I did not create the jinn and mankind except to worship Me."', ref:'সূরা আজ-যারিয়াত: ৫৬' },
+  { id:33, arabic:'الرَّحْمَٰنُ ۝ عَلَّمَ الْقُرْآنَ', pronounce:'আর-রাহমান। আল্লামাল কুরআন।', bangla:'"পরম দয়াময় আল্লাহ, তিনি শিক্ষা দিয়েছেন কোরআন।"', english:'"The Most Merciful. Taught the Qur\'an."', ref:'সূরা আর-রহমান: ১-২' },
+  { id:34, arabic:'وَعَلَّمَكَ مَا لَمْ تَكُن تَعْلَمُ', pronounce:'ওয়া আল্লামাকা মা লাম তাকুন তা\'লাম।', bangla:'"এবং তিনি তোমাকে এমন কিছু শিখিয়েছেন যা তুমি জানতে না।"', english:'"And has taught you that which you did not know."', ref:'সূরা আন-নিসা: ১১৩' },
+  { id:35, arabic:'يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَقُولُوا قَوْلًا سَدِيدًا', pronounce:'ইয়া আইয়ুহাল্লাযীনা আমানুত তাকুল্লাহ ওয়া কূলূ ক্বওলান ছাদীদা।', bangla:'"হে ঈমানদারগণ! আল্লাহকে ভয় করো এবং সঠিক ও সত্য কথা বলো।"', english:'"O you who have believed, fear Allah and speak words of appropriate justice."', ref:'সূরা আল-আহযাব: ৭০' },
+  { id:36, arabic:'سَنُقْرِئُكَ فَلَا تَنسَىٰ', pronounce:'ছানুক্বরিউকা ফালা তানছা।', bangla:'"আমি তোমাকে পাঠ করাব, ফলে তুমি ভুলে যাবে না।"', english:'"We will make you recite, and you will not forget."', ref:'সূরা আল-আলা: ৬' },
+  { id:37, arabic:'وَاقْصِدْ فِي مَشْيِكَ وَاغْضُضْ مِن صَوْتِكَ', pronounce:'ওয়াক্বছিদ ফী মাশয়িকা ওয়াগ্দ্বুদ্ব মিন ছওতিক।', bangla:'"তোমার চলায় মধ্যপন্থা অবলম্বন করো এবং তোমার কণ্ঠস্বর নিচু করো।"', english:'"And be moderate in your pace and lower your voice."', ref:'সূরা লোকমান: ১৯' },
+  { id:38, arabic:'وَإِن تَعُدُّوا نِعْمَةَ اللَّهِ لَا تُحْصُوهَا', pronounce:'ওয়া ইন তাউদ্দূ নি\'মাতাল্লাহি লা তুহছূহা।', bangla:'"আর যদি আল্লাহর নেয়ামতসমূহ গণনা করো, তবে শেষ করতে পারবে না।"', english:'"And if you should count the favors of Allah, you could not enumerate them."', ref:'সূরা আন-নাহল: ১৮' },
+  { id:39, arabic:'ن ۚ وَالْقَلَمِ وَمَا يَسْطُرُونَ', pronounce:'নূন, ওয়াল ক্বালামি ওয়ামা ইয়াছত্বুরুন।', bangla:'"নূন, শপথ কলমের এবং তারা যা লিপিবিদ্ধ করে তার।"', english:'"Nun. By the pen and what they inscribe."', ref:'সূরা আল-কালাম: ১' },
+  { id:40, arabic:'لَا تُصَعِّرْ خَدَّكَ لِلنَّاسِ وَلَا تَمْشِ فِي الْأَرْضِ مَرَحًا', pronounce:'ওয়া লা তুছ্বাই\'ইর খাদ্দাকা লিন্নাছি ওয়া লা তামশি ফিল আরদ্বি মারাহা।', bangla:'"অহঙ্কারবশত মানুষের থেকে মুখ ফিরিয়ে নিয়ো না এবং দম্ভভরে চলো না।"', english:'"Do not turn your cheek toward people and do not walk through the earth exultantly."', ref:'সূরা লোকমান: ১৮' },
+  { id:41, arabic:'أَنِّي لَا أُضِيعُ عَمَلَ عَامِلٍ مِّنكُم', pronounce:'আন্নী লা উদ্বীউ আমালা আমিলিম মিনকুম।', bangla:'"আমি তোমাদের কোনো কর্মীর কর্ম নিষ্ফল করি না।"', english:'"Never will I allow to be lost the work of any worker among you."', ref:'সূরা আলি ইমরান: ১৯৫' },
+  { id:42, arabic:'إِنَّ هَٰذَا كَانَ لَكُمْ جَزَاءً وَكَانَ سَعْيُكُم مَّشْكُورًا', pronounce:'ইন্না হাযা কানা লাকুম জাযাআও ওয়া ছা\'ইউকুম মাশকূরা।', bangla:'"এটি তোমাদের পুরস্কার এবং তোমাদের প্রচেষ্টা প্রশংসিত হয়েছে।"', english:'"Indeed, this is for you a reward, and your effort has been appreciated."', ref:'সূরা আল-ইনসান: ২২' },
+  { id:43, arabic:'وَأَنَّ سَعْيَهُ سَوْفَ يُرَىٰ', pronounce:'ওয়া আন্না ছা\'ইয়াহূ ছাওফা ইয়ুরা।', bangla:'"আর তার প্রচেষ্টা শীঘ্রই মূল্যায়ন করা হবে।"', english:'"And that his effort is going to be seen."', ref:'সূরা আন-নাজম: ৪০' },
+  { id:44, arabic:'وَإِلَىٰ رَبِّكَ فَارْغَب', pronounce:'ওয়া ইলা রাব্বিকা ফারগ্বাব।', bangla:'"আর তোমার প্রতিপালকের প্রতিই গভীরভাবে মনোযোগী হও।"', english:'"And to your Lord direct [your] longing."', ref:'সূরা আশ-শারহ: ৮' },
+  { id:45, arabic:'يَا أَيُّهَا الَّذِينَ آمَنُوا اجْتَنِبُوا كَثِيرًا مِّنَ الظَّنِّ', pronounce:'ইয়া আইয়ুহাল্লাযীনা আমানুজ তানিভূম কাছীরাম মিনায যান্নি।', bangla:'"হে মুমিনগণ! তোমরা অধিকাংশ অনুমান থেকে দূরে থাকো।"', english:'"O you who have believed, avoid much negative assumption."', ref:'সূরা আল-হুজুরাত: ১২' },
+  { id:46, arabic:'وَلَا تَجَسَّسُوا وَلَا يَغْتَب بَّعْضُكُم بَعْضًا', pronounce:'ওয়া লা তাজাচ্ছাচূ ওয়া লা ইয়াগতাব বা\'দ্বুকুম বা\'দ্বা।', bangla:'"একে অপরের গোপনীয়তা অনুসন্ধান কোরো না এবং গীবত কোরো না।"', english:'"And do not spy or backbite each other."', ref:'সূরা আল-হুজুরাত: ১২' },
+  { id:47, arabic:'كُلُّ نَفْسٍ ذَائِقَةُ الْمَوْتِ', pronounce:'কুল্লু নাফছিন যা-ইক্বাতুল মাওত।', bangla:'"প্রত্যেক জীবকেই মৃত্যুর স্বাদ গ্রহণ করতে হবে।"', english:'"Every soul will taste death."', ref:'সূরা আল-ইমরান: ১৮৫' },
+  { id:48, arabic:'وَلَا تَقْفُ مَا لَيْسَ لَكَ بِهِ عِلْمٌ', pronounce:'ওয়া লা তাকফু মা লাইছা লাকা বিহী ইলম।', bangla:'"যে বিষয়ে তোমার কোনো জ্ঞান নেই, তার পেছনে পোড়ো না।"', english:'"And do not pursue that of which you have no knowledge."', ref:'সূরা আল-ইসরা: ৩৬' },
+  { id:49, arabic:'ثُمَّ يُجْزَاهُ الْجَزَاءَ الْأَوْفَىٰ', pronounce:'ছুম্মা ইয়ুজযাহুল জাযাআল আওফা।', bangla:'"অতঃপর তাকে দেওয়া হবে পূর্ণাঙ্গ পুরস্কার।"', english:'"Then he will be recompensed for it with the fullest recompense."', ref:'সূরা আন-নাজম: ৪১' },
+  { id:50, arabic:'وَهُوَ مَعَكُمْ أَيْنَ مَا كُنتُمْ', pronounce:'ওয়া হুয়া মাআকুম আইনা মা কুনতুম।', bangla:'"তোমরা যেখানেই থাকো না কেন, তিনি তোমাদের সাথেই আছেন।"', english:'"And He is with you wherever you are."', ref:'সূরা আল-হাদীদ: ৪' }
+];
+
+const ISL_AHADITH = [
+  { id:1, cat:'নিয়ত', text:'"নিশ্চয়ই সমস্ত কাজ নিয়তের ওপর নির্ভরশীল।"', ref:'সহিহ বুখারী: ১' },
+  { id:2, cat:'শিক্ষা ও জ্ঞান অর্জন', text:'"তোমাদের মধ্যে সর্বোত্তম ব্যক্তি সে, যে নিজে কোরআন শেখে এবং অন্যকে শেখায়।"', ref:'সহিহ বুখারী: ৫০২৭' },
+  { id:3, cat:'আচরণ ও ভদ্রতা', text:'"যার হাত ও জিহ্বা থেকে অন্য মুসলমান নিরাপদ থাকে, সে-ই প্রকৃত মুসলমান।"', ref:'সহিহ বুখারী: ১০' },
+  { id:4, cat:'পরোপকার', text:'"তোমরা পৃথিবীতে যারা আছে তাদের প্রতি দয়া করো, তাহলে আকাশে যিনি আছেন তিনি তোমাদের প্রতি দয়া করবেন।"', ref:'সুনানে তিরমিযী: ১৯২৪' },
+  { id:5, cat:'সুন্দর চরিত্র', text:'"মুমিনদের মধ্যে ইমানের দিক থেকে সম্পূর্ণ নিখুঁত সেই ব্যক্তি, যার চরিত্র সবচেয়ে সুন্দর।"', ref:'সুনানে আবু দাউদ: ৪৬৮২' },
+  { id:6, cat:'রাগ নিয়ন্ত্রণ', text:'"প্রকৃত শক্তিশালী সে, যে রাগের সময় নিজেকে নিয়ন্ত্রণ করতে পারে।"', ref:'সহিহ বুখারী: ৬১১৪' },
+  { id:7, cat:'পরিষ্কার-পরিচ্ছন্নতা', text:'"পবিত্রতা ইমানের অর্ধেক।"', ref:'সহিহ মুসলিম: ২২৩' },
+  { id:8, cat:'সত্যবাদিতা', text:'"তোমরা সত্যকে আঁকড়ে ধরো, কারণ সত্য মানুষকে সৎ কাজের পথ দেখায়, আর সৎ কাজ জান্নাতের পথ দেখায়।"', ref:'সহিহ মুসলিম: ২৬০৭' },
+  { id:9, cat:'অল্পে তুষ্টি', text:'"আসল ধনী হলো অন্তরের ধনী।"', ref:'সহিহ বুখারী: ৬৪৪৬' },
+  { id:10, cat:'সহজ করা', text:'"তোমরা মানুষের জন্য সহজ করো, কঠিন করো না; সুসংবাদ দাও, মানুষকে দূরে সরিয়ে দিও না।"', ref:'সহিহ বুখারী: ৬৯' },
+  { id:11, cat:'পরনিন্দা', text:'"চোগলখোর জান্নাতে প্রবেশ করবে না।"', ref:'সহিহ বুখারী: ৬০৫৬' },
+  { id:12, cat:'দান-সদকার গুরুত্ব', text:'"একটি খেজুরের টুকরো দিয়ে হলেও তোমরা জাহান্নামের আগুন থেকে বাঁচার চেষ্টা করো।"', ref:'সহিহ বুখারী: ১৪১৭' },
+  { id:13, cat:'ভালো কথা বলা', text:'"যে ব্যক্তি আল্লাহ ও পরকালের ওপর ইমান রাখে, সে যেন ভালো কথা বলে অথবা চুপ থাকে।"', ref:'সহিহ বুখারী: ৬০১৮' },
+  { id:14, cat:'ছোট ভালো কাজ', text:'"কোনো ভালো কাজকেই তুচ্ছ মনে করো না, এমনকি তোমার ভাইয়ের সাথে হাস্যোজ্জ্বল মুখে সাক্ষাৎ করা হলেও।"', ref:'সহিহ মুসলিম: ২৬২৬' },
+  { id:15, cat:'পিতা-মাতার প্রতি দায়িত্ব', text:'"আমার সুন্দর সাহচর্যের সবচেয়ে হকদার কে? তিনি বললেন: তোমার মা, তারপর তোমার মা, তারপর তোমার মা, তারপর তোমার বাবা।"', ref:'সহিহ বুখারী: ৫৯৭১' },
+  { id:16, cat:'আত্মীয়তার সম্পর্ক', text:'"যে ব্যক্তি আত্মীয়তার সম্পর্ক ছিন্ন করে, সে জান্নাতে প্রবেশ করবে না।"', ref:'সহিহ বুখারী: ৫৯৮৪' },
+  { id:17, cat:'অন্যের ভালো চাওয়া', text:'"তোমাদের কেউ ততক্ষণ পর্যন্ত প্রকৃত মুমিন হতে পারবে না, যতক্ষণ না সে তার ভাইয়ের জন্য তা-ই পছন্দ করে, যা সে নিজের জন্য পছন্দ করে।"', ref:'সহিহ বুখারী: ১৩' },
+  { id:18, cat:'সময়ের সদ্ব্যবহার', text:'"দুটি নেয়ামতের ব্যাপারে অধিকাংশ মানুষ ধোঁকায় পড়ে আছে: স্বাস্থ্য এবং অবসর সময়।"', ref:'সহিহ বুখারী: ৬৪১২' },
+  { id:19, cat:'অন্যায়ের প্রতিবাদ', text:'"তোমাদের কেউ কোনো অন্যায় দেখলে সে যেন তা হাত দিয়ে পরিবর্তন করে দেয়; তা সম্ভব না হলে মুখ দিয়ে; তাও সম্ভব না হলে অন্তর দিয়ে। আর এটা ইমানের সর্বনিম্ন স্তর।"', ref:'সহিহ মুসলিম: ৪৯' },
+  { id:20, cat:'আল্লাহর ভালোবাসা পাওয়ার উপায়', text:'"আল্লাহর কাছে সবচেয়ে প্রিয় আমল হলো যা নিয়মিত করা হয়, পরিমাণে তা অল্প হলেও।"', ref:'সহিহ বুখারী: ৫৮১৫' }
+];
+
+const ISL_DUAS = [
+  { num:1, title:'পড়াশোনা শুরুর দোয়া', arabic:'رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي', pronounce:'রাব্বিশ রাহলি সাদরি, ওয়া ইয়াসসিরলি আমরি, ওয়াহলুল উকদাতাম মিল লিসানি, ইয়াফকাহু কাউলি।', meaning:'হে আমার পালনকর্তা, আমার বুক প্রশস্ত করে দিন, আমার কাজ সহজ করে দিন এবং আমার জিভ থেকে জড়তা দূর করে দিন, যাতে তারা আমার কথা বুঝতে পারে।', ref:'সূরা তোয়াহা: ২৫-২৮' },
+  { num:2, title:'জ্ঞান বৃদ্ধির দোয়া', arabic:'رَبِّ زِدْنِي عِلْمًا', pronounce:'রাব্বি যিদনি ইলমা।', meaning:'হে আমার প্রতিপালক! আমার জ্ঞান বৃদ্ধি করে দিন।', ref:'সূরা তোয়াহা: ১১৪' },
+  { num:3, title:'দুশ্চিন্তা ও অলসতা থেকে মুক্তির দোয়া', arabic:'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ', pronounce:'আল্লাহুম্মা ইন্নি আউযুবিকা মিনাল হামমি ওয়াল হাযানি, ওয়া আউযুবিকা মিনাল আজযি ওয়াল কাসালি।', meaning:'হে আল্লাহ! আমি আপনার আশ্রয় নিচ্ছি দুশ্চিন্তা ও দুঃখ থেকে, অলসতা ও অক্ষমতা থেকে।', ref:'সহিহ বুখারী: ২৮৯৩' },
+  { num:4, title:'দুনিয়া ও পরকালের কল্যাণের দোয়া', arabic:'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً', pronounce:'রাব্বানা আতিনা ফিদ দুনয়া হাসানাতাও ওয়া ফিল আখিরাতি হাসানাতাও ওয়া কিনা আযাবান নার।', meaning:'হে আমাদের প্রতিপালক! আমাদের দুনিয়াতেও কল্যাণ দিন এবং পরকালেও কল্যাণ দিন এবং আমাদের জাহান্নামের আগুন থেকে রক্ষা করুন।', ref:'সূরা আল-বাকারাহ: ২০১' },
+  { num:5, title:'কঠিন কাজ সহজ হওয়ার দোয়া', arabic:'اللَّهُمَّ لَا سَهْلَ إِلَّا مَا جَعَلْتَهُ سَهْلًا', pronounce:'আল্লাহুম্মা লা সাহলা ইল্লা মা জাআলতাহু সাহলা, ওয়া আনতা তাজআলুল হাযনা ইযা শিইতা সাহলা।', meaning:'হে আল্লাহ! আপনি যা সহজ করেছেন তা ছাড়া কোনো কিছুই সহজ নয়। আপনি চাইলে কঠিন কাজকেও সহজ করে দিতে পারেন।', ref:'সহিহ ইবনে হিব্বান: ৯৭৪' },
+  { num:6, title:'ক্ষমা ও দয়া ভিক্ষার দোয়া', arabic:'رَبِّ اغْفِرْ وَارْحَمْ وَأَنتَ خَيْرُ الرَّاحِمِينَ', pronounce:'রাব্বিগফির ওয়ারহাম ওয়া আনতা খাইরুর রাহিমীন।', meaning:'হে আমার প্রতিপালক! আমাকে ক্ষমা করুন ও দয়া করুন, আর আপনিই তো সর্বশ্রেষ্ঠ দয়ালু।', ref:'সূরা আল-মুমিনুন: ১১৮' },
+  { num:7, title:'সকাল-সন্ধ্যার সুরক্ষার দোয়া', arabic:'بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ', pronounce:'বিসমিল্লাহিল্লাযি লা ইয়াদুররু মাআসমিহি শাইউন ফিল আরদি ওয়া লা ফিস সামায়ি।', meaning:'আল্লাহর নামে, যাঁর নামের বরকতে আসমান ও জমিনের কোনো কিছুই ক্ষতি করতে পারে না।', ref:'সুনানে তিরমিযী: ৩৩৮৮' },
+  { num:8, title:'পিতা-মাতার জন্য দোয়া', arabic:'رَبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا', pronounce:'রাব্বির হামহুমা কামা রাব্বায়ানি সাগিরা।', meaning:'হে আমার প্রতিপালক! তাদের (পিতা-মাতার) প্রতি দয়া করুন, যেভাবে তারা শৈশবে আমাকে লালন-পালন করেছিলেন।', ref:'সূরা আল-ইসরা: ২৪' },
+  { num:9, title:'বিপদের সময়ের দোয়া', arabic:'لَا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ', pronounce:'লা ইলাহা ইল্লা আনতা সুবহানাকা ইন্নি কুনতু মিনাজ জোয়ালিমীন।', meaning:'আপনি ছাড়া কোনো সত্য মাবুদ নেই, আপনি পবিত্র ও মহান! নিশ্চয় আমি অপরাধীদের অন্তর্ভুক্ত।', ref:'সূরা আল-আম্বিয়া: ৮৭' },
+  { num:10, title:'দৃঢ় ইমানের দোয়া', arabic:'يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ', pronounce:'ইয়া মুকাল্লিবাল কুলুব, সাব্বিত কালবি আলা দ্বীনিক।', meaning:'হে অন্তরের পরিবর্তনকারী! আমার অন্তরকে আপনার দ্বীনের ওপর অবিচল রাখুন।', ref:'সুনানে তিরমিযী: ৩৫২২' }
+];
+
+const ISL_BADGES_DEF = [
+  { id:'7day', icon:'🥉', name:'7 Day Salah Streak', desc:'7 দিন একটানা সালাহ পড়েছ', check: s => s.currentStreak >= 7 },
+  { id:'30day', icon:'🥈', name:'30 Day Salah Streak', desc:'30 দিন একটানা সালাহ পড়েছ', check: s => s.currentStreak >= 30 },
+  { id:'100salah', icon:'🥇', name:'100 Salah Completed', desc:'মোট ১০০টি সালাহ সম্পন্ন', check: s => s.totalSalah >= 100 },
+  { id:'consistency', icon:'💎', name:'Consistency Master', desc:'৫০ দিন সালাহ পড়েছ', check: s => s.daysWithSalah >= 50 },
+  { id:'ayahreader', icon:'📖', name:'Ayah Reader', desc:'মোট ৩০টি আয়াত পড়েছ', check: s => s.totalAyatRead >= 30 },
+  { id:'hadithreader', icon:'📚', name:'Hadith Reader', desc:'মোট ১০টি হাদিস পড়েছ', check: s => s.totalHadithRead >= 10 },
+  { id:'fiver', icon:'⭐', name:'Perfect Day', desc:'একদিনে ৫/৫ সালাহ পড়েছ', check: s => s.perfectDays >= 1 },
+  { id:'scholar', icon:'🎓', name:'Scholar', desc:'মোট ৫০টি আয়াত পড়েছ', check: s => s.totalAyatRead >= 50 }
+];
+
+/* ── STATE ── */
+let islState = {
+  salah: { Fajr:false, Dhuhr:false, Asr:false, Maghrib:false, Isha:false },
+  todayDate: '',
+  ayahIndex: 0,
+  hadithIndex: 0,
+  todayAyatRead: 0,
+  todayHadithRead: 0,
+  stats: { totalSalah:0, totalAyatRead:0, totalHadithRead:0, currentStreak:0, longestStreak:0, daysWithSalah:0, perfectDays:0, monthlyPerfect:0 },
+  salahHistory: {},
+  earnedBadges: []
+};
+let islFbUid = null;
+let islFirestore = null;
+
+/* ── INIT ── */
+async function initIslamDash() {
+  try {
+    if (typeof firestore !== 'undefined') { islFirestore = firestore; }
+    if (typeof auth !== 'undefined' && auth.currentUser) { islFbUid = auth.currentUser.uid; }
+    await islLoadFromFirebase();
+  } catch(e) { islLoadFromLocal(); }
+  islCheckAndResetDay();
+  islRenderAll();
+}
+
+function islTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function islCheckAndResetDay() {
+  const today = islTodayStr();
+  if (islState.todayDate !== today) {
+    if (islState.todayDate && islState.todayDate !== '') {
+      const prev = islState.salahHistory[islState.todayDate] || { count:0 };
+      islState.salahHistory[islState.todayDate] = prev;
+    }
+    islState.todayDate = today;
+    islState.salah = { Fajr:false, Dhuhr:false, Asr:false, Maghrib:false, Isha:false };
+    islState.todayAyatRead = 0;
+    islState.todayHadithRead = 0;
+    islSave();
+  }
+}
+
+/* ── FIREBASE LOAD/SAVE ── */
+async function islLoadFromFirebase() {
+  if (!islFirestore || !islFbUid) { islLoadFromLocal(); return; }
+  try {
+    const { doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const ref = doc(islFirestore, 'islamic_data', islFbUid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.salahHistory) islState.salahHistory = d.salahHistory;
+      if (d.stats) islState.stats = { ...islState.stats, ...d.stats };
+      if (d.earnedBadges) islState.earnedBadges = d.earnedBadges;
+      if (d.todayDate) islState.todayDate = d.todayDate;
+      if (d.salah && d.todayDate === islTodayStr()) islState.salah = d.salah;
+      if (d.todayAyatRead && d.todayDate === islTodayStr()) islState.todayAyatRead = d.todayAyatRead || 0;
+      if (d.todayHadithRead && d.todayDate === islTodayStr()) islState.todayHadithRead = d.todayHadithRead || 0;
+      if (typeof d.ayahIndex === 'number') islState.ayahIndex = d.ayahIndex;
+      if (typeof d.hadithIndex === 'number') islState.hadithIndex = d.hadithIndex;
+    }
+  } catch(e) { islLoadFromLocal(); }
+}
+
+async function islSaveToFirebase() {
+  if (!islFirestore || !islFbUid) { islSaveLocal(); return; }
+  try {
+    const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const ref = doc(islFirestore, 'islamic_data', islFbUid);
+    await setDoc(ref, {
+      salahHistory: islState.salahHistory,
+      stats: islState.stats,
+      earnedBadges: islState.earnedBadges,
+      todayDate: islState.todayDate,
+      salah: islState.salah,
+      todayAyatRead: islState.todayAyatRead,
+      todayHadithRead: islState.todayHadithRead,
+      ayahIndex: islState.ayahIndex,
+      hadithIndex: islState.hadithIndex,
+      updatedAt: Date.now()
+    }, { merge: true });
+  } catch(e) { islSaveLocal(); }
+}
+
+function islLoadFromLocal() {
+  try { const d = JSON.parse(localStorage.getItem('isl_state') || '{}'); if (d.stats) { islState = { ...islState, ...d }; } } catch(e) {}
+}
+function islSaveLocal() {
+  try { localStorage.setItem('isl_state', JSON.stringify(islState)); } catch(e) {}
+}
+function islSave() { islSaveLocal(); islSaveToFirebase(); }
+
+/* ── SALAH ── */
+const PRAYERS = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+const PRAYER_LABELS = { Fajr:'🌙 ফজর', Dhuhr:'☀️ যোহর', Asr:'🌤 আসর', Maghrib:'🌆 মাগরিব', Isha:'🌙 ইশা' };
+
+function islRenderSalah() {
+  const grid = document.getElementById('isl-salah-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  let checked = 0;
+  PRAYERS.forEach(p => {
+    const done = islState.salah[p];
+    if (done) checked++;
+    const div = document.createElement('div');
+    div.className = 'salah-item' + (done ? ' done' : '');
+    div.onclick = () => islToggleSalah(p);
+    div.innerHTML = `<div class="salah-cb"></div><div class="salah-name">${PRAYER_LABELS[p]}</div>`;
+    grid.appendChild(div);
+  });
+  const pct = Math.round(checked/5*100);
+  const badge = document.getElementById('isl-salah-pct-badge');
+  if (badge) badge.textContent = pct + '%';
+  document.getElementById('isl-salah-prog').textContent = checked + '/5';
+}
+
+async function islToggleSalah(prayer) {
+  islState.salah[prayer] = !islState.salah[prayer];
+  const count = PRAYERS.filter(p => islState.salah[p]).length;
+  islState.salahHistory[islState.todayDate] = { count, prayers: { ...islState.salah } };
+  if (islState.salah[prayer]) {
+    islState.stats.totalSalah = (islState.stats.totalSalah || 0) + 1;
+    if (count === 5) islState.stats.perfectDays = (islState.stats.perfectDays || 0) + 1;
+  } else {
+    islState.stats.totalSalah = Math.max(0, (islState.stats.totalSalah || 0) - 1);
+  }
+  islCalcStreak();
+  islCheckBadges();
+  islSave();
+  islRenderSalah();
+  islRenderHero();
+  islRenderStats();
+}
+
+function islCalcStreak() {
+  const today = islTodayStr();
+  let streak = 0, d = new Date();
+  while (true) {
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const rec = islState.salahHistory[key];
+    if (rec && rec.count > 0) { streak++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  islState.stats.currentStreak = streak;
+  islState.stats.longestStreak = Math.max(islState.stats.longestStreak || 0, streak);
+  const days = Object.values(islState.salahHistory).filter(r => r && r.count > 0).length;
+  islState.stats.daysWithSalah = days;
+}
+
+/* ── HEATMAP ── */
+function islRenderHeatmap() {
+  const wrap = document.getElementById('isl-heatmap');
+  const monthsWrap = document.getElementById('isl-heatmap-months');
+  if (!wrap) return;
+  wrap.innerHTML = ''; monthsWrap.innerHTML = '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = new Date(today); start.setDate(start.getDate() - 364);
+  // Align to Sunday
+  const dow = start.getDay();
+  if (dow > 0) start.setDate(start.getDate() - dow);
+  const days = []; let d = new Date(start);
+  while (d <= today || days.length % 7 !== 0) {
+    days.push(new Date(d)); d.setDate(d.getDate()+1);
+    if (days.length > 400) break;
+  }
+  const weeks = [];
+  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i+7));
+  // Month labels
+  let lastMonth = -1;
+  weeks.forEach((week) => {
+    const firstDay = week[0];
+    const m = firstDay.getMonth();
+    const span = document.createElement('div');
+    span.className = 'hm-month-lbl';
+    span.style.width = '15px';
+    if (m !== lastMonth) {
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      span.textContent = months[m];
+      lastMonth = m;
+    }
+    monthsWrap.appendChild(span);
+  });
+  // Day labels row
+  const dayLabels = ['','M','','W','','F',''];
+  const dayRow = document.createElement('div');
+  dayRow.style.cssText = 'display:flex;flex-direction:column;gap:3px;margin-right:4px;';
+  dayLabels.forEach(l => {
+    const lbl = document.createElement('div');
+    lbl.className = 'hm-label';
+    lbl.textContent = l;
+    dayRow.appendChild(lbl);
+  });
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:flex;gap:3px;';
+  const tooltip = document.getElementById('hm-tooltip');
+  weeks.forEach(week => {
+    const col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
+    week.forEach(day => {
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell';
+      const key = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
+      const isFuture = day > today;
+      if (isFuture) { cell.classList.add('hm-future'); }
+      else {
+        const rec = islState.salahHistory[key];
+        const cnt = rec ? rec.count : 0;
+        cell.classList.add('hm-' + cnt);
+      }
+      cell.addEventListener('mouseenter', (e) => {
+        if (!tooltip) return;
+        const rec = islState.salahHistory[key];
+        const cnt = rec ? rec.count : 0;
+        const dateStr = day.toLocaleDateString('bn-BD', {day:'numeric',month:'short',year:'numeric'});
+        tooltip.textContent = `${dateStr}: ${isFuture ? '—' : cnt + '/5 Salah'}`;
+        tooltip.style.display = 'block';
+        tooltip.style.left = (e.clientX + 12) + 'px';
+        tooltip.style.top = (e.clientY - 30) + 'px';
+      });
+      cell.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display='none'; });
+      col.appendChild(cell);
+    });
+    grid.appendChild(col);
+  });
+  const container = document.createElement('div');
+  container.style.cssText = 'display:flex;';
+  container.appendChild(dayRow);
+  container.appendChild(grid);
+  wrap.appendChild(container);
+  islCalcHeatmapStats();
+}
+
+function islCalcHeatmapStats() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  // Week
+  let weekTotal = 0, weekDays = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const rec = islState.salahHistory[key];
+    weekTotal += rec ? rec.count : 0; weekDays++;
+  }
+  const weekPct = Math.round(weekTotal / (weekDays * 5) * 100);
+  // Month
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  let monthTotal = 0;
+  for (let i = 1; i <= today.getDate(); i++) {
+    const key = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(i).padStart(2,'0');
+    const rec = islState.salahHistory[key];
+    monthTotal += rec ? rec.count : 0;
+  }
+  const monthPct = Math.round(monthTotal / (today.getDate() * 5) * 100);
+  // Year
+  const start = new Date(today.getFullYear(), 0, 1);
+  let yearTotal = 0, yearDays = 0;
+  const d = new Date(start);
+  while (d <= today) {
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const rec = islState.salahHistory[key];
+    yearTotal += rec ? rec.count : 0; yearDays++;
+    d.setDate(d.getDate()+1);
+  }
+  const yearPct = Math.round(yearTotal / (yearDays * 5) * 100);
+  const wk = document.getElementById('isl-hm-week');
+  const mo = document.getElementById('isl-hm-month');
+  const yr = document.getElementById('isl-hm-year');
+  if (wk) wk.textContent = weekPct + '%';
+  if (mo) mo.textContent = monthPct + '%';
+  if (yr) yr.textContent = yearPct + '%';
+}
+
+/* ── AYAH ── */
+function islRenderAyah() {
+  const a = ISL_AYAT[islState.ayahIndex];
+  if (!a) return;
+  document.getElementById('isl-ayah-arabic').textContent = a.arabic;
+  document.getElementById('isl-ayah-pronounce').textContent = a.pronounce;
+  document.getElementById('isl-ayah-bangla').textContent = a.bangla;
+  document.getElementById('isl-ayah-english').textContent = a.english;
+  document.getElementById('isl-ayah-ref').textContent = a.ref;
+  document.getElementById('isl-ayah-counter').textContent = 'Ayah ' + (islState.ayahIndex+1) + ' of ' + ISL_AYAT.length;
+  const cb = document.getElementById('isl-ayah-check');
+  if (cb) { cb.classList.remove('checked'); }
+}
+
+function islAyahNav(dir) {
+  const newIdx = islState.ayahIndex + dir;
+  if (newIdx < 0 || newIdx >= ISL_AYAT.length) return;
+  islState.ayahIndex = newIdx;
+  islSave();
+  islRenderAyah();
+}
+
+function islToggleAyahRead() {
+  const cb = document.getElementById('isl-ayah-check');
+  if (!cb || cb.classList.contains('checked')) return;
+  cb.classList.add('checked');
+  islState.todayAyatRead++;
+  islState.stats.totalAyatRead = (islState.stats.totalAyatRead || 0) + 1;
+  islCheckBadges();
+  islSave();
+  document.getElementById('isl-ayah-prog').textContent = islState.todayAyatRead;
+  islRenderStats();
+}
+
+/* ── HADITH ── */
+function islRenderHadith() {
+  const h = ISL_AHADITH[islState.hadithIndex];
+  if (!h) return;
+  document.getElementById('isl-hadith-cat').textContent = '📂 বিষয়: ' + h.cat;
+  document.getElementById('isl-hadith-text').textContent = h.text;
+  document.getElementById('isl-hadith-ref').textContent = h.ref;
+  document.getElementById('isl-hadith-counter').textContent = 'Hadith ' + (islState.hadithIndex+1) + ' of ' + ISL_AHADITH.length;
+  const cb = document.getElementById('isl-hadith-check');
+  if (cb) { cb.classList.remove('checked'); }
+}
+
+function islHadithNav(dir) {
+  const newIdx = islState.hadithIndex + dir;
+  if (newIdx < 0 || newIdx >= ISL_AHADITH.length) return;
+  islState.hadithIndex = newIdx;
+  islSave();
+  islRenderHadith();
+}
+
+function islToggleHadithRead() {
+  const cb = document.getElementById('isl-hadith-check');
+  if (!cb || cb.classList.contains('checked')) return;
+  cb.classList.add('checked');
+  islState.todayHadithRead++;
+  islState.stats.totalHadithRead = (islState.stats.totalHadithRead || 0) + 1;
+  islCheckBadges();
+  islSave();
+  document.getElementById('isl-hadith-prog').textContent = islState.todayHadithRead;
+  islRenderStats();
+}
+
+/* ── DUAS ── */
+function islRenderDuas() {
+  const list = document.getElementById('isl-duas-list');
+  if (!list) return;
+  list.innerHTML = '';
+  ISL_DUAS.forEach(dua => {
+    const card = document.createElement('div');
+    card.className = 'dua-card glass';
+    card.innerHTML = `
+      <div class="dua-num">${dua.num}. ${dua.title}</div>
+      <div class="arabic-text" style="font-size:1.2rem;">${dua.arabic}</div>
+      <div class="pronunciation-text">${dua.pronounce}</div>
+      <div class="meaning-text" style="font-size:0.88rem;">${dua.meaning}</div>
+      <div style="margin-top:8px;"><span class="ref-text">${dua.ref}</span></div>
+      <div class="dua-btns">
+        <button class="dua-btn" onclick="islCopyDua(${dua.num-1})">📋 Copy</button>
+        <button class="dua-btn" onclick="islSaveDua(${dua.num-1})">💾 Save</button>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function islCopyDua(idx) {
+  const dua = ISL_DUAS[idx];
+  const text = `${dua.title}\n\n${dua.arabic}\n\n${dua.pronounce}\n\n${dua.meaning}\n\n${dua.ref}`;
+  navigator.clipboard.writeText(text).then(() => showToast('Dua copied! 📋', 'success')).catch(() => showToast('Copy failed', 'error'));
+}
+
+function islSaveDua(idx) {
+  const dua = ISL_DUAS[idx];
+  const saved = JSON.parse(localStorage.getItem('isl_saved_duas') || '[]');
+  if (!saved.includes(idx)) { saved.push(idx); localStorage.setItem('isl_saved_duas', JSON.stringify(saved)); }
+  showToast('Dua saved! 💾', 'success');
+}
+
+/* ── BADGES ── */
+function islCheckBadges() {
+  ISL_BADGES_DEF.forEach(b => {
+    if (!islState.earnedBadges.includes(b.id) && b.check(islState.stats)) {
+      islState.earnedBadges.push(b.id);
+      showToast('🏅 Badge Unlocked: ' + b.name, 'success');
+    }
+  });
+}
+
+function islRenderBadges() {
+  const grid = document.getElementById('isl-badge-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  ISL_BADGES_DEF.forEach(b => {
+    const earned = islState.earnedBadges.includes(b.id);
+    const div = document.createElement('div');
+    div.className = 'islam-badge ' + (earned ? 'earned' : 'locked');
+    div.innerHTML = `<div class="islam-badge-icon">${b.icon}</div><div class="islam-badge-name">${b.name}</div><div class="islam-badge-desc">${b.desc}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+/* ── STATISTICS ── */
+function islRenderStats() {
+  const grid = document.getElementById('isl-stat-grid');
+  if (!grid) return;
+  const s = islState.stats;
+  const data = [
+    { val: s.totalSalah || 0, label: 'Total Salah Completed' },
+    { val: s.currentStreak || 0, label: 'Current Streak 🔥' },
+    { val: s.longestStreak || 0, label: 'Longest Streak' },
+    { val: s.totalAyatRead || 0, label: 'Total Ayat Read' },
+    { val: s.totalHadithRead || 0, label: 'Total Hadith Read' },
+    { val: s.daysWithSalah || 0, label: 'Days With Salah' }
+  ];
+  grid.innerHTML = '';
+  data.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'islam-stat-card';
+    card.innerHTML = `<div class="islam-stat-val">${item.val}</div><div class="islam-stat-label">${item.label}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* ── HERO ── */
+function islRenderHero() {
+  const checkedCount = PRAYERS.filter(p => islState.salah[p]).length;
+  const salahProg = document.getElementById('isl-salah-prog');
+  if (salahProg) salahProg.textContent = checkedCount + '/5';
+  const ayahProg = document.getElementById('isl-ayah-prog');
+  if (ayahProg) ayahProg.textContent = islState.todayAyatRead;
+  const hadithProg = document.getElementById('isl-hadith-prog');
+  if (hadithProg) hadithProg.textContent = islState.todayHadithRead;
+  const streakProg = document.getElementById('isl-streak-prog');
+  if (streakProg) streakProg.textContent = islState.stats.currentStreak || 0;
+}
+
+/* ── TABS ── */
+function islamSwitchTab(tab, el) {
+  document.querySelectorAll('.islam-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.islam-sub').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const sub = document.getElementById('isl-sub-' + tab);
+  if (sub) sub.classList.add('active');
+  if (tab === 'heatmap') islRenderHeatmap();
+  if (tab === 'duas') islRenderDuas();
+  if (tab === 'badges') islRenderBadges();
+  if (tab === 'stats') islRenderStats();
+}
+
+/* ── FULL RENDER ── */
+function islRenderAll() {
+  islRenderHero();
+  islRenderSalah();
+  islRenderAyah();
+  islRenderHadith();
+}
+
+/* ── AUTO INIT on auth ready ── */
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof auth !== 'undefined') {
+    auth.onAuthStateChanged && auth.onAuthStateChanged(user => {
+      if (user) { islFbUid = user.uid; if (typeof firestore !== 'undefined') islFirestore = firestore; }
+    });
+  }
+});
 
 </script>
 </body>
