@@ -207,10 +207,16 @@
         .islam-stat-val { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #00dc78; }
         .islam-stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
         /* Reminder Cards */
-        .reminder-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
-        .reminder-card { flex-shrink: 0; min-width: 160px; background: linear-gradient(135deg, rgba(0,180,100,0.15), rgba(0,80,40,0.1)); border: 1px solid rgba(0,200,100,0.2); border-radius: var(--radius-md); padding: 18px 14px; text-align: center; }
+        .reminder-scroll-outer { overflow: hidden; position: relative; width: 100%; }
+        .reminder-scroll-outer::before, .reminder-scroll-outer::after { content:''; position:absolute; top:0; bottom:0; width:40px; z-index:2; pointer-events:none; }
+        .reminder-scroll-outer::before { left:0; background:linear-gradient(to right, var(--glass-bg), transparent); }
+        .reminder-scroll-outer::after  { right:0; background:linear-gradient(to left, var(--glass-bg), transparent); }
+        .reminder-scroll { display: flex; gap: 12px; padding-bottom: 4px; will-change: transform; cursor: grab; user-select: none; }
+        .reminder-scroll.is-grabbing { cursor: grabbing; }
+        .reminder-card { flex-shrink: 0; width: 220px; background: linear-gradient(135deg, rgba(0,180,100,0.15), rgba(0,80,40,0.1)); border: 1px solid rgba(0,200,100,0.2); border-radius: var(--radius-md); padding: 18px 14px; text-align: center; }
         .reminder-card .r-icon { font-size: 1.8rem; margin-bottom: 8px; }
         .reminder-card .r-text { font-size: 0.82rem; font-weight: 600; color: var(--text-main); line-height: 1.4; }
+        @media (prefers-reduced-motion: reduce) { .reminder-scroll { transition: none !important; } }
         /* Section tabs inside Islam */
         .islam-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
         .islam-tab { padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.2s, color 0.2s; }
@@ -1762,8 +1768,10 @@
   <!-- Hero Dashboard Card -->
   <div class="islam-hero glass">
     <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(0,220,120,0.15);">
-      <div style="font-size:0.68rem;font-weight:700;letter-spacing:2px;color:#00dc78;text-transform:uppercase;margin-bottom:7px;">✦ Daily Reminder</div>
-      <div id="isl-daily-reminder" style="font-size:0.88rem;font-weight:600;color:var(--text-main);line-height:1.7;font-style:italic;word-break:break-word;overflow-wrap:break-word;min-height:2.5em;display:block;"></div>
+      <div style="font-size:0.68rem;font-weight:700;letter-spacing:2px;color:#00dc78;text-transform:uppercase;margin-bottom:7px;">✦ Daily Reminders</div>
+      <div class="reminder-scroll-outer" id="isl-reminder-outer">
+        <div class="reminder-scroll" id="isl-daily-reminder"></div>
+      </div>
     </div>
     <div style="font-size:0.65rem;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">📊 Today's Progress</div>
     <div style="display:flex;gap:8px;justify-content:space-between;">
@@ -10649,10 +10657,140 @@ const ISL_REMINDERS = [
 ];
 
 function islRenderReminder() {
-  const el = document.getElementById('isl-daily-reminder');
-  if (!el) return;
-  const idx = Math.floor(Math.random() * ISL_REMINDERS.length);
-  el.textContent = ISL_REMINDERS[idx];
+  const track = document.getElementById('isl-daily-reminder');
+  if (!track) return;
+
+  // Reduced-motion: just show one static quote
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    track.style.flexWrap = 'wrap';
+    const card = document.createElement('div');
+    card.className = 'reminder-card';
+    card.innerHTML = '<div class="r-text">' + ISL_REMINDERS[Math.floor(Math.random() * ISL_REMINDERS.length)] + '</div>';
+    track.appendChild(card);
+    return;
+  }
+
+  // Build cards — two full sets for seamless looping
+  track.innerHTML = '';
+  const ICONS = ['☪️','📿','🕌','📖','🤲','🌙','⭐','🕋','📚','✨','🌟','💫','🌿','🙏','💚'];
+  function makeSet() {
+    ISL_REMINDERS.forEach(function(txt, i) {
+      const card = document.createElement('div');
+      card.className = 'reminder-card';
+      card.innerHTML = '<div class="r-icon">' + ICONS[i % ICONS.length] + '</div><div class="r-text">' + txt + '</div>';
+      track.appendChild(card);
+    });
+  }
+  makeSet();
+  makeSet(); // duplicate for infinite loop
+
+  // ── Auto-scroll engine ──
+  const CARD_W = 220 + 12; // card width + gap
+  const SINGLE_SET_W = ISL_REMINDERS.length * CARD_W;
+  const SPEED = 0.45; // px per 16ms frame (~1 card per 3.2s at 220px)
+
+  let offset = 0;
+  let paused = false;
+  let resumeTimer = null;
+  let rafId = null;
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartOffset = 0;
+  let lastDragX = 0;
+  let velocity = 0;
+  let lastFrameTime = 0;
+
+  function animate(ts) {
+    rafId = requestAnimationFrame(animate);
+    if (!paused && !isDragging) {
+      const dt = Math.min(ts - lastFrameTime, 50); // cap delta to avoid jump after tab switch
+      lastFrameTime = ts;
+      offset += SPEED * (dt / 16);
+      if (offset >= SINGLE_SET_W) offset -= SINGLE_SET_W;
+    } else {
+      lastFrameTime = ts;
+    }
+    track.style.transform = 'translateX(' + (-offset) + 'px)';
+  }
+
+  function pauseScroll() {
+    paused = true;
+    clearTimeout(resumeTimer);
+  }
+
+  function scheduleResume() {
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(function() { paused = false; }, 3000);
+  }
+
+  // ── Mouse drag ──
+  track.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    paused = true;
+    dragStartX = e.clientX;
+    dragStartOffset = offset;
+    velocity = 0;
+    lastDragX = e.clientX;
+    track.classList.add('is-grabbing');
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    const dx = dragStartX - e.clientX;
+    velocity = lastDragX - e.clientX;
+    lastDragX = e.clientX;
+    offset = dragStartOffset + dx;
+    if (offset < 0) offset += SINGLE_SET_W;
+    if (offset >= SINGLE_SET_W) offset -= SINGLE_SET_W;
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!isDragging) return;
+    isDragging = false;
+    track.classList.remove('is-grabbing');
+    scheduleResume();
+  });
+
+  // ── Touch drag ──
+  track.addEventListener('touchstart', function(e) {
+    isDragging = true;
+    paused = true;
+    dragStartX = e.touches[0].clientX;
+    dragStartOffset = offset;
+    velocity = 0;
+    lastDragX = e.touches[0].clientX;
+  }, { passive: true });
+
+  track.addEventListener('touchmove', function(e) {
+    if (!isDragging) return;
+    const dx = dragStartX - e.touches[0].clientX;
+    velocity = lastDragX - e.touches[0].clientX;
+    lastDragX = e.touches[0].clientX;
+    offset = dragStartOffset + dx;
+    if (offset < 0) offset += SINGLE_SET_W;
+    if (offset >= SINGLE_SET_W) offset -= SINGLE_SET_W;
+  }, { passive: true });
+
+  track.addEventListener('touchend', function() {
+    isDragging = false;
+    scheduleResume();
+  });
+
+  // ── Pause when section is not visible (tab switched away) ──
+  const outer = document.getElementById('isl-reminder-outer');
+  const section = document.getElementById('view-islamdash');
+  const observer = new MutationObserver(function() {
+    if (section && !section.classList.contains('active')) {
+      pauseScroll();
+    } else {
+      scheduleResume();
+    }
+  });
+  if (section) observer.observe(section, { attributes: true, attributeFilter: ['class'] });
+
+  // Start
+  rafId = requestAnimationFrame(function(ts) { lastFrameTime = ts; animate(ts); });
 }
 
 /* ── FULL RENDER ── */
