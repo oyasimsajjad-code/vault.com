@@ -3713,8 +3713,25 @@ function savePartialSession() {
     showToast('Partial session saved: ' + newMins + ' min recorded 📊', 'success');
     _partialSaved = true;
 }
+function savePartialSessionOnPause() {
+    if (!isRunning || timerMode !== 'focus') return;
+    const totalSecs = modes['focus'];
+    const elapsedSecs = totalSecs - timeLeft;
+    const newSecs = elapsedSecs - _lastSavedSecs;
+    if (newSecs < 30) return;
+    const newMins = Math.round(newSecs / 60);
+    if (newMins < 1) return;
+    const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
+    _recordStudyTime(newMins, subj);
+    _lastSavedSecs = elapsedSecs;
+    saveAppData();
+    if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
+    const totalElapsedMins = Math.round(elapsedSecs / 60);
+    showToast('Partial session saved: ' + totalElapsedMins + ' min recorded 📊', 'success');
+    _partialSaved = true;
+}
 function stopTimer() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSessionOnPause();
     _partialSaved = false;
     clearInterval(timerInt); timerInt = null; isRunning = false;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
@@ -3786,7 +3803,7 @@ function _sfOnBreakDone() {
 }
 
 function resetTimer() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSessionOnPause();
     _partialSaved = false;
     _msBlock.enabled = false;
     const skipBtn = document.getElementById('ms-skip-break-btn');
@@ -3803,6 +3820,7 @@ function resetTimer() {
         if (fms) fms.style.display = 'none';
     }
     clearInterval(timerInt); timerInt = null; isRunning = false;
+    _lastSavedSecs = 0;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
     document.getElementById('fm-play-icon').className = 'fa-solid fa-play';
     timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]);
@@ -4035,7 +4053,7 @@ function enterFocusMode() {
     requestWakeLock();
 }
 function exitFocusMode() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSessionOnPause();
     isFocusModeActive = false;
     document.getElementById('focus-mode-screen').classList.add('hidden');
     stopAllSounds();
