@@ -3511,6 +3511,10 @@ function renderNotes() {
 /* ---- POMODORO ---- */
 let timerInt=null,timeLeft=25*60,isRunning=false,timerMode='focus',isFocusModeActive=false;
 let modes={ focus:25*60, short:5*60, long:15*60 };
+// Wall-clock tracking — the ONLY correct way to measure elapsed focus time
+let _sessionStartWall = 0;   // Date.now() when current focus segment started
+let _sessionPausedAccum = 0; // total ms of paused time in this focus session
+let _sessionSavedMs = 0;     // total ms already recorded to stats in this session
 
 function loadTimerSettings() {
     const ts = appData.timerSettings || {};
@@ -3688,14 +3692,42 @@ function applyCustomTimer() {
     saveAppData(); showToast('Timer settings saved!','success');
 }
 function setTimerMode(mode,btn) {
-    stopTimer(); timerMode=mode; timeLeft=modes[mode];
+    stopTimer();
+    // Full wall-clock reset on any mode switch
+    _sessionStartWall = 0;
+    _sessionPausedAccum = 0;
+    _sessionSavedMs = 0;
+    _lastSavedSecs = 0;
+    timerMode=mode; timeLeft=modes[mode];
     document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
     if(btn) btn.classList.add('active');
     updateTimerDisplay(); setRing(modes[mode],modes[mode]);
     document.getElementById('timer-status').innerText=mode==='focus'?'Ready to focus':'Take a break';
 }
-function _recordStudyTime(mins, subj) {
+// Midnight-split aware recording: if session started on a different date, split the minutes
+function _recordStudyTimeSplit(mins, subj, sessionStartMs) {
+    if (mins <= 0) return;
+    const startDate = _getLocalDateStr(new Date(sessionStartMs || Date.now()));
     const today = _getLocalDateStr();
+    if (startDate !== today && sessionStartMs) {
+        // Session crossed midnight — split accurately
+        const midnight = new Date(); midnight.setHours(0,0,0,0);
+        const midnightMs = midnight.getTime();
+        const totalMs = mins * 60000;
+        const sessionEndMs = (sessionStartMs || Date.now()) + totalMs;
+        // Calculate how much was before midnight vs after
+        const prevMs = Math.max(0, midnightMs - (sessionStartMs || 0));
+        const nextMs = Math.max(0, sessionEndMs - midnightMs);
+        const prevMins = Math.floor(prevMs / 60000);
+        const nextMins = Math.floor(nextMs / 60000);
+        if (prevMins > 0) _recordStudyTime(prevMins, subj, startDate);
+        if (nextMins > 0) _recordStudyTime(nextMins, subj, today);
+        return;
+    }
+    _recordStudyTime(mins, subj, today);
+}
+function _recordStudyTime(mins, subj, dateOverride) {
+    const today = dateOverride || _getLocalDateStr();
     if (!appData.stats.subjectHoursDate) appData.stats.subjectHoursDate = today;
     if (appData.stats.subjectHoursDate !== today) {
         appData.stats.subjectHours = {};
@@ -3713,18 +3745,22 @@ function _recordStudyTime(mins, subj) {
 }
 
 let _partialSaved = false;
-let _lastSavedSecs = 0;
+let _lastSavedSecs = 0; // kept for legacy compatibility, not used for timing
 function savePartialSession() {
+    // Guard: only save if actively running a focus session
     if (!isRunning || timerMode !== 'focus') return;
-    const totalSecs = modes['focus'];
-    const elapsedSecs = totalSecs - timeLeft;
-    const newSecs = elapsedSecs - _lastSavedSecs;
-    if (newSecs < 30) return;
-    const newMins = Math.round(newSecs / 60);
+    if (_sessionStartWall === 0) return; // no wall-clock start recorded
+    // Wall-clock elapsed for THIS segment (since last resume)
+    const segmentMs = Date.now() - _sessionStartWall;
+    // Total actual focus ms = all previous segments + current segment - already saved
+    const totalFocusMs = _sessionPausedAccum + segmentMs;
+    const newMs = totalFocusMs - _sessionSavedMs;
+    if (newMs < 30000) return; // less than 30 real seconds — skip
+    const newMins = Math.floor(newMs / 60000);
     if (newMins < 1) return;
     const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
-    _recordStudyTime(newMins, subj);
-    _lastSavedSecs = elapsedSecs;
+    _recordStudyTimeSplit(newMins, subj, _sessionStartWall - (_sessionPausedAccum - (totalFocusMs - newMs)));
+    _sessionSavedMs = totalFocusMs;
     saveAppData();
     if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
     showToast('Partial session saved: ' + newMins + ' min recorded 📊', 'success');
@@ -3732,6 +3768,11 @@ function savePartialSession() {
 }
 function stopTimer() {
     if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    // Accumulate this segment's actual running time into the paused pool
+    if (isRunning && timerMode === 'focus' && _sessionStartWall > 0) {
+        _sessionPausedAccum += (Date.now() - _sessionStartWall);
+        _sessionStartWall = 0; // mark segment as ended
+    }
     clearInterval(timerInt); timerInt = null; isRunning = false;
     _partialSaved = false;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
@@ -3742,7 +3783,17 @@ function toggleTimer() {
         stopTimer(); document.getElementById('timer-status').innerText='Paused';
     } else {
         if (timeLeft <= 0) { timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]); }
-        if (timerMode === 'focus' && timeLeft === modes['focus']) { _lastSavedSecs = 0; }
+        if (timerMode === 'focus') {
+            if (timeLeft === modes['focus']) {
+                // Fresh session start — reset all wall-clock state
+                _lastSavedSecs = 0;
+                _sessionStartWall = 0;
+                _sessionPausedAccum = 0;
+                _sessionSavedMs = 0;
+            }
+            // Record wall-clock start of this segment (fresh or resumed)
+            _sessionStartWall = Date.now();
+        }
         isRunning = true;
         _partialSaved = false;
         document.getElementById('play-icon').className = 'fa-solid fa-pause';
@@ -3805,10 +3856,18 @@ function _sfOnBreakDone() {
 }
 
 function resetTimer() {
-    _partialSaved = true;
-    if (isRunning && timerMode === 'focus') { _partialSaved = false; savePartialSession(); }
-    _partialSaved = false;
+    // Save any unsaved focus time before resetting
+    if (isRunning && timerMode === 'focus') {
+        _partialSaved = false;
+        savePartialSession();
+        _partialSaved = true; // prevent stopTimer from double-saving
+    } else {
+        _partialSaved = true;
+    }
     _lastSavedSecs = 0;
+    _sessionStartWall = 0;
+    _sessionPausedAccum = 0;
+    _sessionSavedMs = 0;
     _msBlock.enabled = false;
     const skipBtn = document.getElementById('ms-skip-break-btn');
     if (skipBtn) skipBtn.remove();
@@ -3838,10 +3897,17 @@ function timerTick() {
         document.title="Study Vault | Time's up!";
         if (timerMode === 'focus') {
             const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
-            const totalSecs = _msBlock.enabled ? _msBlock.blockFocus * 60 : modes['focus'];
-            const remainingUnsavedSecs = totalSecs - _lastSavedSecs;
-            const mins = Math.max(0, Math.round(remainingUnsavedSecs / 60));
+            // Wall-clock: accumulate final segment
+            if (_sessionStartWall > 0) {
+                _sessionPausedAccum += (Date.now() - _sessionStartWall);
+                _sessionStartWall = 0;
+            }
+            const totalFocusMs = _sessionPausedAccum;
+            const remainingMs = totalFocusMs - _sessionSavedMs;
+            const mins = Math.max(0, Math.floor(remainingMs / 60000));
             _lastSavedSecs = 0;
+            _sessionPausedAccum = 0;
+            _sessionSavedMs = 0;
             const today = _getLocalDateStr();
             // Daily sessions counter
             if (!appData.stats.dailySessionsDate) appData.stats.dailySessionsDate = today;
