@@ -2633,7 +2633,8 @@ function showFbError(msg) {
 function hideSplash() {
     const splash = document.getElementById('splash-screen');
     splash.style.opacity = '0';
-    setTimeout(() => splash.style.display = 'none', 600);
+    splash.style.transition = 'opacity 0.15s ease';
+    setTimeout(() => splash.style.display = 'none', 150);
 }
 
 /* ---- THEME ---- */
@@ -2812,11 +2813,7 @@ async function startApp() {
     loadGroupRooms();
     renderGroupRooms();
 
-    if (window.innerWidth <= 768) {
-        const hint = document.getElementById('swipe-hint');
-        hint.classList.add('show');
-        setTimeout(() => hint.classList.remove('show'), 2500);
-    }
+    
 }
 
 function getSidebarItem(i) { return document.querySelectorAll('#sidebar-nav-links .nav-item')[i]; }
@@ -10596,7 +10593,7 @@ function islRenderAll() {
 /* ── EXPOSE TO GLOBAL SCOPE (module fix) ── */
 /* ── FIRST VISIT REMINDER BANNER ── */
 (function() {
-  if (!localStorage.getItem('isl_reminder_hint_shown')) {
+  if (false) {
     setTimeout(() => {
       const banner = document.createElement('div');
       banner.id = 'isl-first-visit-banner';
