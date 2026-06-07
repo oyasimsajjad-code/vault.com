@@ -1765,6 +1765,17 @@
     </div>
   </div>
 
+  <!-- Section Tabs -->
+  <div class="islam-tabs">
+    <div class="islam-tab active" onclick="islamSwitchTab('salah',this)">🕌 Salah</div>
+    <div class="islam-tab" onclick="islamSwitchTab('heatmap',this)">📊 Heatmap</div>
+    <div class="islam-tab" onclick="islamSwitchTab('ayah',this)">📖 Ayah</div>
+    <div class="islam-tab" onclick="islamSwitchTab('hadith',this)">📚 Hadith</div>
+    <div class="islam-tab" onclick="islamSwitchTab('duas',this)">🧠 Study Duas</div>
+    <div class="islam-tab" onclick="islamSwitchTab('badges',this)">🏅 Achievements</div>
+    <div class="islam-tab" onclick="islamSwitchTab('stats',this)">📈 Statistics</div>
+  </div>
+
   <!-- Islamic Reminder Cards -->
   <div style="margin-bottom:20px;">
     <div class="reminder-scroll">
@@ -1775,17 +1786,6 @@
       <div class="reminder-card"><div class="r-icon">🎯</div><div class="r-text">Study With Discipline</div></div>
       <div class="reminder-card"><div class="r-icon">💡</div><div class="r-text">Seek Knowledge Always</div></div>
     </div>
-  </div>
-
-  <!-- Section Tabs -->
-  <div class="islam-tabs">
-    <div class="islam-tab active" onclick="islamSwitchTab('salah',this)">🕌 Salah</div>
-    <div class="islam-tab" onclick="islamSwitchTab('heatmap',this)">📊 Heatmap</div>
-    <div class="islam-tab" onclick="islamSwitchTab('ayah',this)">📖 Ayah</div>
-    <div class="islam-tab" onclick="islamSwitchTab('hadith',this)">📚 Hadith</div>
-    <div class="islam-tab" onclick="islamSwitchTab('duas',this)">🧠 Study Duas</div>
-    <div class="islam-tab" onclick="islamSwitchTab('badges',this)">🏅 Achievements</div>
-    <div class="islam-tab" onclick="islamSwitchTab('stats',this)">📈 Statistics</div>
   </div>
 
   <!-- SUB: Salah Tracker -->
@@ -10525,13 +10525,36 @@ function islamSwitchTab(tab, el) {
 /* ── DAILY REMINDER ── */
 const ISL_REMINDERS = [
   '"Chase your goals, but remember: real success is impossible without Allah\'s grace."',
-  '"وَقُل رَّبِّ زِدْنِي عِلْمًا — My Lord, increase me in knowledge."',
+  '"وَقُل رَّبِّ زِدْنِي عِلْمًا — My Lord, increase me in knowledge." — Surah Ta-Ha: 114',
   '"Pray before you study. Seek Allah\'s help in every task."',
   '"The best among you are those who learn the Quran and teach it." — Bukhari',
   '"Verily, with hardship comes ease." — Surah Ash-Sharh: 5',
   '"Make dua before you begin — Allah opens doors that no human can."',
   '"Knowledge is not about memorizing but about fearing Allah."',
   '"Whoever travels a path seeking knowledge, Allah will ease for them a path to Jannah." — Muslim',
+  '"Do not lose hope, nor be sad." — Surah Al-Imran: 139',
+  '"Allah does not burden a soul beyond that it can bear." — Surah Al-Baqarah: 286',
+  '"Tawakkul is not that you sit idle — it is that you work hard, then trust Allah."',
+  '"Before you open your book, open your heart to Allah."',
+  '"Your exam is easy when Allah is with you. Start with Bismillah."',
+  '"Sleep early, wake for Fajr, study with a clean heart — that is the student\'s sunnah."',
+  '"A Muslim student who seeks knowledge for Allah\'s sake is doing ibadah every moment." — Ibn Majah',
+  '"When you feel like giving up, remember why you started — and remember Allah is watching."',
+  '"Recite Ayatul Kursi before studying — it strengthens memory and brings barakah."',
+  '"The ink of a scholar is more sacred than the blood of a martyr." — Hadith',
+  '"Study not just to pass exams, but to become someone who benefits humanity."',
+  '"Every difficulty you face in learning raises your rank with Allah."',
+  '"Start your study session with: Bismillah, Rabbi zidni ilma."',
+  '"Even 10 minutes of focused study with intention is worship."',
+  '"Be consistent. Small daily effort beats cramming. That is the sunnah of excellence."',
+  '"O Allah, make my studies easy, bless my time, and give me understanding." — Student\'s Dua',
+  '"Gratitude for knowledge means sharing it. Teach what you learn."',
+  '"The world is a prison for the believer — but knowledge is the key to freedom." — Muslim',
+  '"Never let stress make you forget your salah. Salah is your reset button."',
+  '"You are not behind. You are exactly where Allah intended. Keep going."',
+  '"After every hardship comes not one but TWO ease. Keep pushing." — Surah Ash-Sharh: 5-6',
+  '"Make your study table a place of dhikr — say Alhamdulillah after every topic you finish."',
+  '"The student who prays Fajr before studying has already won half the battle."',
 ];
 
 function islRenderReminder() {
