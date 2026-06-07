@@ -136,7 +136,7 @@
         body.light-mode .note-editor { background: rgba(255,255,255,0.7); }
         body.light-mode .note-toolbar button { background: rgba(0,0,80,0.07); border-color: var(--input-border); color: var(--text-main); }
         /* ── ISLAM DASHBOARD ── */
-        .islam-hero { background: linear-gradient(135deg, rgba(0,180,100,0.18) 0%, rgba(0,120,70,0.12) 50%, rgba(0,80,40,0.08) 100%); border: 1px solid rgba(0,200,100,0.2); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .islam-hero { background: linear-gradient(135deg, rgba(0,180,100,0.18) 0%, rgba(0,120,70,0.12) 50%, rgba(0,80,40,0.08) 100%); border: 1px solid rgba(0,200,100,0.2); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 20px; position: relative; overflow: visible; }
         .islam-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(0,220,120,0.15), transparent 70%); pointer-events: none; }
         .islam-progress-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 18px; }
         @media (min-width: 600px) { .islam-progress-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -1741,7 +1741,7 @@
   <div class="islam-hero glass">
     <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(0,220,120,0.15);">
       <div style="font-size:0.68rem;font-weight:700;letter-spacing:2px;color:#00dc78;text-transform:uppercase;margin-bottom:7px;">✦ Daily Reminder</div>
-      <div id="isl-daily-reminder" style="font-size:0.88rem;font-weight:600;color:var(--text-main);line-height:1.7;font-style:italic;word-break:break-word;overflow-wrap:break-word;"></div>
+      <div id="isl-daily-reminder" style="font-size:0.88rem;font-weight:600;color:var(--text-main);line-height:1.7;font-style:italic;word-break:break-word;overflow-wrap:break-word;min-height:2.5em;display:block;"></div>
     </div>
     <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">📊 Today's Progress</div>
     <div class="islam-progress-grid">
@@ -1813,9 +1813,9 @@
         <span style="font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:rgba(255,140,0,0.55);display:inline-block;"></span> ১-২টি</span>
         <span style="font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:2px;background:rgba(255,60,60,0.35);display:inline-block;"></span> পড়া হয়নি</span>
       </div>
-      <div class="islam-heatmap-wrap">
-        <div id="isl-heatmap-months" class="hm-months"></div>
-        <div id="isl-heatmap" class="islam-heatmap"></div>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;">
+        <div id="isl-heatmap-months" style="white-space:nowrap;margin-bottom:4px;padding-left:0;"></div>
+        <div id="isl-heatmap" class="heatmap-grid" style="white-space:nowrap;line-height:0;"></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;text-align:center;">
         <div class="glass" style="padding:14px;border-radius:12px;">
@@ -1846,13 +1846,13 @@
       <div class="meaning-text" id="isl-ayah-bangla"></div>
       <div class="meaning-text" style="color:var(--text-secondary);" id="isl-ayah-english"></div>
       <div style="margin-top:8px;"><span class="ref-text" id="isl-ayah-ref"></span></div>
-      <div class="read-checkbox" id="isl-ayah-check" onclick="window.islToggleAyahRead()">
+      <div class="read-checkbox" id="isl-ayah-check" onclick="(function(){if(window.islToggleAyahRead)window.islToggleAyahRead();})()">
         <div class="read-cb-box"></div>
         <span style="font-size:0.85rem;color:var(--text-muted);">আমি আজকের আয়াতটি মনোযোগ দিয়ে পড়েছি</span>
       </div>
       <div class="card-nav-btns">
-        <button onclick="window.islAyahNav(-1)">← Previous</button>
-        <button onclick="window.islAyahNav(1)">Next →</button>
+        <button onclick="(function(){if(window.islAyahNav)window.islAyahNav(-1);})()">← Previous</button>
+        <button onclick="(function(){if(window.islAyahNav)window.islAyahNav(1);})()">Next →</button>
       </div>
     </div>
   </div>
@@ -1867,13 +1867,13 @@
       <div style="font-size:0.75rem;font-weight:700;color:#00dc78;margin-bottom:10px;" id="isl-hadith-cat"></div>
       <div class="meaning-text" id="isl-hadith-text" style="font-size:1rem;line-height:1.75;"></div>
       <div style="margin-top:12px;"><span class="ref-text" id="isl-hadith-ref"></span></div>
-      <div class="read-checkbox" id="isl-hadith-check" onclick="window.islToggleHadithRead()">
+      <div class="read-checkbox" id="isl-hadith-check" onclick="(function(){if(window.islToggleHadithRead)window.islToggleHadithRead();})()">
         <div class="read-cb-box"></div>
         <span style="font-size:0.85rem;color:var(--text-muted);">আমি আজকের হাদিসটি মনোযোগ দিয়ে পড়েছি</span>
       </div>
       <div class="card-nav-btns">
-        <button onclick="window.islHadithNav(-1)">← Previous</button>
-        <button onclick="window.islHadithNav(1)">Next →</button>
+        <button onclick="(function(){if(window.islHadithNav)window.islHadithNav(-1);})()">← Previous</button>
+        <button onclick="(function(){if(window.islHadithNav)window.islHadithNav(1);})()">Next →</button>
       </div>
     </div>
   </div>
@@ -10215,7 +10215,7 @@ function islRenderSalah() {
     if (done) checked++;
     const div = document.createElement('div');
     div.className = 'salah-item' + (done ? ' done' : '');
-    div.onclick = () => islToggleSalah(p);
+    div.addEventListener('click', function(e){ e.stopPropagation(); islToggleSalah(p); });
     div.innerHTML = `<div class="salah-cb"></div><div class="salah-name">${PRAYER_LABELS[p]}</div>`;
     grid.appendChild(div);
   });
@@ -10263,85 +10263,54 @@ function islRenderHeatmap() {
   const wrap = document.getElementById('isl-heatmap');
   const monthsWrap = document.getElementById('isl-heatmap-months');
   if (!wrap) return;
-  wrap.innerHTML = ''; monthsWrap.innerHTML = '';
+  wrap.innerHTML = ''; if(monthsWrap) monthsWrap.innerHTML = '';
+  const hStart = new Date('2026-01-01');
+  const hEnd = new Date('2026-12-31');
   const today = new Date(); today.setHours(0,0,0,0);
-  const start = new Date(today); start.setDate(start.getDate() - 364);
-  // Align to Sunday
-  const dow = start.getDay();
-  if (dow > 0) start.setDate(start.getDate() - dow);
-  const days = []; let d = new Date(start);
-  while (d <= today || days.length % 7 !== 0) {
-    days.push(new Date(d)); d.setDate(d.getDate()+1);
-    if (days.length > 400) break;
+  const allDates = [];
+  for (let d = new Date(hStart); d <= hEnd; d.setDate(d.getDate()+1)) {
+    allDates.push(new Date(d));
   }
-  const weeks = [];
-  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i+7));
   // Month labels
-  let lastMonth = -1;
-  weeks.forEach((week) => {
-    const firstDay = week[0];
-    const m = firstDay.getMonth();
-    const span = document.createElement('div');
-    span.className = 'hm-month-lbl';
-    span.style.width = '15px';
-    if (m !== lastMonth) {
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      span.textContent = months[m];
-      lastMonth = m;
-    }
-    monthsWrap.appendChild(span);
-  });
-  // Day labels row
-  const dayLabels = ['','M','','W','','F',''];
-  const dayRow = document.createElement('div');
-  dayRow.style.cssText = 'display:flex;flex-direction:column;gap:3px;margin-right:4px;';
-  dayLabels.forEach(l => {
-    const lbl = document.createElement('div');
-    lbl.className = 'hm-label';
-    lbl.textContent = l;
-    dayRow.appendChild(lbl);
-  });
-  const grid = document.createElement('div');
-  grid.style.cssText = 'display:flex;gap:3px;';
-  const tooltip = document.getElementById('hm-tooltip');
-  weeks.forEach(week => {
-    const col = document.createElement('div');
-    col.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
-    week.forEach(day => {
-      const cell = document.createElement('div');
-      cell.className = 'hm-cell';
-      const key = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
-      const isFuture = day > today;
-      if (isFuture) { cell.classList.add('hm-future'); }
-      else {
-        const rec = islState.salahHistory[key];
-        const cnt = rec ? rec.count : 0;
-        cell.classList.add('hm-' + cnt);
-      }
-      const showTip = (e) => {
-        if (!tooltip) return;
-        const rec = islState.salahHistory[key];
-        const cnt = rec ? rec.count : 0;
-        const dateStr = day.toLocaleDateString('bn-BD', {day:'numeric',month:'short',year:'numeric'});
-        tooltip.textContent = `${dateStr}: ${isFuture ? '—' : cnt + '/5 নামাজ'}`;
-        tooltip.style.display = 'block';
-        const cx = e.touches ? e.touches[0].clientX : e.clientX;
-        const cy = e.touches ? e.touches[0].clientY : e.clientY;
-        tooltip.style.left = (cx + 12) + 'px';
-        tooltip.style.top = (cy - 40) + 'px';
-      };
-      cell.addEventListener('mouseenter', showTip);
-      cell.addEventListener('touchstart', (e) => { e.preventDefault(); showTip(e); setTimeout(()=>{ if(tooltip) tooltip.style.display='none'; }, 2000); }, {passive:false});
-      cell.addEventListener('mouseleave', () => { if (tooltip) tooltip.style.display='none'; });
-      col.appendChild(cell);
+  if (monthsWrap) {
+    const months = {};
+    allDates.forEach(d => {
+      const m = d.toLocaleString('default', {month:'short'});
+      if (!months[m]) months[m] = 0;
+      months[m]++;
     });
-    grid.appendChild(col);
+    Object.entries(months).forEach(([m, count]) => {
+      const span = document.createElement('span');
+      span.style.cssText = `width:${count*17}px;overflow:hidden;white-space:nowrap;font-size:0.7rem;color:var(--text-muted);display:inline-block;`;
+      span.textContent = m;
+      monthsWrap.appendChild(span);
+    });
+  }
+  const tooltip = document.getElementById('hm-tooltip');
+  allDates.forEach(day => {
+    const key = day.getFullYear() + '-' + String(day.getMonth()+1).padStart(2,'0') + '-' + String(day.getDate()).padStart(2,'0');
+    const isFuture = day > today;
+    const rec = islState.salahHistory[key];
+    const cnt = rec ? rec.count : 0;
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell';
+    cell.style.display = 'inline-block';
+    if (key === (today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0'))) {
+      cell.style.outline = '2px solid #00dc78';
+    }
+    if (!isFuture && cnt > 0) {
+      if (cnt === 5) cell.classList.add('h4');
+      else if (cnt >= 3) cell.classList.add('h3');
+      else if (cnt === 2) cell.classList.add('h2');
+      else cell.classList.add('h1');
+    }
+    const tipEl = document.createElement('div');
+    tipEl.className = 'heatmap-tooltip';
+    tipEl.textContent = key + ': ' + (isFuture ? '—' : cnt + '/5 নামাজ');
+    cell.appendChild(tipEl);
+    cell.addEventListener('touchstart', (e) => { e.preventDefault(); tipEl.style.display='block'; setTimeout(()=>{ tipEl.style.display=''; },2000); }, {passive:false});
+    wrap.appendChild(cell);
   });
-  const container = document.createElement('div');
-  container.style.cssText = 'display:flex;';
-  container.appendChild(dayRow);
-  container.appendChild(grid);
-  wrap.appendChild(container);
   islCalcHeatmapStats();
 }
 
@@ -10465,8 +10434,8 @@ function islRenderDuas() {
       <div class="meaning-text" style="font-size:0.88rem;">${dua.meaning}</div>
       <div style="margin-top:8px;"><span class="ref-text">${dua.ref}</span></div>
       <div class="dua-btns">
-        <button class="dua-btn" onclick="window.islCopyDua(${dua.num-1})">📋 Copy</button>
-        <button class="dua-btn" onclick="window.islSaveDua(${dua.num-1})">💾 Bookmark</button>
+        <button class="dua-btn" onclick="(function(){if(window.islCopyDua)window.islCopyDua(${dua.num-1});})()">📋 Copy</button>
+        <button class="dua-btn" onclick="(function(){if(window.islSaveDua)window.islSaveDua(${dua.num-1});})()">💾 Save</button>
       </div>`;
     list.appendChild(card);
   });
