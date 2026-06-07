@@ -513,6 +513,12 @@
         .heatmap-tooltip { position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 10; }
         .heatmap-cell:hover .heatmap-tooltip { opacity: 1; }
         .heatmap-months { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; font-size: 0.7rem; color: var(--text-muted); }
+        #isl-heatmap .heatmap-cell.h1 { background: rgba(255,50,50,0.55); }
+        #isl-heatmap .heatmap-cell.h2 { background: rgba(255,140,0,0.65); }
+        #isl-heatmap .heatmap-cell.h4 { background: rgba(0,220,120,0.9); box-shadow: 0 0 5px rgba(0,220,120,0.5); }
+        body.light-mode #isl-heatmap .heatmap-cell.h1 { background: rgba(210,40,40,0.5); }
+        body.light-mode #isl-heatmap .heatmap-cell.h2 { background: rgba(200,100,0,0.55); }
+        body.light-mode #isl-heatmap .heatmap-cell.h4 { background: rgba(0,160,80,0.85); box-shadow: 0 0 5px rgba(0,160,80,0.4); }
         .vault-auth { max-width: 400px; margin: 80px auto; text-align: center; }
         .vault-content { display: none; }
         .vault-content.active { display: block; animation: fadeIn 0.5s; }
@@ -1821,7 +1827,7 @@
       </div>
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;">
         <div id="isl-heatmap-months" style="white-space:nowrap;margin-bottom:4px;padding-left:0;"></div>
-        <div id="isl-heatmap" class="heatmap-grid" style="white-space:nowrap;line-height:0;"></div>
+        <div id="isl-heatmap" class="heatmap-grid" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;"></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;text-align:center;">
         <div class="glass" style="padding:14px;border-radius:12px;">
@@ -1900,6 +1906,15 @@
   <div class="islam-sub" id="isl-sub-stats">
     <h3 style="color:var(--text-main);margin-bottom:16px;">📈 Islamic Statistics</h3>
     <div class="islam-stat-grid" id="isl-stat-grid"></div>
+    <div class="glass" style="padding:20px;margin-top:20px;border-radius:var(--radius-md);">
+      <h4 style="color:var(--text-main);margin-bottom:14px;">📊 এই সপ্তাহের নামাজের রিপোর্ট</h4>
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+        <div style="position:relative;width:140px;height:140px;flex-shrink:0;">
+          <canvas id="isl-salah-pie" width="140" height="140"></canvas>
+        </div>
+        <div id="isl-pie-legend" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
   </div>
 
 </section>
@@ -3715,8 +3730,8 @@ function savePartialSession() {
 }
 function stopTimer() {
     if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
-    _partialSaved = false;
     clearInterval(timerInt); timerInt = null; isRunning = false;
+    _partialSaved = false;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
     document.getElementById('fm-play-icon').className = 'fa-solid fa-play';
 }
@@ -3724,12 +3739,14 @@ function toggleTimer() {
     if(isRunning){
         stopTimer(); document.getElementById('timer-status').innerText='Paused';
     } else {
-        if (timeLeft <= 0) { timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]); _lastSavedSecs = 0; }
+        if (timeLeft <= 0) { timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]); }
+        if (timerMode === 'focus' && timeLeft === modes['focus']) { _lastSavedSecs = 0; }
         isRunning = true;
         _partialSaved = false;
         document.getElementById('play-icon').className = 'fa-solid fa-pause';
         document.getElementById('fm-play-icon').className = 'fa-solid fa-pause';
         document.getElementById('timer-status').innerText = timerMode === 'focus' ? 'Focusing...' : 'On break...';
+        if (timerInt) { clearInterval(timerInt); timerInt = null; }
         timerInt = setInterval(timerTick, 1000);
         if (timerMode === 'focus' && appData.settings.keepScreenAwake) requestWakeLock();
     }
@@ -3786,8 +3803,10 @@ function _sfOnBreakDone() {
 }
 
 function resetTimer() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
+    _partialSaved = true;
+    if (isRunning && timerMode === 'focus') { _partialSaved = false; savePartialSession(); }
     _partialSaved = false;
+    _lastSavedSecs = 0;
     _msBlock.enabled = false;
     const skipBtn = document.getElementById('ms-skip-break-btn');
     if (skipBtn) skipBtn.remove();
@@ -3817,7 +3836,10 @@ function timerTick() {
         document.title="Study Vault | Time's up!";
         if (timerMode === 'focus') {
             const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
-            const mins = _msBlock.enabled ? _msBlock.blockFocus : (appData.timerSettings.focus || 25);
+            const totalSecs = _msBlock.enabled ? _msBlock.blockFocus * 60 : modes['focus'];
+            const remainingUnsavedSecs = totalSecs - _lastSavedSecs;
+            const mins = Math.max(0, Math.round(remainingUnsavedSecs / 60));
+            _lastSavedSecs = 0;
             const today = _getLocalDateStr();
             // Daily sessions counter
             if (!appData.stats.dailySessionsDate) appData.stats.dailySessionsDate = today;
@@ -3827,7 +3849,7 @@ function timerTick() {
             _recordStudyTime(mins, subj);
             saveAppData();
             if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
-            document.getElementById('session-count').innerText = appData.stats.focusSessions;
+            document.getElementById('session-count').innerText = appData.stats.dailySessions;
             playSessionCompleteSound();
             // Microsoft-style block handling
             if (_msBlock.enabled) {
@@ -3863,18 +3885,15 @@ function timerTick() {
             } else if (autoCycleEnabled) {
                 startAutoCycleBreak();
             } else {
-                showToast('Focus session complete! 🎉 Break starting...', 'success');
-                document.getElementById('timer-status').innerText = 'Break time!';
-                playBreakStartSound();
-                setTimeout(() => {
-                    timerMode = 'short';
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    const sbtn = document.getElementById('mode-btn-short'); if (sbtn) sbtn.classList.add('active');
-                    timeLeft = modes.short;
-                    updateTimerDisplay(); setRing(modes.short, modes.short);
-                    document.getElementById('timer-status').innerText = 'On break...';
-                    toggleTimer();
-                }, 800);
+                releaseWakeLock();
+                showToast('Focus session complete! 🎉 Start break manually when ready.', 'success');
+                document.getElementById('timer-status').innerText = 'Session complete — start break manually';
+                timerMode = 'short';
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                const sbtn2 = document.getElementById('mode-btn-short'); if (sbtn2) sbtn2.classList.add('active');
+                timeLeft = modes.short;
+                updateTimerDisplay(); setRing(modes.short, modes.short);
+                // Do NOT call toggleTimer() — user must manually start break
             }
             checkAchievements();
             _partialSaved = false;
@@ -4035,7 +4054,6 @@ function enterFocusMode() {
     requestWakeLock();
 }
 function exitFocusMode() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
     isFocusModeActive = false;
     document.getElementById('focus-mode-screen').classList.add('hidden');
     stopAllSounds();
@@ -10240,14 +10258,20 @@ function islRenderSalah() {
 }
 
 async function islToggleSalah(prayer) {
+  const wasPerfect = PRAYERS.filter(p => islState.salah[p]).length === 5;
   islState.salah[prayer] = !islState.salah[prayer];
   const count = PRAYERS.filter(p => islState.salah[p]).length;
-  islState.salahHistory[islState.todayDate] = { count, prayers: { ...islState.salah } };
+  if (count === 0) {
+    delete islState.salahHistory[islState.todayDate];
+  } else {
+    islState.salahHistory[islState.todayDate] = { count, prayers: { ...islState.salah } };
+  }
   if (islState.salah[prayer]) {
     islState.stats.totalSalah = (islState.stats.totalSalah || 0) + 1;
     if (count === 5) islState.stats.perfectDays = (islState.stats.perfectDays || 0) + 1;
   } else {
     islState.stats.totalSalah = Math.max(0, (islState.stats.totalSalah || 0) - 1);
+    if (wasPerfect) islState.stats.perfectDays = Math.max(0, (islState.stats.perfectDays || 0) - 1);
   }
   islCalcStreak();
   islCheckBadges();
@@ -10255,6 +10279,7 @@ async function islToggleSalah(prayer) {
   islRenderSalah();
   islRenderHero();
   islRenderStats();
+  if (document.getElementById('isl-sub-heatmap') && document.getElementById('isl-sub-heatmap').classList.contains('active')) islRenderHeatmap();
 }
 
 function islCalcStreak() {
@@ -10308,15 +10333,13 @@ function islRenderHeatmap() {
     const cnt = rec ? rec.count : 0;
     const cell = document.createElement('div');
     cell.className = 'heatmap-cell';
-    cell.style.display = 'inline-block';
     if (key === (today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0'))) {
       cell.style.outline = '2px solid #00dc78';
     }
-    if (!isFuture && cnt > 0) {
+    if (!isFuture) {
       if (cnt === 5) cell.classList.add('h4');
-      else if (cnt >= 3) cell.classList.add('h3');
-      else if (cnt === 2) cell.classList.add('h2');
-      else cell.classList.add('h1');
+      else if (cnt >= 1) cell.classList.add('h2');
+      else if (cnt === 0) cell.classList.add('h1');
     }
     const tipEl = document.createElement('div');
     tipEl.className = 'heatmap-tooltip';
@@ -10511,6 +10534,57 @@ function islRenderStats() {
     card.innerHTML = `<div class="islam-stat-val">${item.val}</div><div class="islam-stat-label">${item.label}</div>`;
     grid.appendChild(card);
   });
+  islRenderWeeklySalahPie();
+}
+
+function islRenderWeeklySalahPie() {
+  const canvas = document.getElementById('isl-salah-pie');
+  const legend = document.getElementById('isl-pie-legend');
+  if (!canvas || !legend) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  let completed = 0, missed = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const rec = islState.salahHistory[key];
+    const cnt = rec ? rec.count : 0;
+    completed += cnt;
+    missed += (5 - cnt);
+  }
+  const total = completed + missed;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 140, 140);
+  const cx = 70, cy = 70, r = 60;
+  const drawArc = (start, end, color) => {
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+  };
+  if (total === 0) {
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fill();
+  } else {
+    const compAngle = (completed / total) * Math.PI * 2;
+    drawArc(-Math.PI/2, -Math.PI/2 + compAngle, 'rgba(0,220,120,0.85)');
+    if (missed > 0) drawArc(-Math.PI/2 + compAngle, -Math.PI/2 + Math.PI*2, 'rgba(255,60,60,0.6)');
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, 36, 0, Math.PI*2);
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-secondary').trim() || '#0a0a1a';
+  ctx.fill();
+  ctx.fillStyle = '#00dc78';
+  ctx.font = 'bold 17px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(total > 0 ? Math.round(completed/total*100)+'%' : '0%', cx, cy);
+  legend.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;">
+      <span style="width:13px;height:13px;border-radius:3px;background:rgba(0,220,120,0.85);flex-shrink:0;display:inline-block;"></span>
+      <span style="color:var(--text-main);">আদায় হয়েছে: <b style="color:#00dc78;">${completed}</b></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;">
+      <span style="width:13px;height:13px;border-radius:3px;background:rgba(255,60,60,0.6);flex-shrink:0;display:inline-block;"></span>
+      <span style="color:var(--text-main);">মিস হয়েছে: <b style="color:rgba(255,80,80,0.9);">${missed}</b></span>
+    </div>
+    <div style="font-size:0.74rem;color:var(--text-muted);margin-top:4px;">সর্বমোট (৭ দিন): ${total} / 35</div>`;
 }
 
 /* ── HERO ── */
@@ -10536,7 +10610,7 @@ function islamSwitchTab(tab, el) {
   if (tab === 'heatmap') islRenderHeatmap();
   if (tab === 'duas') islRenderDuas();
   if (tab === 'badges') islRenderBadges();
-  if (tab === 'stats') islRenderStats();
+  if (tab === 'stats') { islRenderStats(); setTimeout(islRenderWeeklySalahPie, 60); }
 }
 
 /* ── DAILY REMINDER ── */
