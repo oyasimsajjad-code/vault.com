@@ -512,12 +512,6 @@
         .heatmap-cell.h4 { background: rgba(0,240,255,0.9); box-shadow: 0 0 6px rgba(0,240,255,0.5); }
         .heatmap-tooltip { position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 10; }
         .heatmap-cell:hover .heatmap-tooltip { opacity: 1; }
-        .heatmap-cell.tip-show .heatmap-tooltip { opacity: 1; }
-        #isl-heatmap .heatmap-cell { background: rgba(255,60,60,0.18); }
-        #isl-heatmap .heatmap-cell.h1 { background: rgba(255,140,0,0.55); box-shadow: 0 0 4px rgba(255,140,0,0.3); }
-        #isl-heatmap .heatmap-cell.h2 { background: rgba(255,220,0,0.65); box-shadow: 0 0 4px rgba(255,220,0,0.35); }
-        #isl-heatmap .heatmap-cell.h3 { background: rgba(0,220,120,0.55); box-shadow: 0 0 5px rgba(0,220,120,0.4); }
-        #isl-heatmap .heatmap-cell.h4 { background: rgba(0,220,120,0.9); box-shadow: 0 0 8px rgba(0,220,120,0.7); }
         .heatmap-months { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; font-size: 0.7rem; color: var(--text-muted); }
         .vault-auth { max-width: 400px; margin: 80px auto; text-align: center; }
         .vault-content { display: none; }
@@ -796,8 +790,7 @@
             .notes-grid { grid-template-columns: 1fr; }
             .achievements-grid { grid-template-columns: repeat(2, 1fr); }
             .subject-grid { grid-template-columns: repeat(2, 1fr); }
-            #bottom-nav { display: flex; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; background: rgba(8,8,20,0.97); backdrop-filter: blur(15px); border-top: 1px solid var(--glass-border); z-index: 200 !important; justify-content: space-around; padding: 9px 0; padding-bottom: calc(9px + env(safe-area-inset-bottom)); flex-shrink: 0; order: 999; }
-            .view-section { padding-bottom: 70px !important; }
+            #bottom-nav { display: flex; position: relative; width: 100%; background: rgba(8,8,20,0.97); backdrop-filter: blur(15px); border-top: 1px solid var(--glass-border); z-index: 100; justify-content: space-around; padding: 9px 0; padding-bottom: calc(9px + env(safe-area-inset-bottom)); flex-shrink: 0; }
             .b-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-muted); font-size: 0.6rem; cursor: pointer; padding: 4px 6px; min-width: 0; flex: 1; border-radius: 8px; transition: color 0.2s; }
             .b-nav-item i { font-size: 0.95rem; }
             .b-nav-item.active { color: var(--primary); }
@@ -925,13 +918,13 @@
         @media (max-width: 768px) {
             html { height: 100%; }
             body { height: 100%; overflow: hidden; }
-            #main-app { display: flex !important; flex-direction: column !important; order: unset !important; height: 100dvh !important; height: 100vh !important; width: 100vw !important; overflow: hidden !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; }
+            #main-app { display: flex !important; flex-direction: column !important; height: 100dvh !important; height: 100vh !important; width: 100vw !important; overflow: hidden !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; }
             #content-area { flex: 1 !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; width: 100% !important; max-width: 100% !important; }
             #content-area > header { flex-shrink: 0 !important; width: 100% !important; }
             .view-section { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; display: none; flex-direction: column; -webkit-overflow-scrolling: touch; width: 100%; box-sizing: border-box; }
             .view-section.active { display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; width: 100% !important; box-sizing: border-box !important; overflow-y: auto !important; }
             #view-inbox.active { display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; overflow: hidden !important; overflow-y: hidden !important; }
-            #bottom-nav { display: flex !important; position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 200 !important; min-height: 56px !important; order: 999 !important; }
+            #bottom-nav { display: flex !important; flex-shrink: 0 !important; position: relative !important; width: 100% !important; z-index: 100 !important; min-height: 56px !important; }
             #sidebar { display: none !important; }
             nav#sidebar { display: none !important; }
         }
@@ -1844,16 +1837,6 @@
           <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">এই বছর</div>
         </div>
       </div>
-    </div>
-  </div>
-    <!-- Weekly Salah Pie Chart -->
-    <div class="glass" style="padding:20px;margin-bottom:16px;">
-      <h3 style="color:var(--text-main);margin-bottom:14px;">📊 সাপ্তাহিক সালাহ রিপোর্ট</h3>
-      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-        <canvas id="isl-salah-pie" width="160" height="160" style="max-width:160px;flex-shrink:0;"></canvas>
-        <div id="isl-pie-legend" style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:140px;"></div>
-      </div>
-      <div id="isl-weekly-bars" style="margin-top:18px;display:flex;flex-direction:column;gap:6px;"></div>
     </div>
   </div>
 
@@ -3689,7 +3672,6 @@ function applyCustomTimer() {
 }
 function setTimerMode(mode,btn) {
     stopTimer(); timerMode=mode; timeLeft=modes[mode];
-    _lastSavedSecs = 0; _partialSaved = false;
     document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
     if(btn) btn.classList.add('active');
     updateTimerDisplay(); setRing(modes[mode],modes[mode]);
@@ -3728,27 +3710,11 @@ function savePartialSession() {
     _lastSavedSecs = elapsedSecs;
     saveAppData();
     if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
-    showToast('✅ ' + newMins + ' min saved' + (subj && subj !== 'General' ? ' (' + subj + ')' : '') + ' 📊', 'success');
-    _partialSaved = true;
-}
-function savePartialSessionOnPause() {
-    if (!isRunning || timerMode !== 'focus') return;
-    const totalSecs = modes['focus'];
-    const elapsedSecs = totalSecs - timeLeft;
-    const newSecs = elapsedSecs - _lastSavedSecs;
-    if (newSecs < 30) return;
-    const newMins = Math.round(newSecs / 60);
-    if (newMins < 1) return;
-    const subj = document.getElementById('timer-subject') ? document.getElementById('timer-subject').value || 'General' : 'General';
-    _recordStudyTime(newMins, subj);
-    _lastSavedSecs = elapsedSecs;
-    saveAppData();
-    if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
-    showToast('✅ ' + newMins + ' min saved' + (subj && subj !== 'General' ? ' (' + subj + ')' : '') + ' 📊', 'success');
+    showToast('Partial session saved: ' + newMins + ' min recorded 📊', 'success');
     _partialSaved = true;
 }
 function stopTimer() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSessionOnPause();
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
     _partialSaved = false;
     clearInterval(timerInt); timerInt = null; isRunning = false;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
@@ -3820,7 +3786,7 @@ function _sfOnBreakDone() {
 }
 
 function resetTimer() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSessionOnPause();
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
     _partialSaved = false;
     _msBlock.enabled = false;
     const skipBtn = document.getElementById('ms-skip-break-btn');
@@ -3837,7 +3803,6 @@ function resetTimer() {
         if (fms) fms.style.display = 'none';
     }
     clearInterval(timerInt); timerInt = null; isRunning = false;
-    _lastSavedSecs = 0;
     document.getElementById('play-icon').className = 'fa-solid fa-play';
     document.getElementById('fm-play-icon').className = 'fa-solid fa-play';
     timeLeft = modes[timerMode]; updateTimerDisplay(); setRing(modes[timerMode], modes[timerMode]);
@@ -4070,7 +4035,7 @@ function enterFocusMode() {
     requestWakeLock();
 }
 function exitFocusMode() {
-    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSessionOnPause();
+    if (isRunning && timerMode === 'focus' && !_partialSaved) savePartialSession();
     isFocusModeActive = false;
     document.getElementById('focus-mode-screen').classList.add('hidden');
     stopAllSounds();
@@ -10173,23 +10138,11 @@ let islFirestore = null;
 async function initIslamDash() {
   try {
     if (typeof window._fbFirestore !== 'undefined') { islFirestore = window._fbFirestore; }
-    if (window._fbAuth && window._fbAuth.currentUser) {
-      islFbUid = window._fbAuth.currentUser.uid;
-      islFirestore = window._fbFirestore || islFirestore;
-    }
+    if (window._fbAuth && window._fbAuth.currentUser) { islFbUid = window._fbAuth.currentUser.uid; }
     await islLoadFromFirebase();
   } catch(e) { islLoadFromLocal(); }
   islCheckAndResetDay();
   islRenderAll();
-  if (window._fbAuth && typeof window._fbAuth.onAuthStateChanged === 'function') {
-    window._fbAuth.onAuthStateChanged(async user => {
-      if (user && user.uid !== islFbUid) {
-        islFbUid = user.uid;
-        islFirestore = window._fbFirestore || islFirestore;
-        try { await islLoadFromFirebase(); islCheckAndResetDay(); islRenderAll(); } catch(e) {}
-      }
-    });
-  }
 }
 
 function islTodayStr() {
@@ -10295,7 +10248,6 @@ async function islToggleSalah(prayer) {
     if (count === 5) islState.stats.perfectDays = (islState.stats.perfectDays || 0) + 1;
   } else {
     islState.stats.totalSalah = Math.max(0, (islState.stats.totalSalah || 0) - 1);
-    if (count === 4) islState.stats.perfectDays = Math.max(0, (islState.stats.perfectDays || 0) - 1);
   }
   islCalcStreak();
   islCheckBadges();
@@ -10370,8 +10322,7 @@ function islRenderHeatmap() {
     tipEl.className = 'heatmap-tooltip';
     tipEl.textContent = key + ': ' + (isFuture ? '—' : cnt + '/5 নামাজ');
     cell.appendChild(tipEl);
-    cell.addEventListener('touchstart', (e) => { e.preventDefault(); document.querySelectorAll('#isl-heatmap .heatmap-cell').forEach(c=>c.classList.remove('tip-show')); cell.classList.add('tip-show'); setTimeout(()=>{ cell.classList.remove('tip-show'); },2500); }, {passive:false});
-    cell.addEventListener('click', (e) => { document.querySelectorAll('#isl-heatmap .heatmap-cell').forEach(c=>c.classList.remove('tip-show')); cell.classList.add('tip-show'); setTimeout(()=>{ cell.classList.remove('tip-show'); },2500); });
+    cell.addEventListener('touchstart', (e) => { e.preventDefault(); tipEl.style.display='block'; setTimeout(()=>{ tipEl.style.display=''; },2000); }, {passive:false});
     wrap.appendChild(cell);
   });
   islCalcHeatmapStats();
@@ -10414,71 +10365,6 @@ function islCalcHeatmapStats() {
   if (wk) wk.textContent = weekPct + '%';
   if (mo) mo.textContent = monthPct + '%';
   if (yr) yr.textContent = yearPct + '%';
-  islRenderWeeklyPie();
-}
-
-function islRenderWeeklyPie() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const DAY_NAMES = ['রবি','সোম','মঙ্গল','বুধ','বৃহ','শুক্র','শনি'];
-  const PRAYER_NAMES = ['Fajr','Dhuhr','Asr','Maghrib','Isha'];
-  const PRAYER_BN = ['ফজর','যোহর','আসর','মাগরিব','এশা'];
-  const COLORS = ['#00dc78','#00b8d9','#ffcc00','#ff8c00','#ff4444'];
-  const weekData = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today); d.setDate(d.getDate() - i);
-    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    const rec = islState.salahHistory[key];
-    weekData.push({ day: DAY_NAMES[d.getDay()], count: rec ? rec.count : 0, prayers: rec ? (rec.prayers || {}) : {} });
-  }
-  const prayerTotals = PRAYER_NAMES.map(p => weekData.filter(d => d.prayers[p]).length);
-  const totalPrayers = prayerTotals.reduce((a,b) => a+b, 0);
-  const canvas = document.getElementById('isl-salah-pie');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 160, 160);
-  const cx = 80, cy = 80, r = 70;
-  let startAngle = -Math.PI / 2;
-  if (totalPrayers === 0) {
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI);
-    ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('কোনো ডেটা নেই', cx, cy);
-  } else {
-    prayerTotals.forEach((val, i) => {
-      if (val === 0) return;
-      const slice = (val / 35) * 2 * Math.PI;
-      ctx.beginPath(); ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r, startAngle, startAngle + slice);
-      ctx.closePath(); ctx.fillStyle = COLORS[i]; ctx.fill();
-      startAngle += slice;
-    });
-    ctx.beginPath(); ctx.arc(cx, cy, 38, 0, 2*Math.PI);
-    ctx.fillStyle = '#0a0a1a'; ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(totalPrayers + '/35', cx, cy);
-  }
-  const legend = document.getElementById('isl-pie-legend');
-  if (legend) {
-    legend.innerHTML = '';
-    PRAYER_NAMES.forEach((p, i) => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:0.8rem;';
-      row.innerHTML = `<span style="width:12px;height:12px;border-radius:50%;background:${COLORS[i]};display:inline-block;flex-shrink:0;"></span><span style="color:var(--text-muted);">${PRAYER_BN[i]}</span><span style="margin-left:auto;font-weight:700;color:${COLORS[i]};">${prayerTotals[i]}/7</span>`;
-      legend.appendChild(row);
-    });
-  }
-  const barsEl = document.getElementById('isl-weekly-bars');
-  if (barsEl) {
-    barsEl.innerHTML = '<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">গত ৭ দিন</div>';
-    weekData.forEach(d => {
-      const pct = Math.round(d.count / 5 * 100);
-      const barColor = d.count === 5 ? '#00dc78' : d.count >= 3 ? '#ffcc00' : d.count > 0 ? '#ff8c00' : 'rgba(255,255,255,0.1)';
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;';
-      row.innerHTML = `<span style="width:30px;font-size:0.75rem;color:var(--text-muted);text-align:right;flex-shrink:0;">${d.day}</span><div style="flex:1;background:rgba(255,255,255,0.06);border-radius:4px;height:10px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px;transition:width 0.4s;"></div></div><span style="width:22px;font-size:0.75rem;color:var(--text-muted);text-align:right;">${d.count}/5</span>`;
-      barsEl.appendChild(row);
-    });
-  }
 }
 
 /* ── AYAH ── */
