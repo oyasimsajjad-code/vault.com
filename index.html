@@ -154,11 +154,11 @@
         .salah-item.done .salah-cb::after { content: '✓'; color: #000; font-size: 13px; font-weight: 900; }
         .salah-name { font-weight: 600; font-size: 0.92rem; }
         /* Heatmap */
-        .islam-heatmap-wrap { overflow-x: auto; padding-bottom: 8px; }
-        .islam-heatmap { display: flex; flex-direction: column; gap: 3px; }
+        .islam-heatmap-wrap { overflow-x: auto; overflow-y: hidden; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+        .islam-heatmap { display: flex; flex-direction: column; gap: 2px; min-width: max-content; }
         .hm-row { display: flex; gap: 3px; align-items: center; }
         .hm-label { font-size: 0.62rem; color: var(--text-muted); width: 24px; flex-shrink: 0; text-align: right; margin-right: 4px; }
-        .hm-cell { width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.06); flex-shrink: 0; cursor: pointer; transition: transform 0.15s; position: relative; border: 1px solid rgba(255,255,255,0.04); }
+        .hm-cell { width: 12px; height: 12px; border-radius: 2px; background: rgba(255,255,255,0.08); flex-shrink: 0; cursor: pointer; transition: transform 0.15s; position: relative; }
         .hm-cell:hover { transform: scale(1.35); z-index: 10; }
         .hm-cell.hm-0 { background: rgba(255,255,255,0.06); }
         .hm-cell.hm-1 { background: rgba(0,220,120,0.2); }
@@ -1741,7 +1741,7 @@
   <div class="islam-hero glass">
     <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(0,220,120,0.15);">
       <div style="font-size:0.68rem;font-weight:700;letter-spacing:2px;color:#00dc78;text-transform:uppercase;margin-bottom:7px;">✦ Daily Reminder</div>
-      <div style="font-size:0.95rem;font-weight:600;color:var(--text-main);line-height:1.6;font-style:italic;">"Chase your goals, but remember: real success is impossible without Allah's grace."</div>
+      <div style="font-size:0.88rem;font-weight:600;color:var(--text-main);line-height:1.7;font-style:italic;word-break:break-word;overflow-wrap:break-word;">"Chase your goals, but remember: real success is impossible without Allah's grace."</div>
     </div>
     <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">📊 Today's Progress</div>
     <div class="islam-progress-grid">
@@ -1851,8 +1851,8 @@
         <span style="font-size:0.85rem;color:var(--text-muted);">আমি আজকের আয়াতটি মনোযোগ দিয়ে পড়েছি</span>
       </div>
       <div class="card-nav-btns">
-        <button onclick="islAyahNav(-1)">← Previous</button>
-        <button onclick="islAyahNav(1)">Next →</button>
+        <button onclick="window.islAyahNav(-1)">← Previous</button>
+        <button onclick="window.islAyahNav(1)">Next →</button>
       </div>
     </div>
   </div>
@@ -1872,8 +1872,8 @@
         <span style="font-size:0.85rem;color:var(--text-muted);">আমি আজকের হাদিসটি মনোযোগ দিয়ে পড়েছি</span>
       </div>
       <div class="card-nav-btns">
-        <button onclick="islHadithNav(-1)">← Previous</button>
-        <button onclick="islHadithNav(1)">Next →</button>
+        <button onclick="window.islHadithNav(-1)">← Previous</button>
+        <button onclick="window.islHadithNav(1)">Next →</button>
       </div>
     </div>
   </div>
@@ -2551,7 +2551,7 @@ function applyLang() {
     });
     // Bottom nav
     const bNavItems = document.querySelectorAll('#bottom-nav .b-nav-item');
-    const bKeys = ['home','pdfs','islam','inbox','timer'];
+    const bKeys = ['home','pdfs','routine','islam','inbox','timer'];
     bNavItems.forEach((el,i) => {
       if (!bKeys[i]) return;
       const nodes = el.childNodes;
@@ -2862,7 +2862,7 @@ function updateGreeting() {
 
 /* ---- NAVIGATION ---- */
 const VIEW_INDEX = { dashboard:0, todo:1, notes:2, library:3, pomodoro:4, revision:5, analytics:6, goals:7, achievements:8, vault:9, routine:10, leaderboard:11, challenge:12, groupfocus:13, friends:14, inbox:15, profile:16, islamdash:17 };
-const BNAV_INDEX = { dashboard:0, library:1, islamdash:2, inbox:3, pomodoro:4 };
+const BNAV_INDEX = { dashboard:0, library:1, routine:2, islamdash:3, inbox:4, pomodoro:5 };
 
 const VIEW_ID_MAP = {
     dashboard:0, todo:1, notes:2, pomodoro:3, revision:4,
@@ -10571,6 +10571,8 @@ window.islToggleSalah = islToggleSalah;
 window.islNextAyah = islNextAyah;
 window.islPrevAyah = islPrevAyah;
 window.islToggleAyahRead = islToggleAyahRead;
+window.islAyahNav = islAyahNav;
+window.islHadithNav = islHadithNav;
 window.islNextHadith = islNextHadith;
 window.islPrevHadith = islPrevHadith;
 window.islToggleHadithRead = islToggleHadithRead;
