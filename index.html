@@ -2435,7 +2435,7 @@
 </div>
 
 <div id="toast-container"></div>
-<div class="swipe-hint" id="swipe-hint">← Swipe to navigate →</div>
+
 <!-- ADMIN FAB — hidden -->
 <button id="admin-fab" class="hidden" onclick="openAdminPanel()" title="Admin Panel" style="display:none!important;">👑</button>
 <!-- ADMIN PANEL MODAL -->
@@ -10593,7 +10593,7 @@ function islRenderAll() {
 /* ── EXPOSE TO GLOBAL SCOPE (module fix) ── */
 /* ── FIRST VISIT REMINDER BANNER ── */
 (function() {
-  if (false) {
+  if (false && false) {
     setTimeout(() => {
       const banner = document.createElement('div');
       banner.id = 'isl-first-visit-banner';
