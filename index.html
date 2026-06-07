@@ -10223,7 +10223,7 @@ function islCheckAndResetDay() {
 async function islLoadFromFirebase() {
   if (!islFirestore || !islFbUid) { islLoadFromLocal(); return; }
   try {
-    const { doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const { doc, getDoc, setDoc } = window._fbFirestoreFns || await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
     const ref = doc(islFirestore, 'islamic_data', islFbUid);
     const snap = await getDoc(ref);
     if (snap.exists()) {
@@ -10244,7 +10244,7 @@ async function islLoadFromFirebase() {
 async function islSaveToFirebase() {
   if (!islFirestore || !islFbUid) { islSaveLocal(); return; }
   try {
-    const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const { doc, setDoc } = window._fbFirestoreFns || await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
     const ref = doc(islFirestore, 'islamic_data', islFbUid);
     await setDoc(ref, {
       salahHistory: islState.salahHistory,
