@@ -2795,14 +2795,14 @@ async function startApp() {
     updateGoalUI();
     renderAchievements();
     updateStreakUI();
-    // Render dashboard stats immediately from local cache — no waiting
+    await loadPDFs();
     updateDashboardStats();
     loadTimerSettings();
     loadRoutine();
+    renderRecentPDFs();
     updateGreeting();
-    // All I/O runs in parallel — never blocks the UI thread
+    // Parallel non-blocking load — prevents 0-value flicker and sequential delays
     Promise.all([
-        loadPDFs(),
         window._fbLoadDashLeaderboard ? window._fbLoadDashLeaderboard() : Promise.resolve(),
         typeof loadFriendRequestsBadge === 'function' ? Promise.resolve().then(loadFriendRequestsBadge) : Promise.resolve(),
         typeof loadInboxBadge === 'function' ? Promise.resolve().then(loadInboxBadge) : Promise.resolve()
@@ -8093,15 +8093,8 @@ async function loadAdminData() {
   if (!window._fbFirestore) { showToast('Firebase not ready','error'); return; }
   try {
     const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
-    const db = window._fbFirestore;
-    // All 4 collections fetched in parallel
-    const [snap, roomsSnap, rSnap, bSnap] = await Promise.all([
-        getDocs(collection(db, 'leaderboard')),
-        getDocs(collection(db, 'groupRooms')),
-        getDocs(collection(db, 'reports')).catch(() => null),
-        getDocs(collection(db, 'bannedUsers')).catch(() => null)
-    ]);
-    // Users
+    // Users (leaderboard)
+    const snap = await getDocs(collection(window._fbFirestore, 'leaderboard'));
     _allUsersCache = [];
     snap.forEach(d => { const v = d.data(); if (v && v.uid) _allUsersCache.push(v); });
     const verifiedCount = _allUsersCache.filter(u => u.verified).length;
@@ -8109,21 +8102,33 @@ async function loadAdminData() {
     const el_v = document.getElementById('admin-total-verified');
     if (el_u) el_u.innerText = _allUsersCache.length;
     if (el_v) el_v.innerText = verifiedCount;
+    // Update verified cache
     window._verifiedUsers = new Set(['aoKaaZLi7xhkcASgXdlaSTuF06k2']);
     _allUsersCache.forEach(u => { if (u.verified || u.role === 'admin') window._verifiedUsers.add(u.uid); });
     filterAdminUsers('');
-    // Rooms
+    // Group rooms
+    const roomsSnap = await getDocs(collection(window._fbFirestore, 'groupRooms'));
     let rooms = [];
     roomsSnap.forEach(d => rooms.push(d.data()));
     const el_g = document.getElementById('admin-total-groups');
     if (el_g) el_g.innerText = rooms.length;
     renderAdminGroups(rooms);
     // Reports
-    const el_r = document.getElementById('admin-total-reports');
-    if (rSnap) { let reports = []; rSnap.forEach(d => reports.push({ id: d.id, ...d.data() })); if (el_r) el_r.innerText = reports.length; renderAdminReports(reports); }
-    else { if (el_r) el_r.innerText = '0'; }
+    try {
+      const rSnap = await getDocs(collection(window._fbFirestore, 'reports'));
+      let reports = [];
+      rSnap.forEach(d => reports.push({ id: d.id, ...d.data() }));
+      const el_r = document.getElementById('admin-total-reports');
+      if (el_r) el_r.innerText = reports.length;
+      renderAdminReports(reports);
+    } catch(e) { const el_r = document.getElementById('admin-total-reports'); if(el_r) el_r.innerText = '0'; }
     // Banned
-    if (bSnap) { let banned = []; bSnap.forEach(d => banned.push({ id: d.id, ...d.data() })); renderAdminBanned(banned); }
+    try {
+      const bSnap = await getDocs(collection(window._fbFirestore, 'bannedUsers'));
+      let banned = [];
+      bSnap.forEach(d => banned.push({ id: d.id, ...d.data() }));
+      renderAdminBanned(banned);
+    } catch(e) {}
     showToast('Admin data লোড হয়েছে ✓', 'success');
   } catch(e) {
     console.error('loadAdminData error:', e);
@@ -8883,9 +8888,6 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import {
     getFirestore,
-    initializeFirestore,
-    persistentLocalCache,
-    persistentMultipleTabManager,
     doc,
     getDoc,
     setDoc,
@@ -8910,7 +8912,6 @@ import {
 const firebaseConfig = {
     apiKey: "AIzaSyCFXdmQSAHucGXZEX_GP2XKvi7qIZN6T1s",
     authDomain: "studyvault-1102b.firebaseapp.com",
-    databaseURL: "https://studyvault-1102b-default-rtdb.firebaseio.com",
     projectId: "studyvault-1102b",
     storageBucket: "studyvault-1102b.appspot.com",
     messagingSenderId: "380134237088",
@@ -8921,18 +8922,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
-// Use initializeFirestore with persistent offline cache + long-polling fallback for QUIC errors
-let firestore;
-try {
-    firestore = initializeFirestore(app, {
-        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-        experimentalForceLongPolling: false,
-        experimentalAutoDetectLongPolling: true
-    });
-} catch(e) {
-    // Already initialized (e.g. hot reload) — get existing instance
-    firestore = getFirestore(app);
-}
+const firestore = getFirestore(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 // setPersistence non-blocking — don't await at top level
@@ -9520,20 +9510,9 @@ setInterval(() => {
 
 function startPresenceListener() {
     if (!auth.currentUser || _presenceListener) return;
-    // Only listen to friends' presence, not all users — prevents inbox/friends re-render on every user's heartbeat
-    const knownUids = Array.from(new Set([
-        ...friendsList.map(f => f.uid),
-        ...Object.keys(conversations || {})
-    ])).filter(Boolean).slice(0, 30); // Firestore 'in' query limit is 30
-    if (!knownUids.length) {
-        // No friends yet — retry in 5s after friends load
-        setTimeout(() => { _presenceListener = null; startPresenceListener(); }, 5000);
-        return;
-    }
     const presRef = collection(firestore, 'presence');
     _presenceListener = onSnapshot(presRef, (snap) => {
         snap.forEach(d => {
-            if (!knownUids.includes(d.id)) return; // ignore strangers
             const v = d.data();
             if (!v) return;
             const blocked = typeof isUserBlocked === 'function' && isUserBlocked(d.id);
@@ -9572,7 +9551,7 @@ function startPresenceListener() {
 }
 
 if (auth.currentUser) {
-    if (!_rtdbPresenceRef) setupRTDBPresence(auth.currentUser.uid);
+    setupRTDBPresence(auth.currentUser.uid);
     startPresenceListener();
     document.addEventListener('visibilitychange', () => {
         if (!auth.currentUser) return;
@@ -9611,29 +9590,24 @@ if (auth.currentUser) {
     window.addEventListener('pageshow', () => {
         if (auth.currentUser) {
             fbUpdatePresence(auth.currentUser.uid, true);
-            // Only re-setup RTDB if the ref was lost (tab restore) — do NOT create duplicate listeners
-            if (!_rtdbPresenceRef) setupRTDBPresence(auth.currentUser.uid);
+            setupRTDBPresence(auth.currentUser.uid);
         }
     });
     startNotifListener(auth.currentUser.uid);
     startMessageNotifListener(auth.currentUser.uid);
 
-    // Cache the RTDB module so import() isn't called every heartbeat tick
-    let _rtdbSetFn = null;
-    import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js')
-        .then(({ set }) => { _rtdbSetFn = set; })
-        .catch(() => {});
-    // Heartbeat every 30s — keeps own presence fresh
+    // Heartbeat every 25s — keeps own presence fresh so others see correct status
     let _presenceHeartbeat = setInterval(() => {
         if (!auth.currentUser) { clearInterval(_presenceHeartbeat); return; }
         if (document.visibilityState === 'visible') {
             fbUpdatePresence(auth.currentUser.uid, true);
-            if (_rtdbPresenceRef && _rtdbSetFn) {
-                _rtdbSetFn(_rtdbPresenceRef, { online: true, lastSeen: Date.now(), uid: auth.currentUser.uid })
+            if (_rtdbPresenceRef) {
+                import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js')
+                    .then(({ set }) => set(_rtdbPresenceRef, { online: true, lastSeen: Date.now(), uid: auth.currentUser.uid }))
                     .catch(() => {});
             }
         }
-    }, 30000);
+    }, 15000);
 }
 
 /* ---- MESSAGE ACTIONS ---- */
@@ -9833,7 +9807,9 @@ window._fbLoadFriendsList = async function() {
 };
 
 /* ---- MESSAGING SYSTEM (Firestore) ---- */
-// onSnapshot is already available from the top-level named import above — no re-import needed
+// onSnapshot already imported at top of module via named import
+// (using the getFirestore import block above - no extra import needed)
+const { onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
 
 function getChatId(uid1, uid2) {
     return [uid1, uid2].sort().join('_');
@@ -10072,10 +10048,7 @@ async function startNotifListener(uid) {
 }
 
 /* ---- Message notification listener (new messages from others) ---- */
-let _msgNotifListenerActive = false;
 async function startMessageNotifListener(uid) {
-    if (_msgNotifListenerActive || !uid) return;
-    _msgNotifListenerActive = true;
     try {
         const convRef = collection(firestore, 'users', uid, 'conversations');
         let _firstLoad = true;
@@ -10118,7 +10091,7 @@ async function startMessageNotifListener(uid) {
                 }
             });
         });
-    } catch(e) { console.warn('Message notif listener error:', e); _msgNotifListenerActive = false; }
+    } catch(e) { console.warn('Message notif listener error:', e); }
 }
 
 
