@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Vault | Smart PDF Library</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237000ff'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' fill='white'%3E📚%3C/text%3E%3C/svg%3E">
     <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" onload="this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
@@ -1011,11 +1012,11 @@
         <div class="fb-form active" id="fb-login-form">
             <div class="fb-field">
                 <label>Email Address</label>
-                <input type="email" id="fb-login-email" placeholder="you@example.com" autocomplete="email">
+                <input type="email" id="fb-login-email" placeholder="you@example.com" autocomplete="email" autocorrect="off" autocapitalize="off">
             </div>
             <div class="fb-field">
                 <label>Password</label>
-                <input type="password" id="fb-login-password" placeholder="Your password" autocomplete="current-password">
+                <input type="password" id="fb-login-password" placeholder="Your password" autocomplete="current-password" autocorrect="off">
                 <i class="fa-solid fa-eye eye-toggle" onclick="toggleFbPassword('fb-login-password')"></i>
             </div>
             <div class="fb-forgot"><a onclick="handleForgotPassword()">Forgot password?</a></div>
@@ -1174,7 +1175,15 @@
         </header>
 
         <!-- Dashboard -->
-        <section id="view-dashboard" class="view-section active" style="overflow-y:auto;flex:1;min-height:0;">            <div class="section-header" style="margin-bottom:10px;">
+        <section id="view-dashboard" class="view-section active" style="overflow-y:auto;flex:1;min-height:0;">
+            <!-- Skeleton loader for instant paint -->
+            <div id="dash-skeleton" style="display:none;">
+                <div style="height:72px;border-radius:16px;background:rgba(255,255,255,0.05);margin-bottom:16px;animation:skeletonPulse 1.5s ease infinite;"></div>
+                <div style="height:120px;border-radius:16px;background:rgba(255,255,255,0.04);margin-bottom:16px;animation:skeletonPulse 1.5s ease infinite 0.1s;"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;"><div style="height:80px;border-radius:12px;background:rgba(255,255,255,0.04);animation:skeletonPulse 1.5s ease infinite 0.2s;"></div><div style="height:80px;border-radius:12px;background:rgba(255,255,255,0.04);animation:skeletonPulse 1.5s ease infinite 0.3s;"></div></div>
+            </div>
+            <style>@keyframes skeletonPulse{0%,100%{opacity:0.5}50%{opacity:1}}</style>
+            <div class="section-header" style="margin-bottom:10px;">
                 <h2 class="section-title">Overview</h2>
                 <div style="text-align:right;">
                     <div id="datetime-widget" style="color:var(--primary);font-family:var(--font-display);font-size:1.2rem;"></div>
@@ -1959,6 +1968,11 @@
   <div style="display:flex;flex-direction:row;flex:1;min-height:0;overflow:hidden;border:1px solid var(--glass-border);position:relative;" id="inbox-layout">
     <div class="conv-panel" style="width:300px;min-width:300px;max-width:300px;background:var(--sidebar-bg);backdrop-filter:blur(16px);display:flex;flex-direction:column;border-right:1px solid var(--glass-border);overflow:hidden;flex-shrink:0;">
       <div style="padding:14px 18px;border-bottom:1px solid var(--glass-border);font-weight:700;color:var(--text-main);font-family:var(--font-display);font-size:1rem;display:flex;align-items:center;gap:8px;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--sidebar-bg);"><i class="fa-solid fa-comments" style="color:var(--primary);"></i> Messages</div>
+      <!-- Stories / Active Friends Row -->
+      <div style="padding:10px 8px 0;border-bottom:1px solid var(--glass-border);flex-shrink:0;">
+        <div style="font-size:0.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-left:4px;">Active Friends</div>
+        <div id="inbox-stories-row" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;" class="hide-scrollbar"></div>
+      </div>
       <div id="inbox-guide-banner" style="margin:10px 8px;background:linear-gradient(135deg,rgba(0,240,255,0.08),rgba(112,0,255,0.08));border:1px solid rgba(0,240,255,0.2);border-radius:12px;padding:12px 14px;font-size:0.75rem;color:var(--text-secondary);line-height:1.7;">
         <div style="font-weight:700;color:var(--primary);margin-bottom:6px;">💬 Inbox Guide</div>
         <div>📌 <b>Friends</b> যোগ করলে এখানে chat আসবে</div>
@@ -2787,7 +2801,10 @@ async function startApp() {
     _authOv.style.visibility = 'hidden';
     _authOv.style.opacity = '0';
     _authOv.style.display = 'none';
-    applyTheme(appData.settings.darkMode !== false)
+    applyTheme(appData.settings.darkMode !== false);
+    // Show skeleton immediately for perceived speed
+    const _skel = document.getElementById('dash-skeleton');
+    if (_skel) _skel.style.display = 'block';
     updateProfileUI();
     renderTasks();
     renderNotes();
@@ -2795,14 +2812,16 @@ async function startApp() {
     updateGoalUI();
     renderAchievements();
     updateStreakUI();
-    await loadPDFs();
     updateDashboardStats();
     loadTimerSettings();
     loadRoutine();
     renderRecentPDFs();
     updateGreeting();
-    // Parallel non-blocking load — prevents 0-value flicker and sequential delays
+    // Hide skeleton, show real content
+    if (_skel) _skel.style.display = 'none';
+    // Load PDFs and all heavy data in parallel — never block UI paint
     Promise.all([
+        loadPDFs().catch(e => console.warn('PDFs load error:', e)),
         window._fbLoadDashLeaderboard ? window._fbLoadDashLeaderboard() : Promise.resolve(),
         typeof loadFriendRequestsBadge === 'function' ? Promise.resolve().then(loadFriendRequestsBadge) : Promise.resolve(),
         typeof loadInboxBadge === 'function' ? Promise.resolve().then(loadInboxBadge) : Promise.resolve()
@@ -6651,6 +6670,38 @@ let conversations = {};
 let currentChatUid = null;
 let chatListenerUnsubscribe = null;
 
+/* ---- INBOX STORIES ROW (Messenger-style) ---- */
+function _renderInboxStories() {
+    const storiesContainer = document.getElementById('inbox-stories-row');
+    if (!storiesContainer) return;
+    const myDp = appData.profile.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(appData.profile.name||'Me')+'&background=7000ff&color=fff');
+    let html = `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;cursor:pointer;" onclick="switchView('profile',null)">
+        <div style="position:relative;width:56px;height:56px;">
+            <img src="${myDp}" onerror="this.src='https://ui-avatars.com/api/?name=Me&background=7000ff&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid var(--secondary);">
+            <span style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--primary);border-radius:50%;border:2px solid var(--bg-base);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#000;font-weight:900;">✦</span>
+        </div>
+        <span style="font-size:0.65rem;color:var(--text-muted);max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;">আপনি</span>
+    </div>`;
+    const onlineFriends = friendsList.filter(f => window._onlineStatus && window._onlineStatus[f.uid]);
+    const offlineFriends = friendsList.filter(f => !(window._onlineStatus && window._onlineStatus[f.uid]));
+    const sortedFriends = [...onlineFriends, ...offlineFriends].slice(0, 10);
+    sortedFriends.forEach(f => {
+        const name = f.name || 'Friend';
+        const dp = f.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(name)+'&background=0D8ABC&color=fff');
+        const isOnline = !!(window._onlineStatus && window._onlineStatus[f.uid]);
+        const unread = conversations[f.uid] ? (conversations[f.uid].unread || 0) : 0;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;cursor:pointer;" onclick="openChatWith('${f.uid}')">
+            <div style="position:relative;width:56px;height:56px;">
+                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ${isOnline?'var(--success)':'var(--glass-border)'};">
+                ${isOnline?'<span style="position:absolute;bottom:1px;right:1px;width:13px;height:13px;background:var(--success);border-radius:50%;border:2px solid var(--bg-base);display:block;"></span>':''}
+                ${unread>0?`<span style="position:absolute;top:-2px;right:-2px;background:var(--accent);color:#fff;font-size:0.55rem;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;border:1.5px solid var(--bg-base);">${unread>9?'9+':unread}</span>`:''}
+            </div>
+            <span style="font-size:0.65rem;color:${isOnline?'var(--success)':'var(--text-muted)'};max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;">${name.split(' ')[0]}</span>
+        </div>`;
+    });
+    storiesContainer.innerHTML = html;
+}
+
 async function loadInboxBadge() {
     if (!window._fbLoadConversations) return;
     try {
@@ -6674,7 +6725,9 @@ function updateInboxBadge(count) {
 async function renderInbox() {
     const list = document.getElementById('conversations-list');
     if (!list) return;
-    list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    // Render stories row (friends with online status)
+    _renderInboxStories();
+    if (list.innerHTML === '') list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i></div>';
     if (!window._fbLoadConversations) return;
     try { conversations = await window._fbLoadConversations() || {}; } catch(e) { conversations = {}; }
     // Guard: if a chat is open and header was rendered, do not disturb it
@@ -8089,12 +8142,32 @@ function switchAdminTab(tab, btn) {
 
 async function loadAdminData() {
   if (!isCreator()) { showToast('Access Denied 🚫', 'error'); return; }
+  // Show loading state in all stat elements immediately
+  ['admin-total-users','admin-total-verified','admin-total-groups','admin-total-reports'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:0.8rem;"></i>';
+  });
+  const _uList = document.getElementById('admin-users-list');
+  if (_uList) _uList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading users...</div>';
+  if (!window._fbFirestore) {
+    // Retry up to 5s for Firebase to be ready
+    let _retries = 0;
+    const _wait = setInterval(() => {
+      _retries++;
+      if (window._fbFirestore) { clearInterval(_wait); loadAdminData(); }
+      else if (_retries > 10) { clearInterval(_wait); showToast('Firebase not ready — reload page','error'); }
+    }, 500);
+    return;
+  }
   showToast('Admin data লোড হচ্ছে...', 'success');
-  if (!window._fbFirestore) { showToast('Firebase not ready','error'); return; }
   try {
     const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    // Load all data in parallel for speed
+    const [lbSnap, roomsSnap] = await Promise.all([
+      getDocs(collection(window._fbFirestore, 'leaderboard')),
+      getDocs(collection(window._fbFirestore, 'groupRooms'))
+    ]);
     // Users (leaderboard)
-    const snap = await getDocs(collection(window._fbFirestore, 'leaderboard'));
+    const snap = lbSnap;
     _allUsersCache = [];
     snap.forEach(d => { const v = d.data(); if (v && v.uid) _allUsersCache.push(v); });
     const verifiedCount = _allUsersCache.filter(u => u.verified).length;
@@ -8106,8 +8179,7 @@ async function loadAdminData() {
     window._verifiedUsers = new Set(['aoKaaZLi7xhkcASgXdlaSTuF06k2']);
     _allUsersCache.forEach(u => { if (u.verified || u.role === 'admin') window._verifiedUsers.add(u.uid); });
     filterAdminUsers('');
-    // Group rooms
-    const roomsSnap = await getDocs(collection(window._fbFirestore, 'groupRooms'));
+    // Group rooms (already fetched in parallel above)
     let rooms = [];
     roomsSnap.forEach(d => rooms.push(d.data()));
     const el_g = document.getElementById('admin-total-groups');
@@ -8869,6 +8941,41 @@ window.onload = async () => {
 };
 </script>
 
+<!-- ===================== DOWNLOAD APP BANNER (web/desktop only) ===================== -->
+<div id="app-download-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:10px 16px;background:linear-gradient(135deg,rgba(112,0,255,0.95),rgba(0,240,255,0.9));backdrop-filter:blur(12px);border-top:1px solid rgba(0,240,255,0.3);box-shadow:0 -4px 24px rgba(0,240,255,0.25);animation:slideUpBanner 0.5s ease;">
+  <div style="max-width:640px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+      <div style="width:44px;height:44px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.4rem;">📱</div>
+      <div>
+        <div style="font-weight:700;color:#fff;font-size:0.95rem;line-height:1.2;">Get StudyVault App</div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.75);">Better experience on Android · Offline support · Push notifications</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <a href="https://github.com/oyasimsajjad-code/vault.com/releases/download/v1.0.0/app-release.apk" style="background:#fff;color:#7000ff;font-weight:800;font-size:0.85rem;padding:9px 18px;border-radius:10px;text-decoration:none;display:flex;align-items:center;gap:7px;white-space:nowrap;" onclick="document.getElementById('app-download-banner').style.display='none';localStorage.setItem('sv_banner_dismissed','1')"><i class="fa-solid fa-download"></i> Download APK</a>
+      <button onclick="document.getElementById('app-download-banner').style.display='none';localStorage.setItem('sv_banner_dismissed','1')" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+  </div>
+</div>
+<style>
+@keyframes slideUpBanner{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
+<script>
+(function(){
+  var _isAndroid = /Android/i.test(navigator.userAgent);
+  var _isWebView = (typeof Android !== 'undefined') || /wv\b/i.test(navigator.userAgent) || (window.navigator.standalone === true) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || document.referrer.includes('android-app://');
+  var _dismissed = localStorage.getItem('sv_banner_dismissed') === '1';
+  if (!_isAndroid && !_isWebView && !_dismissed) {
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        var b = document.getElementById('app-download-banner');
+        if (b) b.style.display = 'block';
+      }, 3500);
+    });
+  }
+})();
+<\/script>
+
 <!-- ===================== FIREBASE MODULE (v10.8.0) ===================== -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
@@ -8898,7 +9005,9 @@ import {
     query,
     where,
     orderBy,
-    limitToLast
+    limitToLast,
+    onSnapshot,
+    enableIndexedDbPersistence
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import {
     getStorage,
@@ -8912,6 +9021,7 @@ import {
 const firebaseConfig = {
     apiKey: "AIzaSyCFXdmQSAHucGXZEX_GP2XKvi7qIZN6T1s",
     authDomain: "studyvault-1102b.firebaseapp.com",
+    databaseURL: "https://studyvault-1102b-default-rtdb.firebaseio.com",
     projectId: "studyvault-1102b",
     storageBucket: "studyvault-1102b.appspot.com",
     messagingSenderId: "380134237088",
@@ -8927,6 +9037,14 @@ const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 // setPersistence non-blocking — don't await at top level
 setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
+// Enable IndexedDB offline persistence (Firestore cache-first)
+enableIndexedDbPersistence(firestore).catch(e => {
+  if (e.code !== 'failed-precondition' && e.code !== 'unimplemented') {
+    console.warn('Firestore persistence error:', e.code);
+  }
+});
+// Expose onSnapshot globally so non-module scripts can use it
+window._fbOnSnapshot = onSnapshot;
 
 // Handle redirect result from mobile Google sign-in (must run before onAuthStateChanged resolves)
 (async () => {
@@ -9230,6 +9348,9 @@ window.handleForgotPassword = async function() {
 window._fbLogout = async function() {
     // 1. Stop all Firestore listeners
     if (chatListenerUnsubscribe) { try { chatListenerUnsubscribe(); } catch(e){} chatListenerUnsubscribe = null; }
+    if (_notifUnsub) { try { _notifUnsub(); } catch(e){} _notifUnsub = null; _notifListenerActive = false; }
+    if (_msgNotifUnsub) { try { _msgNotifUnsub(); } catch(e){} _msgNotifUnsub = null; }
+    if (_presenceListener) { try { _presenceListener(); } catch(e){} _presenceListener = null; }
     // 2. Clear all chat & friend state
     currentChatUid = null;
     conversations = {};
@@ -9441,7 +9562,7 @@ async function setupRTDBPresence(uid) {
     try {
         const { getDatabase, ref: rtdbRef, onValue, set, onDisconnect, serverTimestamp } =
             await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js');
-        const rtdb = getDatabase();
+        const rtdb = getDatabase(app);
         const userStatusRef = rtdbRef(rtdb, 'presence/' + uid);
         const connectedRef = rtdbRef(rtdb, '.info/connected');
         _rtdbPresenceRef = userStatusRef;
@@ -9634,12 +9755,20 @@ window._fbReactMsg = async function(msgId, reaction, friendUid) {
 window._fbUnsendMsg = async function(msgId, friendUid) {
     if(!msgId||!friendUid||!auth.currentUser) return;
     const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
-    try { await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{unsent:true,text:'This message was unsent',reaction:null},{merge:true}); showToast('Message unsent','success'); } catch(e){ showToast('Unsend failed','error'); }
+    try {
+        const { doc: _d, setDoc: _s } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        await _s(_d(firestore,'chats',chatId,'messages',msgId),{unsent:true,text:'This message was unsent',reaction:null},{merge:true});
+        showToast('Message unsent','success');
+    } catch(e){ showToast('Unsend failed','error'); }
 };
 window._fbEditMsg = async function(msgId, newText, friendUid) {
     if(!msgId||!friendUid||!auth.currentUser) return;
     const chatId = [auth.currentUser.uid, friendUid].sort().join('_');
-    try { await setDoc(doc(firestore,'chats',chatId,'messages',msgId),{text:newText,edited:true},{merge:true}); showToast('Edited','success'); } catch(e){ showToast('Edit failed','error'); }
+    try {
+        const { doc: _d, setDoc: _s } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        await _s(_d(firestore,'chats',chatId,'messages',msgId),{text:newText,edited:true},{merge:true});
+        showToast('Edited','success');
+    } catch(e){ showToast('Edit failed','error'); }
 };
 
 /* ---- LEADERBOARD: Load all users ---- */
@@ -9685,29 +9814,54 @@ window._dashLbEntries = {};
 window._fbLoadDashLeaderboard = async function() {
     const el = document.getElementById('dash-leaderboard-list');
     if (!el) return;
+    // Show skeleton placeholder immediately
+    el.innerHTML = [1,2,3].map(() => `<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--glass-border);"><div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.07);flex-shrink:0;animation:skeletonPulse 1.5s ease infinite;"></div><div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.07);flex-shrink:0;animation:skeletonPulse 1.5s ease infinite;"></div><div style="flex:1;height:14px;border-radius:6px;background:rgba(255,255,255,0.07);animation:skeletonPulse 1.5s ease infinite;"></div></div>`).join('');
+    // Check LocalStorage cache (max 3 min stale)
+    try {
+        const _cached = localStorage.getItem('sv_lb_cache');
+        if (_cached) {
+            const { data, ts } = JSON.parse(_cached);
+            if (data && data.length && (Date.now() - ts) < 180000) {
+                _renderDashLb(el, data);
+                // Refresh in background silently
+                getDocs(collection(firestore, 'leaderboard')).then(snap => {
+                    const fresh = []; snap.forEach(d => fresh.push(d.data()));
+                    fresh.sort((a,b) => (b.hours||0)-(a.hours||0));
+                    const top = fresh.slice(0, 5);
+                    localStorage.setItem('sv_lb_cache', JSON.stringify({ data: top, ts: Date.now() }));
+                    top.forEach(e => { window._dashLbEntries[e.uid] = e; });
+                }).catch(() => {});
+                return;
+            }
+        }
+    } catch(_) {}
     try {
         const snap = await getDocs(collection(firestore, 'leaderboard'));
         let entries = [];
         snap.forEach(d => entries.push(d.data()));
         entries.sort((a, b) => (b.hours || 0) - (a.hours || 0));
         entries = entries.slice(0, 5);
+        try { localStorage.setItem('sv_lb_cache', JSON.stringify({ data: entries, ts: Date.now() })); } catch(_) {}
         if (!entries.length) { el.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">এখনো কেউ নেই।</p>'; return; }
-        const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
-        el.innerHTML = entries.map((e, i) => {
-            const isMe = e.uid === currentUser;
-            const dp = e.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(e.name||'U')+'&background=0D8ABC&color=fff');
-            window._dashLbEntries[e.uid] = e;
-            return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--glass-border);cursor:pointer;" onclick="showUserProfile(window._dashLbEntries['${e.uid}'])">
-                <span style="font-size:1.2rem;min-width:28px;text-align:center;">${medals[i]}</span>
-                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid ${isMe?'var(--primary)':'var(--glass-border)'};">
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;font-size:0.88rem;color:var(--text-main);display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${e.name||'Anonymous'}${getVerifiedBadge(e.uid)}${isMe?' <span style="color:var(--primary);font-size:0.7rem;">(আপনি)</span>':''}</div>
-                </div>
-                ${isMe ? `<div style="font-family:var(--font-display);font-weight:700;color:var(--primary);font-size:0.95rem;">${parseFloat((e.hours||0).toFixed(1))}h</div>` : ''}
-            </div>`;
-        }).join('');
-    } catch(e) { console.warn('Dash LB error:', e); }
+        _renderDashLb(el, entries);
+    } catch(e) { console.warn('Dash LB error:', e); el.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">লোড করা যায়নি।</p>'; }
 };
+function _renderDashLb(el, entries) {
+    const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+    el.innerHTML = entries.map((e, i) => {
+        const isMe = e.uid === currentUser;
+        const dp = e.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(e.name||'U')+'&background=0D8ABC&color=fff');
+        window._dashLbEntries[e.uid] = e;
+        return `<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--glass-border);cursor:pointer;" onclick="showUserProfile(window._dashLbEntries['${e.uid}'])">
+            <span style="font-size:1.2rem;min-width:28px;text-align:center;">${medals[i]}</span>
+            <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid ${isMe?'var(--primary)':'var(--glass-border)'};">
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:0.88rem;color:var(--text-main);display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${e.name||'Anonymous'}${getVerifiedBadge(e.uid)}${isMe?' <span style="color:var(--primary);font-size:0.7rem;">(আপনি)</span>':''}</div>
+            </div>
+            ${isMe ? `<div style="font-family:var(--font-display);font-weight:700;color:var(--primary);font-size:0.95rem;">${parseFloat((e.hours||0).toFixed(1))}h</div>` : ''}
+        </div>`;
+    }).join('');
+}
 
 /* ---- FRIENDS SYSTEM (Firestore) ---- */
 window._fbFirestore = firestore;
@@ -9807,9 +9961,7 @@ window._fbLoadFriendsList = async function() {
 };
 
 /* ---- MESSAGING SYSTEM (Firestore) ---- */
-// onSnapshot already imported at top of module via named import
-// (using the getFirestore import block above - no extra import needed)
-const { onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+// onSnapshot is already imported at the top of this module — no dynamic re-import needed
 
 function getChatId(uid1, uid2) {
     return [uid1, uid2].sort().join('_');
@@ -10015,12 +10167,14 @@ window._fbLoadConversations = async function() {
 
 /* ---- Firestore Notifications listener ---- */
 let _notifListenerActive = false;
+let _notifUnsub = null;
 async function startNotifListener(uid) {
     if (_notifListenerActive || !uid) return;
     _notifListenerActive = true;
+    if (_notifUnsub) { try { _notifUnsub(); } catch(e){} _notifUnsub = null; }
     try {
         const notifsRef = collection(firestore, 'users', uid, 'notifications');
-        onSnapshot(notifsRef, (snap) => {
+        _notifUnsub = onSnapshot(notifsRef, (snap) => {
             snap.docChanges().forEach(change => {
                 if (change.type === 'added') {
                     const data = change.doc.data();
@@ -10043,16 +10197,18 @@ async function startNotifListener(uid) {
                     }
                 }
             });
-        }, (err) => { console.warn('Notif listener error:', err); _notifListenerActive = false; });
+        }, (err) => { console.warn('Notif listener error:', err.code || err.message); _notifListenerActive = false; _notifUnsub = null; });
     } catch(e) { console.warn('Notification listener setup error:', e); _notifListenerActive = false; }
 }
 
 /* ---- Message notification listener (new messages from others) ---- */
+let _msgNotifUnsub = null;
 async function startMessageNotifListener(uid) {
+    if (_msgNotifUnsub) { try { _msgNotifUnsub(); } catch(e){} _msgNotifUnsub = null; }
     try {
         const convRef = collection(firestore, 'users', uid, 'conversations');
         let _firstLoad = true;
-        onSnapshot(convRef, (snap) => {
+        _msgNotifUnsub = onSnapshot(convRef, (snap) => {
             // প্রথমবার load এ notification দেখাবে না
             if (_firstLoad) { _firstLoad = false; return; }
             snap.docChanges().forEach(change => {
@@ -10090,7 +10246,7 @@ async function startMessageNotifListener(uid) {
                     if (typeof loadInboxBadge === 'function') loadInboxBadge();
                 }
             });
-        });
+        }, (err) => { console.warn('Message notif listener error:', err.code); _msgNotifUnsub = null; });
     } catch(e) { console.warn('Message notif listener error:', e); }
 }
 
@@ -10118,19 +10274,13 @@ async function initFCM() {
             serviceWorkerRegistration: await navigator.serviceWorker.getRegistration()
         });
         _fcmToken = token;
-window._fcmToken = token;
-try {
-    if (window.OneSignal) {
-        window.OneSignal.login(auth.currentUser.uid);
-        window.OneSignal.User.addTag('uid', auth.currentUser.uid);
-    }
-} catch(e) {}
-// OneSignal UID tag
-try {
-    if (window.OneSignal) {
-        window.OneSignal.login(auth.currentUser.uid);
-    }
-} catch(e) {}
+        window._fcmToken = token;
+        try {
+            if (window.OneSignal && auth.currentUser) {
+                window.OneSignal.login(auth.currentUser.uid);
+                window.OneSignal.User.addTag('uid', auth.currentUser.uid);
+            }
+        } catch(e) {}
 
         // Save token to Firestore
         if (token && auth.currentUser) {
