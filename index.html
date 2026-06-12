@@ -11141,43 +11141,41 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── CAT OS BASE ── */
 #cat-stage {
   position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 72px;
+  left: 16px;
   z-index: 8500;
   pointer-events: none;
   user-select: none;
-  width: 100%;
-  max-width: 520px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  width: auto;
 }
 /* ── DIALOGUE BUBBLE ── */
 #cat-bubble-wrap {
   position: relative;
-  margin-bottom: 0px;
+  margin-bottom: 6px;
   pointer-events: all;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  transform: translateY(120%);
+  align-items: flex-start;
+  transform: translateX(-120%);
   opacity: 0;
   transition: transform 0.42s cubic-bezier(0.34,1.45,0.64,1), opacity 0.3s ease;
   will-change: transform, opacity;
-  max-width: 88vw;
-  width: 320px;
+  max-width: 72vw;
+  width: 260px;
 }
 #cat-bubble-wrap.cat-visible {
-  transform: translateY(0%);
+  transform: translateX(0%);
   opacity: 1;
 }
 #cat-bubble {
   background: var(--glass-bg, rgba(18,18,32,0.96));
   border: 1px solid rgba(255,255,255,0.13);
-  border-radius: 18px 18px 18px 4px;
-  padding: 12px 16px 10px;
-  font-size: 0.84rem;
+  border-radius: 4px 18px 18px 18px;
+  padding: 10px 14px 9px;
+  font-size: 0.82rem;
   color: var(--text-main, #fff);
   line-height: 1.55;
   box-shadow: 0 8px 32px rgba(0,0,0,0.55);
@@ -11194,11 +11192,10 @@ body.light-mode #cat-bubble {
 #cat-bubble::after {
   content: '';
   position: absolute;
-  bottom: -8px;
-  left: 22px;
+  top: 10px;
+  left: -8px;
   border: 5px solid transparent;
-  border-top-color: rgba(255,255,255,0.13);
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+  border-right-color: rgba(255,255,255,0.13);
 }
 .cat-bubble-meta {
   display: flex;
@@ -11227,18 +11224,17 @@ body.light-mode #cat-bubble {
   border-radius: 3px;
   transition: width 1.2s ease;
 }
-/* ── CAT BODY (peeks from bottom) ── */
+/* ── CAT BODY (top-left peek) ── */
 #cat-body {
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   line-height: 1;
-  margin-top: 2px;
+  margin-top: 0px;
   cursor: pointer;
   pointer-events: all;
-  transform: translateY(0px);
   transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
-  filter: drop-shadow(0 -4px 12px rgba(0,0,0,0.4));
-  padding-bottom: 0px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
   animation: catBreath 4s ease-in-out infinite;
+  display: block;
 }
 @keyframes catBreath {
   0%,100% { transform: translateY(0px) scale(1); }
@@ -11278,9 +11274,9 @@ body.light-mode #cat-bubble {
 /* ── FISH TOAST ── */
 #cat-fish-toast {
   position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
+  top: 80px;
+  left: 70px;
+  transform: translateY(-10px);
   background: linear-gradient(135deg,rgba(255,180,60,0.95),rgba(255,120,30,0.95));
   color: #fff;
   font-weight: 700;
@@ -11296,7 +11292,7 @@ body.light-mode #cat-bubble {
 }
 #cat-fish-toast.show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 </style>
 
