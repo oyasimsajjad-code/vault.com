@@ -2368,7 +2368,7 @@
           <!-- Users Panel -->
           <div id="admin-panel-users">
             <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-              <input type="text" id="admin-user-search-page" placeholder="Search by name, institution..." style="flex:1;min-width:180px;" oninput="filterAdminUsers(this.value)">
+              <input type="text" id="admin-user-search" placeholder="Search by name, institution..." style="flex:1;min-width:180px;" oninput="filterAdminUsers(this.value)">
               <select id="admin-user-sort" onchange="filterAdminUsers(document.getElementById('admin-user-search').value)" style="width:150px;">
                 <option value="hours">Sort: Study Hours</option>
                 <option value="streak">Sort: Streak</option>
@@ -2376,11 +2376,11 @@
                 <option value="name">Sort: Name A-Z</option>
               </select>
             </div>
-            <div id="admin-users-list-page"></div>
+            <div id="admin-users-list"></div>
           </div>
           <!-- Groups Panel -->
           <div id="admin-panel-groups" style="display:none;">
-            <div id="admin-groups-list-page"></div>
+            <div id="admin-groups-list"></div>
           </div>
           <!-- Announcement Panel -->
           <div id="admin-panel-announce" style="display:none;">
@@ -2399,7 +2399,7 @@
           </div>
           <!-- Reports Panel -->
           <div id="admin-panel-reports" style="display:none;">
-            <div id="admin-reports-list-page"></div>
+            <div id="admin-reports-list"></div>
           </div>
           <!-- Banned Panel -->
           <div id="admin-panel-banned" style="display:none;">
@@ -8111,6 +8111,110 @@ function loadGroupRooms() {
     _startGFRoomsListener();
 }
 
+/* ===================== PROFILE SHARING SYSTEM ===================== */
+function openProfileShareCard() {
+    const name = appData.profile.name || 'Student';
+    const dp = appData.profile.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(name)+'&background=7000ff&color=fff&size=128');
+    const hours = parseFloat(((appData.stats.studyMinutes||0)/60).toFixed(1));
+    const streak = appData.streak.current || 0;
+    const tasks = appData.stats.completedTasks || 0;
+    const institution = appData.profile.goal || appData.profile.bio || 'StudyVault User';
+    const badges = (appData.earnedBadges||[]).slice(0,4).join(' ') || '📚';
+    const profileUrl = 'https://oyasimsajjad-code.github.io/vault.com/?profile=' + encodeURIComponent(currentUser||'');
+    // Build modal
+    let modal = document.getElementById('_sv_share_modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = '_sv_share_modal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:16px;';
+        modal.onclick = e => { if(e.target===modal) modal.remove(); };
+        document.body.appendChild(modal);
+    }
+    modal.innerHTML = `<div style="background:linear-gradient(135deg,#0a0a1a,#12102a);border:1px solid rgba(0,240,255,0.25);border-radius:24px;padding:28px 24px;max-width:360px;width:100%;position:relative;box-shadow:0 0 60px rgba(112,0,255,0.3);">
+        <button onclick="document.getElementById('_sv_share_modal').remove()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.1);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;">✕</button>
+        <div style="text-align:center;margin-bottom:20px;">
+            <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=S&background=7000ff&color=fff&size=128'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(0,240,255,0.5);margin-bottom:12px;">
+            <div style="font-size:1.2rem;font-weight:800;color:#fff;">${name}</div>
+            <div style="font-size:0.75rem;color:rgba(0,240,255,0.7);margin-top:4px;">${institution}</div>
+            <div style="font-size:0.9rem;margin-top:8px;">${badges}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+            <div style="background:rgba(0,240,255,0.07);border-radius:12px;padding:12px;text-align:center;border:1px solid rgba(0,240,255,0.15);">
+                <div style="font-size:1.3rem;font-weight:800;color:var(--primary,#00f0ff);">${hours}h</div>
+                <div style="font-size:0.65rem;color:rgba(255,255,255,0.5);margin-top:2px;">Study Time</div>
+            </div>
+            <div style="background:rgba(112,0,255,0.07);border-radius:12px;padding:12px;text-align:center;border:1px solid rgba(112,0,255,0.2);">
+                <div style="font-size:1.3rem;font-weight:800;color:#c084fc;">🔥${streak}</div>
+                <div style="font-size:0.65rem;color:rgba(255,255,255,0.5);margin-top:2px;">Day Streak</div>
+            </div>
+            <div style="background:rgba(0,255,102,0.07);border-radius:12px;padding:12px;text-align:center;border:1px solid rgba(0,255,102,0.15);">
+                <div style="font-size:1.3rem;font-weight:800;color:#00ff66;">✅${tasks}</div>
+                <div style="font-size:0.65rem;color:rgba(255,255,255,0.5);margin-top:2px;">Tasks Done</div>
+            </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+            <input id="_sv_share_link" value="${profileUrl}" readonly style="background:transparent;border:none;color:rgba(255,255,255,0.7);font-size:0.75rem;flex:1;outline:none;width:0;">
+            <button onclick="navigator.clipboard.writeText('${profileUrl}').then(()=>showToast('Link copied! 🔗','success'))" style="background:rgba(0,240,255,0.15);border:1px solid rgba(0,240,255,0.3);color:#00f0ff;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:700;white-space:nowrap;">Copy</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="shareProfileWhatsApp()" style="flex:1;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.3);color:#25d366;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;font-family:inherit;"><i class='fa-brands fa-whatsapp'></i> WhatsApp</button>
+            <button onclick="shareProfileToInbox()" style="flex:1;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.25);color:#00f0ff;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;font-family:inherit;"><i class='fa-solid fa-paper-plane'></i> Send in Chat</button>
+        </div>
+        <div style="text-align:center;margin-top:14px;font-size:0.65rem;color:rgba(255,255,255,0.25);">StudyVault · studyvault.app</div>
+    </div>`;
+    modal.style.display = 'flex';
+}
+
+function shareProfileWhatsApp() {
+    const name = appData.profile.name || 'Student';
+    const hours = parseFloat(((appData.stats.studyMinutes||0)/60).toFixed(1));
+    const streak = appData.streak.current || 0;
+    const profileUrl = 'https://oyasimsajjad-code.github.io/vault.com/?profile=' + encodeURIComponent(currentUser||'');
+    const text = `📚 *${name}* is using StudyVault!\n⏱ ${hours}h studied • 🔥 ${streak} day streak\n\n👉 Check my profile: ${profileUrl}\n\nJoin StudyVault: https://oyasimsajjad-code.github.io/vault.com/`;
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+function shareProfileToInbox() {
+    // Close share modal, switch to inbox
+    const modal = document.getElementById('_sv_share_modal');
+    if (modal) modal.remove();
+    if (!friendsList.length) { showToast('প্রথমে friends যোগ করুন', 'error'); switchView('friends', null); return; }
+    const name = appData.profile.name || 'Student';
+    const hours = parseFloat(((appData.stats.studyMinutes||0)/60).toFixed(1));
+    const streak = appData.streak.current || 0;
+    const dp = appData.profile.dp || '';
+    const profileUrl = 'https://oyasimsajjad-code.github.io/vault.com/?profile=' + encodeURIComponent(currentUser||'');
+    const profileMsg = `👤 *${name}*\n⏱ ${hours}h studied • 🔥 ${streak} day streak\n🔗 Profile: ${profileUrl}`;
+    // Show friend picker
+    let picker = document.getElementById('_sv_friend_picker');
+    if (!picker) { picker = document.createElement('div'); picker.id = '_sv_friend_picker'; document.body.appendChild(picker); }
+    picker.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:flex-end;justify-content:center;';
+    picker.onclick = e => { if(e.target===picker) picker.remove(); };
+    picker.innerHTML = `<div style="background:#0a0a1a;border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:480px;max-height:60vh;overflow-y:auto;">
+        <div style="font-weight:700;color:#fff;font-size:1rem;margin-bottom:14px;">📨 Send Profile Card to Friend</div>
+        ${friendsList.map(f => {
+            const fdp = f.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(f.name||'U')+'&background=0D8ABC&color=fff');
+            return `<div onclick="_sendProfileCard('${f.uid}','${(profileMsg).replace(/'/g,"\\'")}');document.getElementById('_sv_friend_picker').remove();showToast('Profile card sent! 📨','success');" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);margin-bottom:8px;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                <img src="${fdp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+                <div style="flex:1;"><div style="font-weight:600;color:#fff;font-size:0.9rem;">${f.name||'Friend'}</div><div style="font-size:0.72rem;color:rgba(255,255,255,0.4);">${f.institution||''}</div></div>
+                <i class="fa-solid fa-paper-plane" style="color:rgba(0,240,255,0.6);"></i>
+            </div>`;
+        }).join('')}
+    </div>`;
+}
+
+async function _sendProfileCard(toUid, msg) {
+    if (!window._fbSendMessage) { showToast('Firebase not ready','error'); return; }
+    await window._fbSendMessage(toUid, msg);
+    switchView('inbox', null);
+    setTimeout(() => openChatWith(toUid), 400);
+}
+
+function downloadProfileCard() {
+    openProfileShareCard();
+    showToast('Share করুন অথবা screenshot নিন 📸', 'success');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const cycleGoal = document.getElementById('cycle-goal-hours');
     const cycleBefore = document.getElementById('cycle-before-long');
@@ -8995,6 +9099,9 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import {
     getFirestore,
+    initializeFirestore,
+    persistentLocalCache,
+    persistentMultipleTabManager,
     doc,
     getDoc,
     setDoc,
@@ -9006,8 +9113,7 @@ import {
     where,
     orderBy,
     limitToLast,
-    onSnapshot,
-    enableIndexedDbPersistence
+    onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import {
     getStorage,
@@ -9032,17 +9138,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
-const firestore = getFirestore(app);
+// Use initializeFirestore with persistentLocalCache (replaces deprecated enableIndexedDbPersistence)
+let firestore;
+try {
+    firestore = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+} catch(e) {
+    // Already initialized (e.g. hot reload) — fall back to getFirestore
+    firestore = getFirestore(app);
+}
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 // setPersistence non-blocking — don't await at top level
 setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Persistence error:', e));
-// Enable IndexedDB offline persistence (Firestore cache-first)
-enableIndexedDbPersistence(firestore).catch(e => {
-  if (e.code !== 'failed-precondition' && e.code !== 'unimplemented') {
-    console.warn('Firestore persistence error:', e.code);
-  }
-});
 // Expose onSnapshot globally so non-module scripts can use it
 window._fbOnSnapshot = onSnapshot;
 
