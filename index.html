@@ -346,16 +346,6 @@
         /* SYNC STATUS INDICATOR */
         #sync-indicator { position: fixed; top: 16px; right: 16px; z-index: 9998; display: none; align-items: center; gap: 8px; background: rgba(0,0,0,0.7); border: 1px solid rgba(0,240,255,0.3); padding: 8px 14px; border-radius: 20px; backdrop-filter: blur(10px); font-size: 0.78rem; color: var(--primary); }
         #sync-indicator.show { display: flex; }
-        /* ── STUDY BUDDY ── */
-        @keyframes sbFloat { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
-        @keyframes sbBubblePop { from{opacity:0;transform:scale(0.8) translateY(8px);} to{opacity:1;transform:scale(1) translateY(0);} }
-        @keyframes sbPanelSlide { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
-        #study-buddy-widget { position:fixed;bottom:100px;right:18px;z-index:3500;display:flex;flex-direction:column;align-items:center;gap:6px; }
-        body.light-mode #sb-message-bubble { background:rgba(255,255,255,0.97);color:var(--text-main);border-color:var(--primary); }
-        body.light-mode #sb-panel { background:rgba(240,245,255,0.99);border-color:var(--primary); }
-        /* Dashboard Buddy Card */
-        #sb-dash-card { background:linear-gradient(135deg,rgba(112,0,255,0.12),rgba(0,240,255,0.08));border:1px solid rgba(0,240,255,0.2);border-radius:var(--radius-md);padding:18px;margin-bottom:20px;display:flex;align-items:center;gap:16px; }
-        body.light-mode #sb-dash-card { background:linear-gradient(135deg,rgba(85,0,204,0.07),rgba(0,95,163,0.06)); }
         /* CLOUD BADGE on PDF cards */
         .cloud-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,240,255,0.15); border: 1px solid rgba(0,240,255,0.3); border-radius: 6px; padding: 2px 6px; font-size: 0.65rem; color: var(--primary); }
         /* SPLASH */
@@ -1206,11 +1196,6 @@
                     <div class="greeting-sub" id="greeting-sub">Ready to conquer today?</div>
                 </div>
             </div>
-            <!-- Study Buddy Dashboard Card -->
-            <div id="sb-dash-card" style="background:linear-gradient(135deg,rgba(112,0,255,0.12),rgba(0,240,255,0.08));border:1px solid rgba(0,240,255,0.2);border-radius:var(--radius-md);padding:18px;margin-bottom:20px;display:flex;align-items:center;gap:16px;cursor:default;">
-              <div style="font-size:2.5rem;">🐱</div>
-              <div style="flex:1;color:var(--text-muted);font-size:0.85rem;">Loading Study Buddy...</div>
-            </div>
             <div class="glass" style="padding:20px;margin-bottom:20px;">
                 <h3 style="margin-bottom:14px;color:var(--text-main);"><i class="fa-solid fa-ranking-star" style="color:var(--warning);margin-right:8px;"></i>Top Learners — Study Hours</h3>
                 <div id="dash-leaderboard-list"></div>
@@ -1379,7 +1364,7 @@
                 <p style="margin-top:18px;color:var(--text-muted);font-size:0.9rem;">Sessions completed: <span id="session-count" style="color:var(--primary);font-weight:bold;">0</span></p>
                 <div style="margin-top:14px;">
                     <label style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:5px;">Studying subject:</label>
-                    <select id="timer-subject" style="width:200px;padding:8px 12px;font-size:0.85rem;" onchange="if(window._sbUpdateUI)window._sbUpdateUI();">
+                    <select id="timer-subject" style="width:200px;padding:8px 12px;font-size:0.85rem;">
                         <option value="">General</option>
                         <option value="Physics">Physics</option>
                         <option value="Chemistry">Chemistry</option>
@@ -2453,8 +2438,6 @@
         <button class="sound-btn" id="snd-library" onclick="toggleSound('library')">📚 Library</button>
         <button class="sound-btn" id="snd-focus" onclick="toggleSound('focus')">🎵 Focus</button>
     </div>
-    <!-- Study Buddy Floating Widget (injected into focus mode) -->
-    <div id="study-buddy-fm" style="position:absolute;bottom:90px;right:28px;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:10;"></div>
 </div>
 
 <!-- PDF Viewer Modal -->
@@ -2483,49 +2466,6 @@
 </div>
 
 <div id="toast-container"></div>
-
-<!-- ═══════════════════════════════════════════════════════
-     STUDY BUDDY — Floating Cat Companion
-     ═══════════════════════════════════════════════════════ -->
-<div id="study-buddy-widget" style="display:none;position:fixed;bottom:100px;right:18px;z-index:3500;display:flex;flex-direction:column;align-items:center;gap:6px;">
-  <div id="sb-message-bubble" style="max-width:200px;background:rgba(15,15,30,0.95);backdrop-filter:blur(16px);border:1px solid rgba(0,240,255,0.3);border-radius:16px 16px 4px 16px;padding:10px 13px;font-size:0.78rem;color:#fff;line-height:1.5;box-shadow:0 4px 20px rgba(0,240,255,0.15);display:none;position:absolute;bottom:110px;right:0;width:200px;animation:sbBubblePop 0.3s ease;"></div>
-  <div id="sb-avatar-wrap" style="cursor:pointer;position:relative;" onclick="sbTogglePanel()" title="Study Buddy">
-    <div id="sb-avatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#7000ff,#00f0ff);display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 0 20px rgba(0,240,255,0.4);animation:sbFloat 3s ease-in-out infinite;position:relative;border:2px solid rgba(0,240,255,0.5);">🐱</div>
-    <div id="sb-level-badge" style="position:absolute;bottom:-4px;right:-4px;background:linear-gradient(135deg,#7000ff,#00f0ff);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:900;color:#fff;border:2px solid var(--bg-base);font-family:var(--font-display);">1</div>
-    <div id="sb-xp-ring" style="position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(var(--primary) 0%,rgba(255,255,255,0.05) 0%);z-index:-1;transition:background 0.5s;"></div>
-  </div>
-  <!-- Mini Panel -->
-  <div id="sb-panel" style="display:none;position:absolute;bottom:80px;right:0;width:240px;background:rgba(10,10,25,0.97);backdrop-filter:blur(20px);border:1px solid rgba(0,240,255,0.25);border-radius:18px;padding:18px;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:sbPanelSlide 0.25s ease;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <div style="font-size:2rem;">🐱</div>
-      <div style="flex:1;">
-        <div id="sb-name-label" style="font-weight:700;color:#fff;font-size:0.9rem;">Kitten</div>
-        <div id="sb-level-label" style="font-size:0.7rem;color:var(--primary);">Level 1 · Study Buddy</div>
-      </div>
-    </div>
-    <div style="margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-        <span style="font-size:0.7rem;color:rgba(255,255,255,0.5);">XP</span>
-        <span id="sb-xp-label" style="font-size:0.7rem;color:var(--primary);font-weight:700;">0 / 100</span>
-      </div>
-      <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
-        <div id="sb-xp-bar" style="height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:10px;width:0%;transition:width 0.5s;"></div>
-      </div>
-    </div>
-    <div id="sb-next-evo" style="font-size:0.68rem;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:12px;"></div>
-    <button onclick="sbTogglePanel()" style="width:100%;background:rgba(0,240,255,0.08);border:1px solid rgba(0,240,255,0.2);color:var(--primary);border-radius:10px;padding:7px;font-size:0.78rem;cursor:pointer;font-family:var(--font-main);">Close ✕</button>
-  </div>
-</div>
-
-<!-- Download App CTA — hidden in PWA/APK/WebView, visible in browser only -->
-<div id="download-app-cta" style="display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:4500;background:linear-gradient(135deg,#7000ff,#00f0ff);border-radius:30px;padding:10px 22px;box-shadow:0 4px 24px rgba(0,240,255,0.35);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:var(--font-main);animation:sbFloat 4s ease-in-out infinite;" onclick="window.open('https://play.google.com/store/apps','_blank')">
-  <span style="font-size:1.2rem;">📱</span>
-  <div>
-    <div style="font-weight:700;color:#fff;font-size:0.85rem;line-height:1.2;">Download Mobile App</div>
-    <div style="font-size:0.65rem;color:rgba(255,255,255,0.75);">Better experience on Android</div>
-  </div>
-  <button onclick="event.stopPropagation();document.getElementById('download-app-cta').style.display='none';" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
-</div>
 
 <!-- ADMIN FAB — hidden -->
 <button id="admin-fab" class="hidden" onclick="openAdminPanel()" title="Admin Panel" style="display:none!important;">👑</button>
@@ -2897,10 +2837,6 @@ async function startApp() {
     history.replaceState({ view: 'dashboard' }, '');
     checkAndUpdateStreak();
     _scheduleMidnightReset();
-    // Init Study Buddy after app data is loaded
-    if (window.initStudyBuddy) setTimeout(window.initStudyBuddy, 800);
-    // Store UID for buddy Firestore sync
-    window._fbCurrentUID = currentUser;
     setupSwipeGestures();
     showAdminNavIfCreator();
     if (!appData.stats.aiXP) appData.stats.aiXP = 0;
@@ -3474,7 +3410,7 @@ function toggleTask(id) {
     const t=appData.tasks.find(x=>x.id===id); if(!t) return;
     t.completed=!t.completed;
     appData.stats.completedTasks=Math.max(0,(appData.stats.completedTasks||0)+(t.completed?1:-1));
-    if(t.completed) { playSound(); if(window.sbOnTaskComplete) window.sbOnTaskComplete(); }
+    if(t.completed) playSound();
     saveAppData(); renderTasks(); checkAchievements();
 }
 function deleteTask(id) {
@@ -3873,8 +3809,6 @@ function toggleTimer() {
                 _sessionStartWall = 0;
                 _sessionPausedAccum = 0;
                 _sessionSavedMs = 0;
-                // Study Buddy: session start notification
-                if (window.sbOnSessionStart) window.sbOnSessionStart(modes['focus'] * 1000);
             }
             // Record wall-clock start of this segment (fresh or resumed)
             _sessionStartWall = Date.now();
@@ -4004,8 +3938,6 @@ function timerTick() {
             if (window._fbPushLeaderboardStats) window._fbPushLeaderboardStats();
             document.getElementById('session-count').innerText = appData.stats.dailySessions;
             playSessionCompleteSound();
-            // Study Buddy XP reward
-            if (window.sbOnSessionComplete) window.sbOnSessionComplete(mins);
             // Microsoft-style block handling
             if (_msBlock.enabled) {
                 _msBlock.blocksDone++;
@@ -4358,8 +4290,6 @@ function _scheduleMidnightReset() {
 }
 
 function checkAndUpdateStreak(todayStr) {
-    // Study Buddy streak milestone hook
-    const prevStreak = appData.streak ? (appData.streak.current || 0) : 0;
     const today=todayStr||_getMidnightResetKey();
     // Reset todayMinutes if new day (exact date comparison, not floating 24h)
     if(appData.stats.lastStudyDate && appData.stats.lastStudyDate !== today) {
@@ -11180,436 +11110,6 @@ function islRenderAll() {
     }, 1500);
   }
 })();
-
-/* ══════════════════════════════════════════════════════════
-   STUDY BUDDY SYSTEM
-   ══════════════════════════════════════════════════════════ */
-(function() {
-'use strict';
-
-/* ── XP / Levels ── */
-const SB_LEVELS = [
-  { level:1, name:'Kitten',       avatar:'🐱', xpRequired:0,   nextXp:100  },
-  { level:2, name:'Student Cat',  avatar:'😺', xpRequired:100, nextXp:300  },
-  { level:3, name:'Scholar Cat',  avatar:'🎓', xpRequired:300, nextXp:600  },
-  { level:4, name:'Professor Cat',avatar:'🦁', xpRequired:600, nextXp:1000 },
-  { level:5, name:'Legend Cat',   avatar:'⭐', xpRequired:1000,nextXp:9999 }
-];
-
-/* ── Message pools ── */
-const SB_MSGS = {
-  start: [
-    "Today's effort is tomorrow's confidence.",
-    "You've already started. That's what most people never do.",
-    "Your future rank is being built right now.",
-    "I'm glad you came back today.",
-    "Bad day? That's okay. Let's still move forward.",
-    "We don't need a perfect day. We need progress.",
-    "Begin. The rest follows.",
-    "One focused session changes your entire day.",
-    "Every great scholar started exactly where you are.",
-    "Your brain is about to do something incredible.",
-    "Let's build something today that future-you will thank you for.",
-    "The session starts now. Everything else waits.",
-    "Champion mindset — show up even when it's hard.",
-    "Breathe. Focus. Begin. You've got this.",
-    "No one becomes great by accident. This is the work.",
-    "The gap between average and excellent is right here.",
-    "Another session. Another step forward.",
-    "You chose to study. That's already ahead of most.",
-    "Silence the noise. It's study time.",
-    "Your consistency is becoming your superpower.",
-    "Ready? Let's make this count.",
-    "Every minute of focus compounds. Let's go.",
-    "Today's discipline builds tomorrow's freedom.",
-    "Start strong. The momentum will carry you.",
-    "Your future self is watching — don't let them down.",
-    "Anxiety is just excitement without breath. Breathe. Begin.",
-    "One chapter at a time. One concept at a time.",
-    "This session matters more than you know.",
-    "Success loves preparation. You're here. That's step one.",
-    "Open the book. The rest becomes easier."
-  ],
-  early: [
-    "Great start! You're already ahead.",
-    "First 10% done. Keep the energy alive.",
-    "Momentum is building. Don't stop now.",
-    "You're warming up beautifully.",
-    "Early progress feels slow — but it's real.",
-    "Every second of focus matters. You're doing it.",
-    "The first few minutes are the hardest. You passed them.",
-    "Brain engaged. Let's keep it there.",
-    "Solid start. Stay with it.",
-    "You're building the habit that changes everything.",
-    "Early phase — this is where commitment shows.",
-    "Focus is a muscle. You're training it right now.",
-    "10% in. 90% opportunity ahead.",
-    "Stay curious. The subject is waiting to reveal itself.",
-    "You started. Now don't stop.",
-    "This is the grind. This is where champions are made.",
-    "Concentration building. Stay with it.",
-    "Early focus creates late-session breakthroughs.",
-    "You're in it. Now go deeper.",
-    "The first 25% separates starters from finishers.",
-    "Lock in. You're doing great.",
-    "Don't check the clock yet. Keep going.",
-    "Slow and steady builds understanding. Keep the pace.",
-    "You're planting seeds right now. They'll grow.",
-    "Focus is a choice. You're choosing it every second.",
-    "Progress looks invisible at this stage. Trust the process.",
-    "Don't rush the early work. Build the foundation.",
-    "The brain loves novelty. Stay curious.",
-    "This phase matters the most. Don't rush past it.",
-    "Small consistent effort. That's the secret."
-  ],
-  mid: [
-    "Halfway done. Don't let a good session become an unfinished one.",
-    "Most people would've stopped already. You didn't.",
-    "You've earned this pace. Don't waste it.",
-    "Middle of the session — this is where real learning happens.",
-    "Halfway there. You're not tired — you're focused.",
-    "50% in. The second half is where mastery forms.",
-    "You're past the hard part. Now it gets interesting.",
-    "Deep work mode activated. Stay here.",
-    "Another topic closer to your goal.",
-    "Your future rank is being decided right now.",
-    "Half done — the session is yours. Own it.",
-    "Mid-session energy drop is normal. Push through.",
-    "Every concept you absorb now reduces future pressure.",
-    "You're in the zone. Don't break it.",
-    "This is the section most students give up in. Not you.",
-    "Progress reached the halfway mark. Impressive.",
-    "You're making this look effortless. Keep going.",
-    "The halfway point is where discipline defines you.",
-    "Halfway — but the ideas are just starting to connect.",
-    "Your brain is synthesizing information. Let it work.",
-    "You're not just studying — you're becoming.",
-    "Resist distraction. You're so close to a breakthrough.",
-    "Mid-session is the test of real commitment. You're passing.",
-    "Each minute past the halfway point is compounding ROI.",
-    "The material is getting clearer. Stay with it.",
-    "You're past the plateau. Flow state incoming.",
-    "This is your edge — most students don't push this far.",
-    "Stay hungry. The session is still alive.",
-    "Midpoint mastery — you're building something real.",
-    "The second half always yields the best insights."
-  ],
-  late: [
-    "Future you deserves these last few minutes too.",
-    "You're so close. Don't stop now.",
-    "The end is in sight. Give it everything.",
-    "Last stretch — this is where legends finish strong.",
-    "Almost there. Don't let go now.",
-    "These final minutes are the most valuable. Use them.",
-    "You've come too far to slow down now.",
-    "90% done. The finish line is right there.",
-    "Last few minutes — dig deeper than you think you can.",
-    "This is where you separate yourself from the average.",
-    "Push. You'll rest when it's done.",
-    "Don't coast to the finish. Accelerate.",
-    "Your focus at the end matters as much as the beginning.",
-    "The final chapter of a good session. Make it count.",
-    "These last minutes build the habit of completion.",
-    "You're almost there. Stay sharp.",
-    "Late-session clarity is the reward for early-session discipline.",
-    "Finish what you started. It matters.",
-    "Final stretch: your brain is in full retention mode.",
-    "The hardest sessions end with the most pride.",
-    "Almost complete — don't leave the session unfinished.",
-    "These last minutes will define this session. Choose well.",
-    "You're close enough to taste it. Keep going.",
-    "Late game is where champions prove themselves.",
-    "Every second of the final stretch is earned.",
-    "Don't let the ending be the weakest part.",
-    "Finish with the same intensity you started with.",
-    "The final push always feels worth it.",
-    "You are literally seconds away from a completed session.",
-    "Last minutes. Maximum focus. Let's go."
-  ],
-  complete: [
-    "Session complete. Another promise kept to yourself.",
-    "You did it. Your future self is proud.",
-    "Completed. That's one more brick in the foundation.",
-    "Rest earned. Come back stronger.",
-    "Every session like this compounds into mastery.",
-    "You showed up and you stayed. That's everything.",
-    "Session done. Your brain just got stronger.",
-    "Another chapter in your success story — written.",
-    "Consistency is the real flex. You have it.",
-    "Done. No one can take that session from you.",
-    "You kept your promise to yourself. That's character.",
-    "Session complete. The work continues to pay dividends.",
-    "You didn't quit. That matters more than you know.",
-    "Another focused session. Another step toward your goal.",
-    "Well done. Rest, then rise again.",
-    "Your streak continues because of sessions like this.",
-    "The exam doesn't know you studied — but you do.",
-    "Finished. Now rest like a champion.",
-    "That session was an investment. The returns will show.",
-    "Complete. You've earned every minute of this rest.",
-    "Session closed. Growth unlocked.",
-    "You did the work when it was hard. That's the difference.",
-    "Another session down. The goal gets closer.",
-    "Consistency compounds. Today's session will show in results.",
-    "Proud of you. Seriously. Come back tomorrow.",
-    "Done. Go rest. You earned it.",
-    "The session is over — but the knowledge stays forever.",
-    "You finished. Not everyone does. Remember that.",
-    "Session complete. Level up in progress.",
-    "I'll be here for the next one. Great work today."
-  ]
-};
-
-/* ── Subject messages ── */
-const SB_SUBJECT_MSGS = {
-  'Physics': [
-    "Physics builds logic. Every formula you learn rewires your thinking.",
-    "Forces, fields, and motion — you're mastering the language of the universe.",
-    "Physics progress is real. The concepts are connecting."
-  ],
-  'Chemistry': [
-    "Chemistry unlocks medicine, materials, and life itself. Keep going.",
-    "Every reaction you learn is a door to understanding the world.",
-    "Chemistry rewards patience. You're on the right path."
-  ],
-  'Higher Math': [
-    "Math is the foundation of every science. You're building it.",
-    "Every problem you solve sharpens reasoning that lasts a lifetime.",
-    "Higher Math progress means stronger logic for every subject."
-  ],
-  'Biology': [
-    "Biology is the study of life — including the life you want to build.",
-    "Every chapter brings you closer to understanding the human body.",
-    "Medical admission dreams are built on sessions like this one."
-  ],
-  'ICT': [
-    "ICT skills are 21st century superpowers. You're leveling up.",
-    "Technology is the future — and you're learning to own it.",
-    "Code, systems, networks — you're getting it. Keep going."
-  ],
-  'Bangla': [
-    "Language is culture. You're preserving and growing something beautiful.",
-    "Strong Bangla skills unlock communication and confidence.",
-    "Every literature piece you study deepens your understanding."
-  ],
-  'English': [
-    "English opens global doors. Every session builds that key.",
-    "Strong English is a competitive edge. You're building it.",
-    "Grammar, vocabulary, comprehension — all improving right now."
-  ]
-};
-
-/* ── State ── */
-let _sb = { xp:0, level:1, sessionActive:false, sessionDurationMs:0, sessionStartMs:0, msgInterval:null, lastMsgIdx:-1, lastPool:'' };
-const _SB_KEY = 'sv_studybuddy_v2';
-
-function _sbLoad() {
-  try {
-    const raw = localStorage.getItem(_SB_KEY);
-    if (raw) { const p = JSON.parse(raw); _sb.xp = p.xp||0; _sb.level = p.level||1; }
-  } catch(e){}
-}
-function _sbSave() {
-  try { localStorage.setItem(_SB_KEY, JSON.stringify({xp:_sb.xp, level:_sb.level})); } catch(e){}
-  // Sync to Firestore if available
-  if (window._fbFirestore && window._fbCurrentUID) {
-    try {
-      import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({doc,setDoc})=>{
-        setDoc(doc(window._fbFirestore,'users',window._fbCurrentUID,'buddy','data'),{xp:_sb.xp,level:_sb.level},{merge:true}).catch(()=>{});
-      });
-    } catch(e){}
-  }
-}
-
-function _sbLevelData() { return SB_LEVELS[Math.min(_sb.level-1, SB_LEVELS.length-1)]; }
-function _sbNextLevel() { return SB_LEVELS[Math.min(_sb.level, SB_LEVELS.length-1)]; }
-
-function _sbAddXP(amount) {
-  _sb.xp += amount;
-  // Level up check
-  let leveled = false;
-  for (let i = SB_LEVELS.length-1; i >= 0; i--) {
-    if (_sb.xp >= SB_LEVELS[i].xpRequired) {
-      if (_sb.level !== SB_LEVELS[i].level) { leveled = true; }
-      _sb.level = SB_LEVELS[i].level;
-      break;
-    }
-  }
-  _sbSave();
-  _sbUpdateUI();
-  if (leveled) {
-    const ld = _sbLevelData();
-    _sbShowMessage('🎉 Level Up! You are now a ' + ld.name + ' ' + ld.avatar, true);
-    showToast('Study Buddy evolved to ' + ld.name + '! ' + ld.avatar, 'success');
-  }
-}
-
-function _sbGetMsg(pool) {
-  const msgs = SB_MSGS[pool] || SB_MSGS.start;
-  // Avoid immediate repeat
-  let idx;
-  do { idx = Math.floor(Math.random() * msgs.length); } while (idx === _sb.lastMsgIdx && msgs.length > 1);
-  _sb.lastMsgIdx = idx;
-  _sb.lastPool = pool;
-  return msgs[idx];
-}
-
-function _sbGetAdaptiveMsg() {
-  // Detect session progress for milestone messages
-  const subj = (document.getElementById('timer-subject') || {}).value || '';
-  if (!_sb.sessionActive || _sb.sessionDurationMs === 0) return _sbGetMsg('start');
-  const elapsed = Date.now() - _sb.sessionStartMs;
-  const pct = Math.min(1, elapsed / _sb.sessionDurationMs);
-  // Subject-aware injection (25% chance when subject is set)
-  if (subj && SB_SUBJECT_MSGS[subj] && Math.random() < 0.25) {
-    const pool = SB_SUBJECT_MSGS[subj];
-    return pool[Math.floor(Math.random() * pool.length)];
-  }
-  if (pct < 0.10) return _sbGetMsg('start');
-  if (pct < 0.35) return _sbGetMsg('early');
-  if (pct < 0.65) return _sbGetMsg('mid');
-  if (pct < 0.90) return _sbGetMsg('late');
-  return _sbGetMsg('late');
-}
-
-function _sbShowMessage(text, force) {
-  const bubble = document.getElementById('sb-message-bubble');
-  if (!bubble) return;
-  bubble.innerText = text;
-  bubble.style.display = 'block';
-  bubble.style.animation = 'none';
-  void bubble.offsetWidth;
-  bubble.style.animation = 'sbBubblePop 0.3s ease';
-  if (_sb._bubbleTimer) clearTimeout(_sb._bubbleTimer);
-  _sb._bubbleTimer = setTimeout(() => { if (bubble) bubble.style.display = 'none'; }, force ? 5000 : 7000);
-}
-
-function _sbUpdateUI() {
-  const ld = _sbLevelData();
-  const nl = _sbNextLevel();
-  // Avatar
-  const av = document.getElementById('sb-avatar');
-  if (av) av.innerText = ld.avatar;
-  const lbadge = document.getElementById('sb-level-badge');
-  if (lbadge) lbadge.innerText = _sb.level;
-  // XP ring
-  const ring = document.getElementById('sb-xp-ring');
-  if (ring) {
-    const xpInLevel = _sb.xp - ld.xpRequired;
-    const xpNeeded = nl.xpRequired - ld.xpRequired;
-    const pct = xpNeeded > 0 ? Math.min(100, Math.round(xpInLevel/xpNeeded*100)) : 100;
-    ring.style.background = `conic-gradient(var(--primary) ${pct}%,rgba(255,255,255,0.05) ${pct}%)`;
-    // Panel
-    const xpBar = document.getElementById('sb-xp-bar');
-    if (xpBar) xpBar.style.width = pct + '%';
-    const xpLabel = document.getElementById('sb-xp-label');
-    if (xpLabel) xpLabel.innerText = xpInLevel + ' / ' + (xpNeeded > 0 ? xpNeeded : '—') + ' XP';
-  }
-  const nameEl = document.getElementById('sb-name-label');
-  if (nameEl) nameEl.innerText = ld.name;
-  const lvlEl = document.getElementById('sb-level-label');
-  if (lvlEl) lvlEl.innerText = 'Level ' + _sb.level + ' · Study Buddy';
-  const evoEl = document.getElementById('sb-next-evo');
-  if (evoEl) {
-    if (_sb.level < 5) evoEl.innerText = 'Next: ' + nl.name + ' ' + nl.avatar + ' at ' + nl.xpRequired + ' XP';
-    else evoEl.innerText = 'Max Level Reached! ' + ld.avatar;
-  }
-  // Dashboard card
-  _sbRenderDashCard();
-}
-
-function _sbRenderDashCard() {
-  const card = document.getElementById('sb-dash-card');
-  if (!card) return;
-  const ld = _sbLevelData();
-  const nl = _sbNextLevel();
-  const xpInLevel = _sb.xp - ld.xpRequired;
-  const xpNeeded = nl.xpRequired - ld.xpRequired;
-  const pct = xpNeeded > 0 ? Math.min(100, Math.round(xpInLevel/xpNeeded*100)) : 100;
-  card.innerHTML = `
-    <div style="font-size:2.5rem;animation:sbFloat 3s ease-in-out infinite;">${ld.avatar}</div>
-    <div style="flex:1;min-width:0;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-        <span style="font-family:var(--font-display);font-weight:800;color:var(--text-main);font-size:0.95rem;">${ld.name}</span>
-        <span style="background:linear-gradient(135deg,var(--secondary),var(--primary));color:#fff;font-size:0.62rem;padding:2px 8px;border-radius:20px;font-weight:700;">Lv.${_sb.level}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <div style="flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;"><div style="height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:10px;width:${pct}%;transition:width 0.5s;"></div></div>
-        <span style="font-size:0.68rem;color:var(--primary);font-weight:700;flex-shrink:0;">${_sb.xp} XP</span>
-      </div>
-      <div style="font-size:0.68rem;color:var(--text-muted);">${_sb.level < 5 ? 'Next: '+nl.name+' at '+nl.xpRequired+' XP' : 'Legend Status Achieved! ⭐'}</div>
-    </div>
-    <button onclick="switchView('pomodoro',null)" style="background:linear-gradient(135deg,var(--secondary),var(--primary));border:none;color:#fff;border-radius:12px;padding:8px 14px;cursor:pointer;font-size:0.78rem;font-weight:700;font-family:var(--font-main);white-space:nowrap;">Start Focus</button>
-  `;
-}
-
-/* ── Session hooks (called from timer events) ── */
-window.sbOnSessionStart = function(durationMs) {
-  _sb.sessionActive = true;
-  _sb.sessionDurationMs = durationMs;
-  _sb.sessionStartMs = Date.now();
-  _sbShowMessage(_sbGetMsg('start'));
-  if (_sb.msgInterval) clearInterval(_sb.msgInterval);
-  // Show message every ~90 seconds
-  _sb.msgInterval = setInterval(() => {
-    if (_sb.sessionActive) _sbShowMessage(_sbGetAdaptiveMsg());
-  }, 90000);
-  _sbShowWidget();
-};
-
-window.sbOnSessionComplete = function(mins) {
-  _sb.sessionActive = false;
-  if (_sb.msgInterval) { clearInterval(_sb.msgInterval); _sb.msgInterval = null; }
-  _sbShowMessage(_sbGetMsg('complete'));
-  // XP: 10 XP per focus minute (capped at 60 XP per session at min=6)
-  const xpGain = Math.min(120, Math.max(5, Math.floor((mins||1) * 2)));
-  _sbAddXP(xpGain);
-  showToast('Study Buddy: +' + xpGain + ' XP earned! 🐱', 'success');
-};
-
-window.sbOnTaskComplete = function() { _sbAddXP(5); };
-window.sbOnGoalComplete = function() { _sbAddXP(15); };
-window.sbOnStreakMilestone = function(days) { _sbAddXP(days * 3); };
-
-function sbTogglePanel() {
-  const panel = document.getElementById('sb-panel');
-  if (!panel) return;
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-window.sbTogglePanel = sbTogglePanel;
-
-function _sbShowWidget() {
-  const w = document.getElementById('study-buddy-widget');
-  if (w) w.style.display = 'flex';
-}
-
-/* ── Init ── */
-function initStudyBuddy() {
-  _sbLoad();
-  _sbShowWidget();
-  _sbUpdateUI();
-  // Download App CTA: hide in PWA/APK/WebView
-  const cta = document.getElementById('download-app-cta');
-  if (cta) {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    const isWebView = /wv|WebView/.test(navigator.userAgent) || window.Android !== undefined || window.ReactNativeWebView !== undefined;
-    if (!isStandalone && !isWebView) {
-      cta.style.display = 'flex';
-      // Hide after 10s auto
-      setTimeout(() => { if (cta) cta.style.display = 'none'; }, 15000);
-    }
-  }
-}
-window.initStudyBuddy = initStudyBuddy;
-
-// Auto-init after DOM ready (or immediately if already ready)
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => setTimeout(initStudyBuddy, 1200));
-} else {
-  setTimeout(initStudyBuddy, 1200);
-}
-
-})(); // end Study Buddy IIFE
 
 window.initIslamDash = initIslamDash;
 window.islamSwitchTab = islamSwitchTab;
