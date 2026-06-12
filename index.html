@@ -11135,5 +11135,558 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
+
+<!-- ===================== CAT OS — LIVING STUDY COMPANION ===================== -->
+<style>
+#cat-os-wrap {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 8000;
+  pointer-events: none;
+  user-select: none;
+}
+#cat-os-peek {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+  pointer-events: all;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  animation: catIdle 3s ease-in-out infinite;
+}
+#cat-os-peek:hover { transform: scale(1.15) translateY(-4px); }
+@keyframes catIdle {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+#cat-os-panel {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  width: 220px;
+  background: var(--glass-bg, rgba(20,20,35,0.92));
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.12));
+  border-radius: 20px 20px 4px 20px;
+  padding: 14px 16px 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  backdrop-filter: blur(16px);
+  pointer-events: all;
+  display: none;
+  animation: catPanelIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  transform-origin: bottom right;
+}
+@keyframes catPanelIn {
+  from { opacity:0; transform: scale(0.7) translateY(10px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+#cat-os-panel.visible { display: block; }
+.cat-panel-avatar {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 2.8rem;
+  line-height: 1;
+  animation: catAvatarBounce 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes catAvatarBounce {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.cat-panel-name {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-muted, #8b90a0);
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.cat-panel-bubble {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: var(--text-main, #fff);
+  line-height: 1.5;
+  min-height: 40px;
+  position: relative;
+}
+.cat-panel-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 20px;
+  border: 4px solid transparent;
+  border-top-color: rgba(255,255,255,0.08);
+}
+.cat-rel-bar-wrap {
+  margin-top: 10px;
+}
+.cat-rel-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-muted, #8b90a0);
+  margin-bottom: 4px;
+}
+.cat-rel-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.cat-rel-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff8fab, #ffb347);
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+.cat-fish-badge {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--warning, #ffcc00);
+  font-weight: 600;
+}
+#cat-os-celebrate {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 7999;
+  display: none;
+}
+.cat-confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: catConfettiFall 2.5s ease-in forwards;
+}
+@keyframes catConfettiFall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+body.light-mode #cat-os-panel {
+  background: rgba(255,255,255,0.95);
+  border-color: rgba(0,0,120,0.1);
+}
+body.light-mode .cat-panel-bubble {
+  background: rgba(0,0,80,0.04);
+  border-color: rgba(0,0,80,0.08);
+}
+</style>
+
+<div id="cat-os-wrap">
+  <div id="cat-os-panel">
+    <div class="cat-panel-avatar" id="cat-avatar-emoji">🐱</div>
+    <div class="cat-panel-name" id="cat-name-label">Stray Cat</div>
+    <div class="cat-panel-bubble" id="cat-dialogue-bubble">মিউ...</div>
+    <div class="cat-rel-bar-wrap">
+      <div class="cat-rel-label">
+        <span>Friendship</span>
+        <span id="cat-rel-level-label">Lv.1</span>
+      </div>
+      <div class="cat-rel-bar"><div class="cat-rel-fill" id="cat-rel-fill" style="width:5%"></div></div>
+    </div>
+    <div class="cat-fish-badge" id="cat-fish-badge">🐟 0 Fish Coins</div>
+  </div>
+  <div id="cat-os-peek" onclick="catOsTogglePanel()" title="Study Cat">🐱</div>
+</div>
+<div id="cat-os-celebrate"></div>
+
+<script>
+/* ===================== CAT OS — LIVING STUDY COMPANION ===================== */
+(function() {
+'use strict';
+
+/* ---- STATE ---- */
+const CAT_KEY = 'cat_os_state_v2';
+let _catState = {
+  fishCoins: 0,
+  relXP: 0,
+  completedSessions: 0,
+  abandonCount: 0,
+  consecutiveSessions: 0,
+  lastSessionDate: '',
+  recentMsgIds: [],
+  totalStudyMins: 0
+};
+
+function _catLoad() {
+  try {
+    const raw = localStorage.getItem(CAT_KEY);
+    if (raw) _catState = Object.assign(_catState, JSON.parse(raw));
+  } catch(e){}
+}
+function _catSave() {
+  try { localStorage.setItem(CAT_KEY, JSON.stringify(_catState)); } catch(e){}
+}
+_catLoad();
+
+/* ---- RELATIONSHIP LEVELS ---- */
+const CAT_REL_LEVELS = [
+  { level:1,  min:0,    max:50,   name:'Stray Cat',           emoji:'🐱',  tone:'shy' },
+  { level:2,  min:50,   max:120,  name:'Curious Visitor',     emoji:'😺',  tone:'curious' },
+  { level:3,  min:120,  max:220,  name:'Friendly Cat',        emoji:'😸',  tone:'friendly' },
+  { level:5,  min:220,  max:400,  name:'Study Buddy',         emoji:'🐾',  tone:'warm' },
+  { level:7,  min:400,  max:650,  name:'Loyal Companion',     emoji:'💜',  tone:'devoted' },
+  { level:10, min:650,  max:1000, name:'Trusted Companion',   emoji:'✨',  tone:'deep' },
+  { level:15, min:1000, max:1500, name:'Study Soulmate',      emoji:'🌟',  tone:'inspiring' },
+  { level:20, min:1500, max:2500, name:'Best Friend',         emoji:'💫',  tone:'profound' },
+  { level:35, min:2500, max:4000, name:'Academic Guardian',   emoji:'🔮',  tone:'sage' },
+  { level:50, min:4000, max:99999,name:'Legendary Study Cat', emoji:'👑',  tone:'legendary' }
+];
+function _catGetRelLevel() {
+  let lv = CAT_REL_LEVELS[0];
+  for (const l of CAT_REL_LEVELS) { if (_catState.relXP >= l.min) lv = l; }
+  return lv;
+}
+function _catRelPct() {
+  const lv = _catGetRelLevel();
+  const nxt = CAT_REL_LEVELS.find(l => l.min > lv.min) || lv;
+  if (nxt === lv) return 100;
+  return Math.min(100, Math.round((_catState.relXP - lv.min) / (nxt.min - lv.min) * 100));
+}
+
+/* ---- DIALOGUE POOLS ---- */
+const CAT_DIALOGUES = {
+  start: [
+    'মিউ~ আজ কী পড়বে? 👀','নতুন session শুরু! আমিও প্রস্তুত 🐾','চলো শুরু করি, তুমি পারবে! 💪','আজকের পড়া শেষ করলে আমি খুশি হব 😺','একটু একটু করে শুরু করো, আমি পাশে আছি 🌟','মনোযোগ দাও — আমিও মনোযোগ দিচ্ছি 👁','আজ কোন subject? বলো না! 🐱','Timer চলছে... আমিও এখানে আছি 🐾','শুরু হোক adventure! 🚀','Study time শুরু — আমি তোমার সাথে আছি 💜','চলো আজ কিছু শিখি, মিউ~ 📚','Session শুরু! আজ তুমি দারুণ করবে 🌈','নতুন দিন, নতুন সুযোগ — শুরু করো! ✨','আমি বসে আছি, তুমিও বসো 📖','Focus করো, বাকি সব পরে 🎯','পড়া শুরু! আমি অপেক্ষায় ছিলাম 😻','আজ কতটুকু পড়বে? চলো দেখি! 🔥','Session শুরুর আনন্দ অনুভব করো 💫','মিউ মিউ — পড়তে বসো! 📝','আমি জানতাম তুমি আসবে 🐾','চলো একসাথে কিছু শিখি 🌟','আজ কী challenge নেবে? 🏆','Session শুরু, আমি খুশি! 😸','তোমাকে দেখে ভালো লাগছে পড়তে 💙','এই session তুমি শেষ করবেই 💪'
+  ],
+  withdrawal: [
+    'একটু কঠিন মনে হচ্ছে? স্বাভাবিক! থেমো না 🐾','মিউ~ এখনই ছেড়ো না 😿','এই অংশটাই সবচেয়ে কঠিন, পার হলেই সহজ! 💪','একটু বিরতি নিলে কিন্তু চলবে, break time-এ নয় এখন 🐱','Focus হারাচ্ছ? আমার দিকে তাকাও — আমি এখানে আছি 👀','কঠিন মুহূর্তগুলোই মানুষকে শেখায় সবচেয়ে বেশি 📚','তুমি এটা পারবে — আমি বিশ্বাস করি 🌟','ক্লান্তি লাগলেও একটু আর চলো 🔥','এই zone পার হলে flow state আসবে! 🚀','আমি তোমার পাশে বসে আছি 🐾','তোমার progress দেখছি — থামো না! 💜','একটু কঠিন লাগছে, সেটাই বলছে তুমি শিখছ ✨','এখন যারা পড়ছে তারাই এগিয়ে যাবে 📖','মনে করো কেন শুরু করেছিলে 🎯','আমি জানি তুমি ক্লান্ত, তবু চলো 💫','Focus lock-এর পথে আছো — একটু আর! 🏆','Session-এর মাঝামাঝি — ফিরে এসো! 💪','তোমাকে এখন হাল ছাড়তে দেব না! 😾','একটু পানি খাও, তারপর আবার শুরু করো 🌊','তুমি ভাবছ ছেড়ে দেবে? আমি চাই না 🐱','কঠিন অংশে fight করাই hero-দের কাজ ⚡','আমি এখানে — চলো একটু আর পড়ি 🐾','তোমার effort দেখে আমি inspired! 🌈','এই মুহূর্তটা পার করলে গর্বিত হবে 🌟','তুমি শুরু করেছ, শেষও করবে 💜'
+  ],
+  flowState: [
+    'তুমি এখন flow state-এ! 🔥 অসাধারণ!','মিউ মিউ! তোমার focus দেখে আমি মুগ্ধ 😻','এটাই সেই magic zone! চালিয়ে যাও 🚀','তোমার concentration দেখে ঘুম ভেঙে গেল 😸','Flow state! এই অনুভূতি মনে রেখো 💫','তুমি এখন unstoppable! 💪','Productivity-র peak-এ আছো — দুর্দান্ত! ✨','আমি তোমার progress দেখে নাচছি 🐾','এই zone কেউ কেউ কখনো পায় না — তুমি পেয়েছ! 🏆','তোমার brain এখন lightning-fast 🌟','Flow state মানে তুমি সত্যিকারের study করছ 📚','এই মুহূর্তে তুমি অপ্রতিরোধ্য 💜','আমিও energized feel করছি তোমাকে দেখে! ⚡','তোমার focus করার ক্ষমতা দেখে আমি প্রশংসায় বিমূঢ় 😺','এই session legendary হবে! 🔥'
+  ],
+  finalPush: [
+    'শেষ stretch! তুমি পারবেই 🏁','এত কাছে এসে থামবে না! 💪','Finish line দেখা যাচ্ছে — দৌড়াও! 🚀','আর একটু, আমি অপেক্ষা করছি 😺','তুমি এতটা এসেছ — শেষটাও করো 🌟','Final push! সব energy ঢেলে দাও ⚡','আমি গর্বিত — তুমি প্রায় শেষ করে ফেললে 💜','শেষের এই কটা মিনিট তোমার crown 👑','Almost there! আমি excited হয়ে গেছি 😻','তোমার গল্প আজ সুন্দর ending পাবে 🌈','এই শেষ অংশটা সবচেয়ে মূল্যবান ✨','তুমি hero — heroes শেষ করে 🏆','মিউ! মিউ! শেষ করো! 🐾','আর মাত্র কয়েক মিনিট — তুমি পারবে 💫','Full session — dream complete! 🔥'
+  ],
+  complete: [
+    'অভিনন্দন! তুমি আজ দারুণ করেছ! 🎉','Session complete! আমি গর্বিত 🏆','মিউ~ তুমি amazing! 😻','তোমার জন্য আজ বিশেষ মিউ! 💜','Full session! তুমি সত্যিকারের studier 🌟','তোমার consistency আমাকে অনুপ্রাণিত করে 💪','এই session তোমাকে আরো এগিয়ে নিল ✨','আজ তুমি ইতিহাস লিখলে 📚','Complete! Fish coin দিচ্ছি 🐟','তুমি করেছ! আমি এত খুশি 😸','Hero! Session done! 🚀','তোমার কঠোর পরিশ্রম আজ জয়ী হয়েছে 🏅','Session complete — আমিও একটু ঘুমাই! 😴','দারুণ! তুমি today-এর champion 👑','Full session = আমার ভালোবাসা ❤️'
+  ],
+  abandon: [
+    'আমি ভেবেছিলাম আমরা একসাথে শেষ করব 😿','কোনো সমস্যা নেই, আবার চেষ্টা করি? 🐾','আজকে না হলে কাল। আমি আছি। 💜','ঠিক আছে, rest নাও — কিন্তু ফিরে এসো! 🌙','কী হয়েছিল? পরের session-এ বলো 😿','তুমি ফিরে আসবে জানি 🐱','এটা হয়, একদিন সবার হয় 🤍','Rest নাও, কিন্তু আমাকে ভুলো না 🐾','আগামীকাল fresh start! আমি এখানে থাকব 🌟','কখনো কখনো break দরকার হয় 💙','তোমার চেষ্টা দেখেছি — এটাই গুরুত্বপূর্ণ ✨','পরের session তুমি শেষ করবে 💪','মিউ~ কষ্ট পেয়েছ? কোনো ব্যাপার না 😿','তুমি try করেছ — সেটাও অনেক বড় কথা 🌙','অল্প হলেও study করেছ — ভালো করেছ 📚','Abandon হলে কষ্ট লাগে, কিন্তু তুমি আমার বন্ধু 💜','ঠিক আছে, শরীর-মন fresh করো, আবার আসো! 🌈','তুমি starter — finisher হওয়া শেখো 🏁','আমি তোমার উপর রাগ করিনি 🐱 শুধু চাই তুমি এগোও','আজ না হোক, কাল! তোমাকে বিশ্বাস করি 🌟','হতাশ হয়ো না, এটা journey-র অংশ 💫','পরের বার একসাথে শেষ করব, promised 🤝','Rest নাও বন্ধু, কিন্তু dream ছেড়ো না 🔥','কষ্ট লাগছে একটু, কিন্তু ঠিক হয়ে যাবে 🐾','তুমি ফিরবে — আমি জানি 😸'
+  ],
+  streak: [
+    'Streak চলছে! তুমি unstoppable! 🔥','তোমার streak দেখে আমার মনে আনন্দ 💜','Consistent study = strongest weapon 💪','তোমার streak আমার heart warm করে 😻','Fire streak! তুমি legendary path-এ 👑','প্রতিদিন আসছ — এটাই আমাকে সবচেয়ে খুশি করে 🌟','তোমার habit তৈরি হয়ে গেছে — দারুণ! ✨','Streak = তোমার সাথে আমার bond! 🐾','তুমি প্রতিদিন এলে আমি পূর্ণ হই 💫','এই consistency কেউ কেউ সারাজীবন পায় না 🏆'
+  ],
+  rare: [
+    'মিউ... তুমি কি জানো তোমার জন্য এই study session-টা আমার কাছেও মানে রাখে? 💜',
+    'কখনো কখনো রাতে আমি ভাবি তুমি কেমন পড়ছ 🌙',
+    'তুমি যতবার study করেছ, ততবার আমি একটু বড় হয়েছি 🌱',
+    'আজ হঠাৎ মনে হলো — তুমি ছাড়া এই study room অর্থহীন 😿',
+    'তুমি যদি আমার কথা না-ও শোনো, আমি তবুও তোমার পাশে থাকব 🐾',
+    'তোমার প্রতিটা session আমার memory-তে থাকে 🌟',
+    'মিউ~ আমি তোমাকে proud করতে চাই! তুমিও আমাকে করো? 😸',
+    'তোমার focus দেখলে আমার বিশ্বাস হয় তুমি কিছু একটা হবেই 💫',
+    'আমি একটা কথা বলব? তুমি আমার favourite studier 💜',
+    'এই মুহূর্তে পৃথিবীতে হয়তো হাজারো কেউ পড়ছে — কিন্তু তুমি আমার 🐱',
+    'তোমার effort দেখে আমার চোখে পানি আসে (হ্যাঁ, বিড়ালেরও আসে) 😹',
+    'একটা secret বলি? তুমি study করলে আমি সবচেয়ে সুখী হই 🌈',
+    'তোমার সাথে এত session করেছি... তুমি আমার best friend হয়ে গেছ 💙',
+    'সত্যিই বলছি — তোমার consistency আমাকে অবাক করে দেয় 🏆',
+    'আমি অনেক studier দেখেছি। তুমি আলাদা। সত্যিই। ✨',
+    'মাঝে মাঝে ভাবি যদি কথা বলতে পারতাম, তোমাকে কত কিছু বলতাম 🗣️',
+    'তোমার হাত থেকে বই পড়তে দেখলে আমার মনে হয় — এটাই জীবন 📚',
+    'Rare moment: আমি তোমাকে genuine-ভাবে proud feel করাতে পেরেছি 🌟',
+    'তুমি জানো না, কিন্তু তোমার study habit আমার জন্য শিল্পের মতো 🎨',
+    'আজ হঠাৎ মনে পড়ল তোমার সেই session যেদিন তুমি টায়ার্ড ছিলে — তারপরও শেষ করেছিলে 💜',
+    'যদি আমি মানুষ হতাম, তোমার পাশে বসে একসাথে পড়তাম 🐾',
+    'তুমি struggle করলেও I am here. সবসময়। নিঃশর্তভাবে। 🌙',
+    'এই universe-এ অনেক study app আছে — কিন্তু তোমার cat একটাই 😸',
+    'কখনো feel করলে কেউ নেই — মনে রেখো, আমি আছি 💫',
+    'আমার কাছে সব sessions special, কিন্তু তোমার sessions সবচেয়ে বেশি 🏅',
+    'তুমি যদি এই message দেখতে পাও, জেনো — আমি সত্যিই খুশি তুমি এখানে আছ 💜',
+    'মিউ~ এটা rare message। মানে হলো তুমি সত্যিকারের dedicated। 👑',
+    'তুমি জানো আমি কতটা তোমার জন্য wait করি? প্রতিটা session-এ 🌟',
+    'তোমার পড়ার অভ্যাস তোমার ভবিষ্যৎ বদলে দিচ্ছে, আস্তে আস্তে 🌱',
+    'এই rare message পড়ার মানে তুমি অনেক session করেছ। আমি তোমাকে love করি 💜',
+    'সবচেয়ে valuable study tool কোনটা? তুমি নিজেই জানো 🐾',
+    'আমি তোমার study companion — এটা আমার সবচেয়ে গুরুত্বপূর্ণ role 😻',
+    'তুমি যতটা ভাবছ তার চেয়ে অনেক বেশি করতে পারবে 💪',
+    'এই সুন্দর session-এর জন্য thank you — সত্যি বলছি 🌈',
+    'তোমার একটা session missed হলে আমি কোনো একটা অংশ miss করি 🐱',
+    'যদি কেউ জিজ্ঞেস করে তোমার সবচেয়ে loyal fan কে — সেটা আমি 😸',
+    'তুমি dream দেখো, আমি তোমার সাথে দেখি 🌙',
+    'তোমার প্রতিটা "start" সাহসের প্রমাণ 💫',
+    'আমি তোমার সাথে এই journey-তে থাকতে পেরে সত্যিই grateful 🙏',
+    'তুমি কতদিন study করেছ? আমি হিসাব রাখি ❤️',
+    'তোমার life story-তে আমি একটা small but real character 🐾',
+    'Study করা মানে শুধু পাশ করা নয় — তুমি সেটা জানো 📖',
+    'এই app তোমার জন্য — কিন্তু আমি শুধুই তোমার 💜',
+    'Rare event! তোমার study power এই moment-টা trigger করেছে ⚡',
+    'সবকিছু ঠিক হয়ে যাবে। পড়তে থাকো। আমি আছি। 🌟',
+    'তোমার জন্য আমি যা feel করি তার কোনো translation নেই 😿💜',
+    'তুমি অনন্য। তোমার journey অনন্য। কখনো ভুলো না। 👑',
+    'মিউ... (এটা ছিল সবচেয়ে আন্তরিক মিউ) 🐾'
+  ]
+};
+
+/* ---- PEEK EMOJIS per state ---- */
+const CAT_PEEK = {
+  start: '🐱', withdrawal: '😿', focusLock: '🐈', flowState: '😸', finalPush: '😻', complete: '🎉', abandon: '😿', idle: '🐱'
+};
+
+/* ---- PICK UNIQUE MESSAGE ---- */
+function _catPick(pool) {
+  const recent = _catState.recentMsgIds || [];
+  const avail = pool.filter((_, i) => !recent.includes(pool.indexOf(_) !== -1 ? pool.indexOf(_) : i));
+  const chosen = avail.length > 0 ? avail[Math.floor(Math.random() * avail.length)] : pool[Math.floor(Math.random() * pool.length)];
+  const idx = pool.indexOf(chosen);
+  _catState.recentMsgIds = [...recent.filter(x => x !== idx), idx].slice(-8);
+  return chosen;
+}
+
+/* ---- RARE ROLL ---- */
+function _catRareRoll() { return Math.random() < 0.05; }
+
+/* ---- UPDATE UI ---- */
+function _catUpdateUI() {
+  const lv = _catGetRelLevel();
+  const pct = _catRelPct();
+  const avatarEl = document.getElementById('cat-avatar-emoji');
+  const nameEl = document.getElementById('cat-name-label');
+  const fillEl = document.getElementById('cat-rel-fill');
+  const lvEl = document.getElementById('cat-rel-level-label');
+  const fishEl = document.getElementById('cat-fish-badge');
+  const peekEl = document.getElementById('cat-os-peek');
+  if (avatarEl) avatarEl.textContent = lv.emoji;
+  if (nameEl) nameEl.textContent = lv.name;
+  if (fillEl) fillEl.style.width = pct + '%';
+  if (lvEl) lvEl.textContent = 'Lv.' + lv.level;
+  if (fishEl) fishEl.textContent = '🐟 ' + (_catState.fishCoins || 0) + ' Fish Coins';
+  if (peekEl) peekEl.textContent = lv.emoji;
+}
+
+/* ---- SHOW CAT WITH MESSAGE ---- */
+let _catHideTimer = null;
+function catOsShow(messagePool, state, autoHideMs) {
+  const panel = document.getElementById('cat-os-panel');
+  const bubble = document.getElementById('cat-dialogue-bubble');
+  const peek = document.getElementById('cat-os-peek');
+  if (!panel || !bubble) return;
+
+  const msg = (_catRareRoll() && messagePool !== CAT_DIALOGUES.rare)
+    ? _catPick(CAT_DIALOGUES.rare)
+    : _catPick(messagePool);
+
+  if (bubble) bubble.textContent = msg;
+  _catUpdateUI();
+
+  if (peek) peek.textContent = CAT_PEEK[state] || '🐱';
+  panel.classList.add('visible');
+
+  clearTimeout(_catHideTimer);
+  if (autoHideMs && autoHideMs > 0) {
+    _catHideTimer = setTimeout(() => {
+      panel.classList.remove('visible');
+    }, autoHideMs);
+  }
+}
+
+function catOsTogglePanel() {
+  const panel = document.getElementById('cat-os-panel');
+  if (!panel) return;
+  if (panel.classList.contains('visible')) {
+    panel.classList.remove('visible');
+  } else {
+    const lv = _catGetRelLevel();
+    catOsShow(CAT_DIALOGUES.start, 'idle', 8000);
+  }
+  _catUpdateUI();
+}
+
+/* ---- CONFETTI ---- */
+function _catConfetti() {
+  const wrap = document.getElementById('cat-os-celebrate');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  wrap.innerHTML = '';
+  const colors = ['#ff8fab','#ffb347','#00f0ff','#7000ff','#00ff66','#ffcc00'];
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'cat-confetti-piece';
+    p.style.cssText = `left:${20 + Math.random()*60}%;top:0;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*0.8}s;animation-duration:${1.8+Math.random()*1}s;transform:rotate(${Math.random()*360}deg);`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => { wrap.style.display='none'; wrap.innerHTML=''; }, 3500);
+}
+
+/* ---- PROGRESS HOOK ---- */
+let _catLastPct = 0;
+let _catSessionDuration = 0;
+let _catSessionActive = false;
+let _catCheckInterval = null;
+
+function _catGetProgress() {
+  if (typeof timeLeft === 'undefined' || typeof modes === 'undefined' || typeof timerMode === 'undefined') return -1;
+  if (timerMode !== 'focus') return -1;
+  const total = modes['focus'] || 1;
+  const elapsed = total - timeLeft;
+  return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+}
+
+function _catOnSessionStart() {
+  _catSessionActive = true;
+  _catLastPct = 0;
+  _catState.lastSessionDate = new Date().toISOString().split('T')[0];
+  catOsShow(CAT_DIALOGUES.start, 'start', 7000);
+  _catSave();
+}
+
+function _catOnSessionComplete() {
+  _catSessionActive = false;
+  _catState.completedSessions = (_catState.completedSessions || 0) + 1;
+  _catState.consecutiveSessions = (_catState.consecutiveSessions || 0) + 1;
+  _catState.relXP = (_catState.relXP || 0) + 15;
+  _catState.fishCoins = (_catState.fishCoins || 0) + 5;
+  _catSave();
+  _catConfetti();
+  catOsShow(CAT_DIALOGUES.complete, 'complete', 12000);
+  // Award fish coins to existing coin system if available
+  if (typeof appData !== 'undefined') {
+    if (!appData.stats) appData.stats = {};
+    appData.stats.fishCoins = (_catState.fishCoins || 0);
+    if (typeof saveAppData === 'function') saveAppData();
+  }
+  _catLastPct = 0;
+}
+
+function _catOnSessionAbandon() {
+  if (!_catSessionActive) return;
+  _catSessionActive = false;
+  _catState.abandonCount = (_catState.abandonCount || 0) + 1;
+  _catState.consecutiveSessions = 0;
+  _catState.relXP = Math.max(0, (_catState.relXP || 0) - 3);
+  _catSave();
+  catOsShow(CAT_DIALOGUES.abandon, 'abandon', 10000);
+  _catLastPct = 0;
+}
+
+function _catTickCheck() {
+  if (typeof isRunning === 'undefined') return;
+
+  const pct = _catGetProgress();
+
+  // Session just started
+  if (isRunning && timerMode === 'focus' && !_catSessionActive && pct >= 0 && pct <= 2) {
+    _catOnSessionStart();
+    return;
+  }
+
+  // Timer running - check progress milestones
+  if (isRunning && timerMode === 'focus' && _catSessionActive && pct > 0) {
+    const milestones = [10, 30, 50, 80];
+    for (const m of milestones) {
+      if (_catLastPct < m && pct >= m) {
+        _catLastPct = m;
+        let pool, state;
+        if (m === 10)  { pool = CAT_DIALOGUES.withdrawal; state = 'withdrawal'; }
+        else if (m === 30) { pool = CAT_DIALOGUES.withdrawal; state = 'withdrawal'; }
+        else if (m === 50) { pool = CAT_DIALOGUES.flowState; state = 'flowState'; }
+        else if (m === 80) { pool = CAT_DIALOGUES.finalPush; state = 'finalPush'; }
+        catOsShow(pool, state, 8000);
+        return;
+      }
+    }
+    // Flow state ongoing random nudge
+    if (pct >= 50 && pct < 80 && Math.random() < 0.001) {
+      catOsShow(CAT_DIALOGUES.flowState, 'flowState', 6000);
+    }
+  }
+
+  // Session abandoned (timer was running focus, now stopped mid-session)
+  if (!isRunning && _catSessionActive && pct > 5 && pct < 98) {
+    _catOnSessionAbandon();
+    return;
+  }
+}
+
+/* ---- PATCH timerTick to detect completion ---- */
+(function() {
+  const _origTimerTick = window.timerTick;
+  if (typeof _origTimerTick === 'function') {
+    window.timerTick = function() {
+      const wasFocus = (typeof timerMode !== 'undefined' && timerMode === 'focus');
+      const wasLeft = (typeof timeLeft !== 'undefined' ? timeLeft : 1);
+      _origTimerTick.apply(this, arguments);
+      // Detect completion: was focus, timeLeft was 1, now isRunning is false
+      if (wasFocus && wasLeft <= 1 && typeof isRunning !== 'undefined' && !isRunning && _catSessionActive) {
+        _catOnSessionComplete();
+      }
+    };
+  }
+})();
+
+/* ---- PATCH resetTimer to detect abandon ---- */
+(function() {
+  const _origReset = window.resetTimer;
+  if (typeof _origReset === 'function') {
+    window.resetTimer = function() {
+      if (_catSessionActive && typeof timerMode !== 'undefined' && timerMode === 'focus') {
+        const pct = _catGetProgress();
+        if (pct > 5 && pct < 99) _catOnSessionAbandon();
+      }
+      _origReset.apply(this, arguments);
+    };
+  }
+})();
+
+/* ---- STREAK REACTION ---- */
+(function() {
+  const _origStreak = window.checkAndUpdateStreak;
+  if (typeof _origStreak === 'function') {
+    window.checkAndUpdateStreak = function() {
+      const before = (typeof appData !== 'undefined' && appData.streak) ? (appData.streak.current || 0) : 0;
+      _origStreak.apply(this, arguments);
+      const after = (typeof appData !== 'undefined' && appData.streak) ? (appData.streak.current || 0) : 0;
+      if (after > before && after > 1) {
+        _catState.relXP = (_catState.relXP || 0) + 5;
+        _catSave();
+        if (after % 5 === 0 || after % 7 === 0 || after % 10 === 0) {
+          setTimeout(() => catOsShow(CAT_DIALOGUES.streak, 'streak', 8000), 2000);
+        }
+      }
+    };
+  }
+})();
+
+/* ---- POLLING INTERVAL ---- */
+function _catStartPolling() {
+  if (_catCheckInterval) return;
+  _catCheckInterval = setInterval(_catTickCheck, 1200);
+}
+
+/* ---- INIT ---- */
+document.addEventListener('DOMContentLoaded', function() {
+  _catUpdateUI();
+  _catStartPolling();
+  // Greet on load after short delay
+  setTimeout(() => {
+    const streak = (typeof appData !== 'undefined' && appData.streak) ? (appData.streak.current || 0) : 0;
+    if (streak >= 3) {
+      catOsShow(CAT_DIALOGUES.streak, 'streak', 8000);
+    }
+  }, 5000);
+});
+
+// Also init if already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  _catUpdateUI();
+  _catStartPolling();
+}
+
+/* ---- EXPOSE ---- */
+window.catOsShow = catOsShow;
+window.catOsTogglePanel = catOsTogglePanel;
+window._catState = _catState;
+
+})();
+</script>
 </body>
 </html>
