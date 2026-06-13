@@ -2908,6 +2908,22 @@ async function startApp() {
     history.replaceState({ view: 'dashboard' }, '');
     checkAndUpdateStreak();
     _scheduleMidnightReset();
+    // Deep link: ?uid=XXXX opens that user's profile
+    setTimeout(async () => {
+        try {
+            const _params = new URLSearchParams(window.location.search);
+            const _deepUid = _params.get('uid');
+            if (_deepUid && window._fbFirestore) {
+                const { getDoc, doc: _doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+                const _snap = await getDoc(_doc(window._fbFirestore, 'leaderboard', _deepUid));
+                if (_snap.exists()) {
+                    showUserProfile(_snap.data());
+                    // Clean URL without reload
+                    history.replaceState({}, '', window.location.pathname);
+                }
+            }
+        } catch(e) {}
+    }, 2000);
     setupSwipeGestures();
     showAdminNavIfCreator();
     if (!appData.stats.aiXP) appData.stats.aiXP = 0;
@@ -6986,6 +7002,7 @@ async function openChatWith(friendUid) {
     _renderChatHeader(friendName, friendDp);
     chatInputArea.style.display = 'flex';
     chatMessages.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);padding:40px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;"></i></div>';
+    chatMessages._forceScrollBottom = true;
 
     // Step 3: Fetch real data from Firestore in background, refresh header only
     if (window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
@@ -7101,7 +7118,9 @@ function renderChatMessages(messages, friendName, friendDp) {
         container.innerHTML = `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;"><div style="font-size:3rem;margin-bottom:12px;">👋</div><div style="color:var(--text-muted);font-size:0.85rem;">${friendName} কে প্রথম message করুন!</div></div>`;
         return;
     }
-    const atBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 80;
+    const _forceBottom = container._forceScrollBottom === true;
+    if (_forceBottom) container._forceScrollBottom = false;
+    const atBottom = _forceBottom || (container.scrollHeight - container.scrollTop - container.clientHeight) < 80;
     let html = '', lastDate = '', lastSender = '';
     messages.forEach((msg, i) => {
         if (msg.unsent) return;
@@ -7118,7 +7137,8 @@ function renderChatMessages(messages, friendName, friendDp) {
             html += `<div style="text-align:center;margin:12px 0 6px;"><span style="background:rgba(255,255,255,0.07);color:var(--text-muted);font-size:0.68rem;padding:3px 12px;border-radius:20px;">${dateStr}</span></div>`;
         }
         lastSender = msg.fromUid;
-        const safeText = (msg.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const _rawText = (msg.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const safeText = _rawText.replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--primary);text-decoration:underline;word-break:break-all;">$1</a>');
         const safeMsgText = (msg.text||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
         const safeId = (msg.id||'').replace(/'/g,'');
         const _rxn = (msg.reaction && typeof msg.reaction === 'string') ? msg.reaction : null;
@@ -7149,7 +7169,10 @@ function renderChatMessages(messages, friendName, friendDp) {
         </div>`;
     });
     container.innerHTML = html;
-    if (atBottom) container.scrollTop = container.scrollHeight;
+    // Always scroll to bottom on first load; only preserve position if user scrolled up
+    if (atBottom || container.scrollHeight === container.clientHeight) {
+        requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+    }
     attachSwipeReply(container);
 }
 
@@ -8390,8 +8413,8 @@ function shareProfileWhatsApp() {
 
 function shareUserProfileToChat(entry) {
     if (!friendsList.length) { showToast('প্রথমে friends যোগ করুন', 'error'); switchView('friends', null); return; }
-    const profileUrl = 'https://oyasimsajjad-code.github.io/vault.com/?profile=' + encodeURIComponent(entry.uid || '');
-    const msg = `👤 *${entry.name||'User'}*\n🏫 ${entry.institution||'StudyVault'}\n⏱ ${parseFloat((entry.hours||0).toFixed(1))}h studied • 🔥 ${entry.streak||0} day streak\n🔗 Profile: ${profileUrl}`;
+    const profileUrl = 'https://oyasimsajjad-code.github.io/vault.com/?uid=' + encodeURIComponent(entry.uid || '');
+    const msg = `👤 *${entry.name||'User'}*\n🏫 ${entry.institution||'StudyVault'}\n⏱ ${parseFloat((entry.hours||0).toFixed(1))}h studied • 🔥 ${entry.streak||0} day streak\n🔗 ${profileUrl}`;
     let picker = document.getElementById('_sv_friend_picker');
     if (!picker) { picker = document.createElement('div'); picker.id = '_sv_friend_picker'; document.body.appendChild(picker); }
     picker.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:flex-end;justify-content:center;';
@@ -10571,7 +10594,19 @@ async function startNotifListener(uid) {
                 if (change.type === 'added') {
                     const data = change.doc.data();
                     if (!data.read) {
-                        addNotification(data.msg || 'নতুন notification', data.type || 'info');
+                        let _nRoute = null;
+                        if (data.type === 'message' || (data.msg && data.msg.startsWith('📨'))) {
+                            _nRoute = { view: 'inbox', chatUid: data.fromUid || null };
+                        } else if (data.type === 'friend_request' || (data.msg && data.msg.includes('friend request'))) {
+                            _nRoute = { view: 'friends' };
+                        } else if (data.type === 'admin_msg' || (data.msg && data.msg.includes('[Admin]'))) {
+                            _nRoute = { view: 'inbox' };
+                        } else if (data.type === 'announcement') {
+                            _nRoute = { view: 'inbox' };
+                        } else if (data.type === 'profile_share' || (data.msg && data.msg.includes('profile'))) {
+                            _nRoute = { view: 'friends' };
+                        }
+                        addNotification(data.msg || 'নতুন notification', data.type || 'info', null, _nRoute);
                         // Show browser notification regardless of app state
                         if ('Notification' in window && Notification.permission === 'granted') {
                             try {
