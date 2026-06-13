@@ -1994,19 +1994,7 @@
         <div id="inbox-stories-row" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;" class="hide-scrollbar"></div>
       </div>
       <!-- My Note bar — shown below stories -->
-      <div id="inbox-my-note-bar" style="padding:8px 12px;border-bottom:1px solid var(--glass-border);flex-shrink:0;display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(112,0,255,0.04);" onclick="_openInboxNoteEditor()">
-        <div style="position:relative;flex-shrink:0;">
-          <div id="inbox-note-avatar-wrap" style="width:38px;height:38px;border-radius:50%;overflow:visible;position:relative;">
-            <img id="inbox-note-avatar-img" src="" onerror="this.src='https://ui-avatars.com/api/?name=Me&background=7000ff&color=fff'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--secondary);">
-            <span style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;background:var(--primary);border-radius:50%;border:2px solid var(--bg-base);display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#000;font-weight:900;">✦</span>
-          </div>
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:0.68rem;font-weight:700;color:var(--text-muted);margin-bottom:2px;">Your note</div>
-          <div id="inbox-note-text" style="font-size:0.78rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic;">Add a note...</div>
-        </div>
-        <i class="fa-solid fa-pen" style="color:var(--text-muted);font-size:0.75rem;flex-shrink:0;"></i>
-      </div>
+      <div id="inbox-notes-row" style="display:flex;gap:12px;overflow-x:auto;padding:10px 12px;border-bottom:1px solid var(--glass-border);flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none;" class="hide-scrollbar"></div>
       <div id="inbox-guide-banner" style="margin:10px 8px;background:linear-gradient(135deg,rgba(0,240,255,0.08),rgba(112,0,255,0.08));border:1px solid rgba(0,240,255,0.2);border-radius:12px;padding:12px 14px;font-size:0.75rem;color:var(--text-secondary);line-height:1.7;">
         <div style="font-weight:700;color:var(--primary);margin-bottom:6px;">💬 Inbox Guide</div>
         <div>📌 <b>Friends</b> যোগ করলে এখানে chat আসবে</div>
@@ -2461,6 +2449,7 @@
 <div id="focus-mode-screen" class="hidden">
     <div class="focus-bg"></div>
     <button class="exit-focus" onclick="exitFocusMode()"><i class="fa-solid fa-compress"></i> Exit Focus</button>
+    <div id="sc-companion-msg" style="position:absolute;top:max(70px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);max-width:90vw;text-align:center;font-size:0.92rem;color:rgba(255,255,255,0.92);background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:10px 18px;opacity:0;transition:opacity 0.6s ease;pointer-events:none;font-family:var(--font-main);line-height:1.6;z-index:5;"></div>
     <div class="focus-quote" id="fm-quote">"Deep work is the superpower of the 21st century."</div>
     <div id="fm-sf-status" style="display:none;font-size:1rem;color:rgba(255,255,255,0.6);margin-bottom:10px;font-family:var(--font-display);letter-spacing:1px;"></div>
     <div class="focus-time" id="fm-time">25:00</div>
@@ -4135,6 +4124,7 @@ function resetTimer() {
 function timerTick() {
     if(timeLeft>0){
         timeLeft--; updateTimerDisplay(); setRing(timeLeft,modes[timerMode]);
+        _scCheckProgress();
     } else {
         _partialSaved = true;
         stopTimer(); playSound();
@@ -4364,6 +4354,8 @@ function enterFocusMode() {
     document.getElementById('fm-quote').innerText='"'+qs[Math.floor(Math.random()*qs.length)]+'"';
     if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
     requestWakeLock();
+    _scResetSession();
+    _scShowMessage('start');
 }
 function exitFocusMode() {
     isFocusModeActive = false;
@@ -4371,6 +4363,176 @@ function exitFocusMode() {
     stopAllSounds();
     releaseWakeLock();
     if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+}
+
+/* ---- STUDY COMPANION ---- */
+let _scShownMilestones = {};
+let _scLastMsgIndex = {};
+const _scMilestoneMessages = {
+    start: [
+        "{N}, শুরুটা হয়ে গেছে। এখন শুধু ধারাবাহিকতা ধরে রাখো।",
+        "{N}, আজকের এই সময়টুকু তোমার ভবিষ্যতের জন্য বিনিয়োগ।",
+        "{N}, অনেকেই পরিকল্পনা করে, তুমি কাজ করছো।",
+        "{N}, চলো শুরু করি। আমি তোমার সাথেই আছি।",
+        "{N}, একদম ঠিক সময়। মনোযোগটা ধরে রাখো।",
+        "{N}, আজকের সেশনটা ভালো হবে, দেখো।",
+        "{N}, প্রতিদিনের এই ছোট ছোট কাজগুলোই বড় পার্থক্য গড়ে দেয়।",
+        "{N}, শুরু করার সাহসটাই সবচেয়ে কঠিন, আর সেটা তুমি করে ফেলেছ।",
+        "{N}, ফোকাস মোডে আছো, এখন বাইরের সব কিছু ভুলে যাও।",
+        "{N}, আজকের লক্ষ্যটা ছোট ছোট ধাপে ভাগ করে নিচ্ছি, কেমন?",
+        "{N}, তোমার এই অভ্যাসটাই তোমাকে অন্যদের থেকে আলাদা করবে।",
+        "{N}, রেডি? চলো একসাথে এগিয়ে যাই।",
+        "{N}, সময় শুরু হয়ে গেছে, এখন শুধু পড়ায় মন দাও।",
+        "{N}, আজও তুমি নিজের সাথে করা প্রতিশ্রুতি রাখছো। গর্ব হচ্ছে।",
+        "{N}, চাপ নিও না, একটু একটু করে এগিয়ে গেলেই হবে।",
+        "{N}, এই মুহূর্ত থেকেই তোমার আজকের গল্প শুরু।",
+        "{N}, পড়াশোনার এই যাত্রায় আমি তোমার সঙ্গী।",
+        "{N}, নিজেকে বিশ্বাস করো, তুমি পারবে।",
+        "{N}, আজকের সেশনটা শেষে নিজেকে ধন্যবাদ দিতে পারবে, কথা দিচ্ছি।",
+        "{N}, চলো ফোন সাইডে রেখে মনোযোগটা পড়ায় দিই।"
+    ],
+    10: [
+        "{N}, ভালো শুরু! এই গতিটা ধরে রাখো।",
+        "{N}, প্রথম ধাপ পার হয়ে গেছে, বাকিটাও হয়ে যাবে।",
+        "{N}, একদম ঠিক পথে আছো।",
+        "{N}, মনোযোগ ভালো লাগছে, চালিয়ে যাও।",
+        "{N}, এইভাবেই এগিয়ে যাও, দেখবে সময় কেটে যাচ্ছে।",
+        "{N}, শুরুটা সুন্দর হয়েছে। বাকিটাও পারবে।",
+        "{N}, ছোট জয়গুলোই বড় জয়ের ভিত্তি।",
+        "{N}, এখনো অনেক সময় বাকি, তবে শুরুটা মন্দ হয়নি।",
+        "{N}, ফোকাস ধরে রাখছো, এটাই আসল।",
+        "{N}, একটু একটু এগিয়ে যাচ্ছ, ভালো লাগছে দেখে।",
+        "{N}, এই মোমেন্টামটা হারাবে না, প্রমিজ?",
+        "{N}, প্রথম দশ শতাংশ শেষ, বাকিটাও হবে।",
+        "{N}, ভালো গতি, এভাবেই চলো।",
+        "{N}, এগিয়ে যাচ্ছ, আমি দেখছি।",
+        "{N}, সবে শুরু, কিন্তু লেগে থাকাটাই আসল কথা।"
+    ],
+    25: [
+        "{N}, এক চতুর্থাংশ শেষ! সামনে এগিয়ে যাও।",
+        "{N}, ভালো চলছে। মাঝে মাঝে চোখ একটু বিশ্রাম দিও।",
+        "{N}, এই গতিতে চললে সেশন শেষে নিজেই অবাক হবে।",
+        "{N}, ২৫% হয়ে গেছে, বাকিটাও সহজ মনে হবে।",
+        "{N}, তুমি ভালোই করছো, এভাবেই এগিয়ে যাও।",
+        "{N}, মনোযোগ নষ্ট না করে এগিয়ে চলো।",
+        "{N}, এই অংশটা পার হয়ে গেলে বাকিটা সহজ হয়ে যাবে।",
+        "{N}, ভালো লাগছে দেখে, তুমি লেগে আছো।",
+        "{N}, ছোট একটা পজ নিতে পারো, তারপর আবার শুরু করো।",
+        "{N}, সময় ভালোভাবেই কাজে লাগাচ্ছ।",
+        "{N}, একটু পানি খেয়ে আবার মনোযোগ দাও।",
+        "{N}, এক চতুর্থাংশ শেষ, আরও তিন ভাগ বাকি, পারবে।",
+        "{N}, এভাবেই এগিয়ে গেলে লক্ষ্যে পৌঁছানো সময়ের ব্যাপার।",
+        "{N}, তোমার মনোযোগ দেখে ভালো লাগছে।",
+        "{N}, এই মোমেন্টাম ধরে রাখো, বাকিটা সহজ হবে।"
+    ],
+    50: [
+        "{N}, অর্ধেক পথ পার হয়ে গেছে! দারুণ চলছে।",
+        "{N}, এখন থেকে দ্বিতীয়ার্ধ শুরু, একই গতিতে চলো।",
+        "{N}, হাফওয়ে পয়েন্ট! এটা একটা বড় মাইলস্টোন।",
+        "{N}, অর্ধেক শেষ মানে তুমি অর্ধেক সফল, বাকিটাও হবে।",
+        "{N}, এতদূর এসেছ, পেছনে ফেরার কোনো মানে নেই।",
+        "{N}, মাঝপথে এসেও মনোযোগ ধরে রেখেছ, প্রশংসনীয়।",
+        "{N}, অর্ধেক হয়ে গেছে, এখন একটু গতি বাড়াও।",
+        "{N}, এই মুহূর্তটা সেলিব্রেট করার মতো, তবে এখন কাজে ফিরি।",
+        "{N}, অর্ধেক শেষ, বাকি অর্ধেকেও একই ফোকাস চাই।",
+        "{N}, তুমি যা ভেবেছিলে তার চেয়ে ভালো করছো।",
+        "{N}, এখন থেকে আর একটু চেষ্টা করলেই লক্ষ্যে পৌঁছে যাবে।",
+        "{N}, হাফ ডান! বাকি হাফ-ও তোমার হাতের মুঠোয়।",
+        "{N}, এতক্ষণ ভালো করেছ, এখন একটু গভীরে যাও।",
+        "{N}, মাঝামাঝি এসে হারিয়ে যাওয়ার সময় নেই, এগিয়ে যাও।",
+        "{N}, অর্ধেক পথ শেষ, বাকিটাও তোমার জন্যই অপেক্ষা করছে।"
+    ],
+    75: [
+        "{N}, তিন চতুর্থাংশ শেষ! একদম শেষের দিকে।",
+        "{N}, আরেকটু এগিয়ে যাও। তুমি ভালোই করছো।",
+        "{N}, এখন থামলে চলবে না, একদম কাছে চলে এসেছ।",
+        "{N}, ৭৫% শেষ, বাকিটা তো এক চতুর্থাংশ মাত্র।",
+        "{N}, শেষ ধাপের দিকে এগিয়ে যাচ্ছ, ভালো লাগছে।",
+        "{N}, এতদূর এসে হাল ছেড়ে দেওয়ার প্রশ্নই আসে না।",
+        "{N}, এই অংশটা শেষ হলেই তুমি লক্ষ্যের কাছাকাছি চলে যাবে।",
+        "{N}, শেষের আগের এই মুহূর্তটাই সবচেয়ে গুরুত্বপূর্ণ।",
+        "{N}, তুমি প্রায় পৌঁছে গেছ, একটু শক্তি জমিয়ে রাখো।",
+        "{N}, এখন একটু গভীর শ্বাস নিয়ে শেষ পর্যন্ত চালিয়ে যাও।",
+        "{N}, তিন ভাগ শেষ, এক ভাগ বাকি, এটা তো কিছুই না তোমার জন্য।",
+        "{N}, শেষের দিকে ক্লান্তি আসতে পারে, কিন্তু তুমি পারবে।",
+        "{N}, এতক্ষণের পরিশ্রম এখন কাজে দিচ্ছে, অনুভব করছ?",
+        "{N}, প্রায় শেষ! মনোযোগ ছাড়বে না।",
+        "{N}, শেষ অংকটা পর্যন্ত একই উদ্যমে এগিয়ে যাও।"
+    ],
+    90: [
+        "{N}, একদম শেষের কাছে! আর একটু মাত্র বাকি।",
+        "{N}, ৯০% শেষ, এখন থামলে আগের সব পরিশ্রম বৃথা যাবে না, কিন্তু চলো শেষ করি।",
+        "{N}, শেষ লাইনের কাছে চলে এসেছ, স্প্রিন্ট দাও।",
+        "{N}, আর কয়েক মিনিট, তারপর তুমি মুক্ত।",
+        "{N}, এই শেষ অংশটুকু সবচেয়ে মূল্যবান, ধরে রাখো।",
+        "{N}, একদম শেষ পর্যায়ে, হাল ছাড়ো না।",
+        "{N}, তুমি প্রায় পেরিয়ে গেছ, এখন আর পেছনে তাকানোর সময় নেই।",
+        "{N}, শেষ কয়েক মুহূর্ত উপভোগ করো, তুমি দারুণ করেছ।",
+        "{N}, আর একটু, তারপর আজকের কাজ শেষ।",
+        "{N}, এই শেষ অংশটা পার করলেই তুমি আজকের জয়ী।",
+        "{N}, ফিনিশিং লাইন দেখা যাচ্ছে, এগিয়ে চলো।",
+        "{N}, শেষ মুহূর্তের এই মনোযোগটাই সবচেয়ে দামি।",
+        "{N}, প্রায় হয়ে গেছে, একটু ধৈর্য ধরো।"
+    ],
+    100: [
+        "{N}, দারুণ! আজকের সেশন কমপ্লিট হয়ে গেছে। 🎉",
+        "{N}, তুমি করে দেখালে! এটাই ধারাবাহিকতার শক্তি।",
+        "{N}, একটা সেশন শেষ মানে তুমি আজ নিজের সাথে কথা রেখেছ।",
+        "{N}, অভিনন্দন! এখন একটু বিশ্রাম নাও।",
+        "{N}, তুমি যা করলে, সেটাই তোমাকে এগিয়ে রাখবে।",
+        "{N}, আজকের কাজ শেষ, কালকের জন্য নিজেকে প্রস্তুত রাখো।",
+        "{N}, প্রতিটা শেষ হওয়া সেশনই তোমার সাফল্যের দিকে একটা পদক্ষেপ।",
+        "{N}, গর্বিত হও, তুমি এটা করে দেখালে।",
+        "{N}, আজকের জন্য এটুকুই অনেক, ভালো কাজ করেছ।",
+        "{N}, এই অনুভূতিটা মনে রাখো, এটাই তোমাকে আগামীকাল এগিয়ে যাওয়ার শক্তি দেবে।",
+        "{N}, সেশন শেষ! একটু পানি খাও, একটু হাঁটো।",
+        "{N}, তোমার পরিশ্রম বৃথা যায়নি, এটা মনে রাখো।",
+        "{N}, আজকের এই সাফল্য আগামীকালের ভিত্তি।",
+        "{N}, কাজ শেষ, এখন একটু আনন্দ করো নিজের সাথে।"
+    ]
+};
+function _scGetUserName() {
+    try {
+        if (appData && appData.profile && appData.profile.name && appData.profile.name !== 'Student') return appData.profile.name;
+        if (typeof auth !== 'undefined' && auth.currentUser && auth.currentUser.displayName) return auth.currentUser.displayName;
+        if (appData && appData.profile && appData.profile.name) return appData.profile.name;
+    } catch(e) {}
+    return 'বন্ধু';
+}
+function _scResetSession() {
+    _scShownMilestones = {};
+}
+function _scShowMessage(milestoneKey) {
+    if (_scShownMilestones[milestoneKey]) return;
+    _scShownMilestones[milestoneKey] = true;
+    const pool = _scMilestoneMessages[milestoneKey];
+    if (!pool || !pool.length) return;
+    let idx = Math.floor(Math.random() * pool.length);
+    if (pool.length > 1 && idx === _scLastMsgIndex[milestoneKey]) {
+        idx = (idx + 1) % pool.length;
+    }
+    _scLastMsgIndex[milestoneKey] = idx;
+    const name = _scGetUserName();
+    const msgText = pool[idx].replace(/\{N\}/g, name);
+    const el = document.getElementById('sc-companion-msg');
+    if (!el) return;
+    el.textContent = msgText;
+    el.style.opacity = '1';
+    clearTimeout(window._scHideTimer);
+    window._scHideTimer = setTimeout(() => { el.style.opacity = '0'; }, 7000);
+}
+function _scCheckProgress() {
+    if (!isFocusModeActive) return;
+    const total = modes[timerMode];
+    if (!total || timerMode !== 'focus') return;
+    const elapsed = total - timeLeft;
+    const pct = (elapsed / total) * 100;
+    if (pct >= 100) _scShowMessage(100);
+    else if (pct >= 90) _scShowMessage(90);
+    else if (pct >= 75) _scShowMessage(75);
+    else if (pct >= 50) _scShowMessage(50);
+    else if (pct >= 25) _scShowMessage(25);
+    else if (pct >= 10) _scShowMessage(10);
 }
 
 /* ---- FOCUS SOUNDS ---- */
@@ -6951,6 +7113,78 @@ function _renderInboxStories() {
     storiesContainer.innerHTML = html;
 }
 
+/* ---- FRIEND NOTES ROW (Messenger-style, real-time) ---- */
+let _friendNotesUnsub = null;
+function _renderFriendNotesRow() {
+    const row = document.getElementById('inbox-notes-row');
+    if (!row) return;
+    const myDp = appData.profile.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(appData.profile.name||'Me')+'&background=7000ff&color=fff');
+    const myNote = window._myNoteText || '';
+    let html = `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;cursor:pointer;width:64px;" onclick="_openInboxNoteEditor()">
+        <div style="position:relative;width:56px;height:56px;">
+            <img src="${myDp}" onerror="this.src='https://ui-avatars.com/api/?name=Me&background=7000ff&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ${myNote?'var(--primary)':'var(--glass-border)'};">
+            <span style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;background:var(--primary);border-radius:50%;border:2px solid var(--bg-base);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#000;font-weight:900;"><i class="fa-solid fa-plus"></i></span>
+        </div>
+        <span style="font-size:0.62rem;color:var(--text-muted);max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;">${myNote ? 'Your note' : 'Add note'}</span>
+    </div>`;
+    const notesMap = window._friendNotes || {};
+    friendsList.forEach(f => {
+        const noteData = notesMap[f.uid];
+        if (!noteData || !noteData.text || !noteData.text.trim()) return;
+        if (noteData.expiresAt && noteData.expiresAt < Date.now()) return;
+        const name = f.name || 'Friend';
+        const dp = f.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(name)+'&background=0D8ABC&color=fff');
+        const noteText = (noteData.text || '').substring(0, 40);
+        const safeName = name.replace(/'/g,"\\'");
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;width:64px;">
+            <div style="position:relative;width:56px;height:56px;cursor:pointer;" onclick="event.stopPropagation();if(window._dashLbEntries&&window._dashLbEntries['${f.uid}'])showUserProfile(window._dashLbEntries['${f.uid}']);else showUserProfile({uid:'${f.uid}',name:'${safeName}',dp:'${dp.replace(/'/g,"\\'")}',streak:0,hours:0,tasks:0})">
+                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);">
+            </div>
+            <div style="font-size:0.62rem;color:var(--text-muted);max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-weight:600;">${name.split(' ')[0]}</div>
+            <div onclick="_openNoteReply('${f.uid}','${safeName}','${dp.replace(/'/g,"\\'")}','${noteText.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')" style="font-size:0.6rem;color:var(--text-secondary);max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;background:rgba(255,255,255,0.06);border-radius:10px;padding:2px 6px;cursor:pointer;">${noteText}</div>
+        </div>`;
+    });
+    row.innerHTML = html;
+}
+function _openNoteReply(uid, name, dp, noteText) {
+    let modal = document.getElementById('_sv_note_reply_modal');
+    if (!modal) { modal = document.createElement('div'); modal.id = '_sv_note_reply_modal'; document.body.appendChild(modal); }
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);display:flex;align-items:flex-end;justify-content:center;';
+    modal.onclick = e => { if (e.target === modal) modal.remove(); };
+    modal.innerHTML = `<div style="background:var(--bg-base);border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:480px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">
+            <div><div style="font-weight:700;color:var(--text-main);font-size:0.92rem;">${name}</div><div style="font-size:0.78rem;color:var(--text-muted);font-style:italic;">${noteText}</div></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <input id="_sv_note_reply_inp" placeholder="Reply to note..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);border-radius:20px;padding:10px 16px;color:var(--text-main);font-family:var(--font-main);font-size:0.88rem;outline:none;">
+            <button onclick="_sendNoteReply('${uid}')" style="background:var(--primary);color:#000;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;font-size:1rem;flex-shrink:0;"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>`;
+    setTimeout(() => { const inp = modal.querySelector('#_sv_note_reply_inp'); if (inp) { inp.focus(); inp.addEventListener('keydown', e => { if (e.key==='Enter') _sendNoteReply(uid); }); } }, 100);
+}
+async function _sendNoteReply(uid) {
+    const inp = document.getElementById('_sv_note_reply_inp');
+    if (!inp || !inp.value.trim()) return;
+    const text = '💬 Replied to your note: ' + inp.value.trim();
+    if (!window._fbSendMessage) { showToast('Firebase not ready','error'); return; }
+    try {
+        await window._fbSendMessage(uid, text);
+        showToast('Reply sent! 📨', 'success');
+        const modal = document.getElementById('_sv_note_reply_modal');
+        if (modal) modal.remove();
+        switchView('inbox', null);
+        setTimeout(() => openChatWith(uid), 300);
+    } catch(e) { showToast('Could not send reply', 'error'); }
+}
+function _startFriendNotesListener() {
+    if (_friendNotesUnsub || !window._fbListenFriendNotes) return;
+    _friendNotesUnsub = window._fbListenFriendNotes((notesMap) => {
+        window._friendNotes = notesMap;
+        _renderFriendNotesRow();
+    });
+}
+
 async function loadInboxBadge() {
     if (!window._fbLoadConversations) return;
     try {
@@ -6973,6 +7207,8 @@ function updateInboxBadge(count) {
 
 async function renderInbox() {
     _loadInboxNote();
+    _startFriendNotesListener();
+    _renderFriendNotesRow();
     const list = document.getElementById('conversations-list');
     if (!list) return;
     // Render stories row (friends with online status)
@@ -7083,8 +7319,10 @@ async function openChatWith(friendUid) {
 
     _renderChatHeader(friendName, friendDp);
     chatInputArea.style.display = 'flex';
+    chatMessages.style.scrollBehavior = 'auto';
     chatMessages.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);padding:40px;"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;"></i></div>';
     chatMessages._forceScrollBottom = true;
+    chatMessages._isFirstRender = true;
 
     // Step 3: Fetch real data from Firestore in background, refresh header only
     if (window._fbFirestore && window._fbAuth && window._fbAuth.currentUser) {
@@ -7204,28 +7442,11 @@ function openInboxWithUser(uid) {
     setTimeout(() => openChatWith(uid), 350);
 }
 
-/* ---- INBOX NOTE (Messenger-style, max 60 chars) ---- */
+/* ---- INBOX NOTE (Messenger-style, max 60 chars, synced to Firestore) ---- */
 function _loadInboxNote() {
     const saved = localStorage.getItem('sv_inbox_note_' + (currentUser||''));
-    const el = document.getElementById('inbox-note-text');
-    if (el) {
-        if (saved && saved.trim()) {
-            el.textContent = saved;
-            el.style.fontStyle = 'normal';
-            el.style.color = 'var(--text-secondary)';
-        } else {
-            el.textContent = 'Add a note...';
-            el.style.fontStyle = 'italic';
-            el.style.color = 'var(--text-muted)';
-        }
-    }
-    // Update avatar in note bar
-    const avatarImg = document.getElementById('inbox-note-avatar-img');
-    if (avatarImg) {
-        const myDp = appData && appData.profile && appData.profile.dp;
-        const myName = (appData && appData.profile && appData.profile.name) || 'Me';
-        avatarImg.src = myDp || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(myName) + '&background=7000ff&color=fff');
-    }
+    window._myNoteText = (saved && saved.trim()) ? saved : '';
+    _renderFriendNotesRow();
 }
 function _openInboxNoteEditor() {
     const cur = localStorage.getItem('sv_inbox_note_' + (currentUser||'')) || '';
@@ -7261,7 +7482,7 @@ function _openInboxNoteEditor() {
     };
     if (inp) { inp.addEventListener('input', updateShare); updateShare(); setTimeout(() => inp.focus(), 100); }
 }
-function _saveInboxNote() {
+async function _saveInboxNote() {
     const inp = document.getElementById('_sv_note_inp');
     if (!inp) return;
     const val = inp.value.trim().substring(0, 60);
@@ -7269,6 +7490,7 @@ function _saveInboxNote() {
     _loadInboxNote();
     const modal = document.getElementById('_sv_inbox_note_modal');
     if (modal) modal.remove();
+    if (window._fbSaveNote) { try { await window._fbSaveNote(val); } catch(e){} }
     if (val) showToast('Note shared! ✦', 'success');
 }
 function closeChatPanel() {
@@ -7356,9 +7578,10 @@ function renderChatMessages(messages, friendName, friendDp) {
             return `<div style="background:rgba(255,255,255,0.12);border-left:3px solid ${isMe?'rgba(255,255,255,0.6)':'var(--primary)'};border-radius:6px;padding:5px 9px;margin-bottom:5px;font-size:0.75rem;color:${isMe?'rgba(255,255,255,0.8)':'var(--text-muted)'};max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="scrollToMsg('${msg.replyTo.msgId}')">${origText.substring(0,60)}</div>`;
         })() : '';
 
+        const _profileCardHtml = (!msg.imageUrl) ? _renderProfileCardMessage(msg, isMe) : null;
         const msgContent = msg.imageUrl
             ? `<div style="padding:4px;">${replyThread}<img src="${msg.imageUrl}" style="max-width:220px;max-height:280px;border-radius:12px;display:block;cursor:pointer;object-fit:cover;" onclick="openInAppImageViewer('${msg.imageUrl.replace(/'/g,'%27')}')" loading="lazy" onerror="this.style.display='none'"></div>`
-            : `<div style="background:${isMe?'linear-gradient(135deg,var(--secondary),var(--primary))':'rgba(255,255,255,0.1)'};color:${isMe?'#fff':'var(--text-main)'};padding:9px 13px;border-radius:${isMe?'18px 18px 4px 18px':'18px 18px 18px 4px'};font-size:0.88rem;word-break:break-word;line-height:1.45;text-align:left;">${replyThread}${safeText}${editedTag}</div>`;
+            : (_profileCardHtml || `<div style="background:${isMe?'linear-gradient(135deg,var(--secondary),var(--primary))':'rgba(255,255,255,0.1)'};color:${isMe?'#fff':'var(--text-main)'};padding:9px 13px;border-radius:${isMe?'18px 18px 4px 18px':'18px 18px 18px 4px'};font-size:0.88rem;word-break:break-word;line-height:1.45;text-align:left;">${replyThread}${safeText}${editedTag}</div>`);
 
         // Swipe-to-reply state
         const msgWrapId = 'msgw_' + safeId;
@@ -7375,11 +7598,20 @@ function renderChatMessages(messages, friendName, friendDp) {
         </div>`;
     });
     container.innerHTML = html;
-    // Always scroll to bottom on first load; only preserve position if user scrolled up
-    if (atBottom || container.scrollHeight === container.clientHeight) {
+    // On first render of this conversation, jump instantly to latest message (no animation)
+    if (container._isFirstRender) {
+        container._isFirstRender = false;
+        container.scrollTop = container.scrollHeight;
         requestAnimationFrame(() => {
             container.scrollTop = container.scrollHeight;
-            // Double RAF ensures mobile layout has fully painted before scroll
+            requestAnimationFrame(() => {
+                container.scrollTop = container.scrollHeight;
+                container.style.scrollBehavior = 'smooth';
+            });
+        });
+    } else if (atBottom || container.scrollHeight === container.clientHeight) {
+        requestAnimationFrame(() => {
+            container.scrollTop = container.scrollHeight;
             requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
         });
     }
@@ -8662,7 +8894,7 @@ function shareProfileToInbox() {
     const streak = appData.streak.current || 0;
     const dp = appData.profile.dp || '';
     const profileUrl = 'https://oyasimsajjad-code.github.io/vault.com/?profile=' + encodeURIComponent(currentUser||'');
-    const profileMsg = `👤 *${name}*\n⏱ ${hours}h studied • 🔥 ${streak} day streak\n🔗 Profile: ${profileUrl}`;
+    const cardPayload = JSON.stringify({ type:'profile_card', uid: currentUser||'', name, dp, hours, streak, url: profileUrl }).replace(/'/g,"\\'").replace(/"/g,'&quot;');
     // Show friend picker
     let picker = document.getElementById('_sv_friend_picker');
     if (!picker) { picker = document.createElement('div'); picker.id = '_sv_friend_picker'; document.body.appendChild(picker); }
@@ -8672,13 +8904,30 @@ function shareProfileToInbox() {
         <div style="font-weight:700;color:#fff;font-size:1rem;margin-bottom:14px;">📨 Send Profile Card to Friend</div>
         ${friendsList.map(f => {
             const fdp = f.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(f.name||'U')+'&background=0D8ABC&color=fff');
-            return `<div onclick="_sendProfileCard('${f.uid}','${(profileMsg).replace(/'/g,"\\'")}');document.getElementById('_sv_friend_picker').remove();showToast('Profile card sent! 📨','success');" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);margin-bottom:8px;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+            return `<div onclick="_sendProfileCardCard('${f.uid}','${cardPayload}');document.getElementById('_sv_friend_picker').remove();" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);margin-bottom:8px;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
                 <img src="${fdp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
                 <div style="flex:1;"><div style="font-weight:600;color:#fff;font-size:0.9rem;">${f.name||'Friend'}</div><div style="font-size:0.72rem;color:rgba(255,255,255,0.4);">${f.institution||''}</div></div>
                 <i class="fa-solid fa-paper-plane" style="color:rgba(0,240,255,0.6);"></i>
             </div>`;
         }).join('')}
     </div>`;
+}
+
+async function _sendProfileCardCard(toUid, payloadStr) {
+    if (!window._fbSendMessage) { showToast('Firebase not ready','error'); return; }
+    try {
+        const text = payloadStr.replace(/&quot;/g, '"');
+        await window._fbSendMessage(toUid, text);
+        showToast('Profile card sent! 📨', 'success');
+        const picker = document.getElementById('_sv_friend_picker');
+        if (picker) picker.remove();
+        const profileModal = document.getElementById('user-profile-modal');
+        if (profileModal) profileModal.remove();
+        switchView('inbox', null);
+        setTimeout(() => openChatWith(toUid), 400);
+    } catch(e) {
+        showToast('Could not send profile card', 'error');
+    }
 }
 
 async function _sendProfileCard(toUid, msg) {
@@ -8697,6 +8946,24 @@ async function _sendProfileCard(toUid, msg) {
     } catch(e) {
         showToast('Could not send profile card', 'error');
     }
+}
+
+function _renderProfileCardMessage(msg, isMe) {
+    try {
+        const data = JSON.parse(msg.text);
+        if (data.type !== 'profile_card') return null;
+        const safeName = (data.name||'User').replace(/'/g,"\\'");
+        const dp = data.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(data.name||'U')+'&background=0D8ABC&color=fff');
+        return `<div style="background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;max-width:230px;cursor:pointer;" onclick="_openSharedProfile('${data.uid}','${safeName}','${dp.replace(/'/g,"\\'")}',${data.hours||0},${data.streak||0})">
+            <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">
+            <div style="flex:1;min-width:0;"><div style="font-weight:700;color:var(--text-main);font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${data.name||'User'}</div><div style="font-size:0.7rem;color:var(--text-muted);">⏱${data.hours||0}h • 🔥${data.streak||0}</div></div>
+            <button onclick="event.stopPropagation();_openSharedProfile('${data.uid}','${safeName}','${dp.replace(/'/g,"\\'")}',${data.hours||0},${data.streak||0})" style="background:var(--primary);color:#000;border:none;padding:6px 10px;border-radius:8px;font-size:0.7rem;font-weight:700;cursor:pointer;white-space:nowrap;">Profile</button>
+        </div>`;
+    } catch(e) { return null; }
+}
+function _openSharedProfile(uid, name, dp, hours, streak) {
+    const entry = (window._dashLbEntries && window._dashLbEntries[uid]) || { uid, name, dp, hours, streak, tasks:0 };
+    showUserProfile(entry);
 }
 
 function downloadProfileCard() {
@@ -10808,6 +11075,30 @@ window._fbLoadConversations = async function() {
         snap.forEach(d => { convs[d.id] = d.data(); });
         return convs;
     } catch(e) { return {}; }
+};
+
+window._fbSaveNote = async function(text) {
+    const uid = auth.currentUser.uid;
+    const expiresAt = Date.now() + 24*60*60*1000;
+    try {
+        await setDoc(doc(firestore, 'notes', uid), { uid, text, expiresAt, timestamp: Date.now() });
+    } catch(e) { console.warn('saveNote error', e); }
+};
+
+window._fbListenFriendNotes = function(callback) {
+    try {
+        const notesRef = collection(firestore, 'notes');
+        return onSnapshot(notesRef, (snap) => {
+            const notesMap = {};
+            snap.forEach(d => {
+                const data = d.data();
+                if (data && data.text && (!data.expiresAt || data.expiresAt > Date.now())) {
+                    notesMap[d.id] = data;
+                }
+            });
+            callback(notesMap);
+        }, () => {});
+    } catch(e) { return null; }
 };
 
 /* ---- Firestore Notifications listener ---- */
