@@ -2025,7 +2025,7 @@
       <div id="chat-header" style="padding:12px 18px;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;gap:10px;background:var(--header-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);flex-shrink:0;min-height:60px;width:100%;z-index:10;">
         <span style="color:var(--text-muted);font-size:0.9rem;">একটি conversation select করুন</span>
       </div>
-      <div id="chat-messages" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 18px;display:flex;flex-direction:column;scroll-behavior:smooth;overscroll-behavior:contain;min-height:0;overflow-x:hidden;"></div>
+      <div id="chat-messages" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 18px;display:flex;flex-direction:column;overscroll-behavior:contain;min-height:0;overflow-x:hidden;"></div>
       <div id="chat-input-area" style="padding:10px 14px;border-top:1px solid var(--glass-border);display:none;gap:8px;align-items:flex-end;background:var(--header-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);flex-shrink:0;width:100%;padding-bottom:calc(10px + env(safe-area-inset-bottom));z-index:10;position:relative;flex-wrap:wrap;">
         <input type="file" id="chat-photo-input" accept="image/*" class="hidden" onchange="sendChatPhoto(this)">
         <div style="position:relative;">
@@ -4135,6 +4135,12 @@ function resetTimer() {
 function timerTick() {
     if(timeLeft>0){
         timeLeft--; updateTimerDisplay(); setRing(timeLeft,modes[timerMode]);
+        if (isFocusModeActive && timerMode === 'focus') {
+            const _totalSecs = modes.focus || (25 * 60);
+            const _elapsed = _totalSecs - timeLeft;
+            const _pct = Math.round((_elapsed / _totalSecs) * 100);
+            if (window._triggerFocusCompanionMsg) window._triggerFocusCompanionMsg(_pct);
+        }
     } else {
         _partialSaved = true;
         stopTimer(); playSound();
@@ -4359,6 +4365,7 @@ function handleAutoCycleBreakEnd() {
 
 function enterFocusMode() {
     isFocusModeActive=true;
+    if (window._resetFocusCompanionSession) window._resetFocusCompanionSession();
     document.getElementById('focus-mode-screen').classList.remove('hidden');
     const qs=["Deep work is the superpower of the 21st century.","Starve your distractions, feed your focus.","Success is the sum of small efforts repeated day in and day out.","Focus on being productive instead of busy.","The secret to getting ahead is getting started.","Great things never come from comfort zones.","You don't need more time, you need more focus.","Work hard in silence; let success make the noise."];
     document.getElementById('fm-quote').innerText='"'+qs[Math.floor(Math.random()*qs.length)]+'"';
@@ -4371,7 +4378,54 @@ function exitFocusMode() {
     stopAllSounds();
     releaseWakeLock();
     if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    if (window._resetFocusCompanionSession) window._resetFocusCompanionSession();
 }
+
+/* ---- FOCUS COMPANION MESSAGES ---- */
+(function() {
+    const _MILESTONES = [0, 10, 25, 50, 75, 90, 100];
+    const _MSGS = {
+        0:   ['"{n}, let\'s begin. I\'ll stay with you." 🤗', '"Ready, {n}? I\'m right here with you." 🤗', '"{n}, the journey of a thousand sessions begins now." 🤗'],
+        10:  ['"{n}, great start! Keep that momentum." 😎', '"Nice, {n}! First 10% conquered." 😎', '"{n}, you\'re already ahead of yesterday." 😎'],
+        25:  ['"{n}, you\'re building momentum now." 🔥', '"25% done, {n}! The hardest part is behind you." 🔥', '"{n}, quarter way through — amazing." 🔥'],
+        50:  ['"{n}, halfway there. Keep going!" 😺', '"50%, {n}! Nothing can stop you now." 😺', '"{n}, the halfway mark — you\'re crushing it!" 😺'],
+        75:  ['"{n}, amazing focus today! Almost there." 😉', '"Three quarters done, {n}! Push through!" 😉', '"{n}, 75%! Your future self is proud." 😉'],
+        90:  ['"{n}, final stretch! Give it everything." ❤️\u200d🔥', '"So close, {n}! 10% left — don\'t stop!" ❤️\u200d🔥', '"{n}, the finish line is right there!" ❤️\u200d🔥'],
+        100: ['"{n}, mission accomplished! Well done." 😘', '"100%, {n}! You crushed it today." 😘', '"{n}, session complete! Take a proud breath." 😘']
+    };
+    let _shownThisSession = {};
+    window._triggerFocusCompanionMsg = function(pct) {
+        for (let i = 0; i < _MILESTONES.length; i++) {
+            const m = _MILESTONES[i];
+            if (pct >= m && !_shownThisSession[m]) {
+                _shownThisSession[m] = true;
+                const userName = (appData && appData.profile && appData.profile.name) || 'Friend';
+                const pool = _MSGS[m] || [];
+                if (!pool.length) return;
+                const template = pool[Math.floor(Math.random() * pool.length)];
+                const text = template.replace(/\{n\}/g, userName);
+                _showFocusCompanionBubble(text);
+                return;
+            }
+        }
+    };
+    window._resetFocusCompanionSession = function() { _shownThisSession = {}; };
+    function _showFocusCompanionBubble(text) {
+        const fms = document.getElementById('focus-mode-screen');
+        if (!fms || !isFocusModeActive) return;
+        let el = document.getElementById('_sv_focus_companion');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = '_sv_focus_companion';
+            el.style.cssText = 'position:absolute;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);backdrop-filter:blur(12px);border:1px solid rgba(0,240,255,0.25);border-radius:20px;padding:12px 20px;max-width:min(90vw,380px);text-align:center;font-size:0.9rem;color:#fff;font-family:var(--font-display,sans-serif);opacity:0;transition:opacity 0.5s ease;z-index:10;pointer-events:none;line-height:1.5;font-style:italic;';
+            fms.appendChild(el);
+        }
+        el.textContent = text;
+        el.style.opacity = '1';
+        clearTimeout(el._hideTimer);
+        el._hideTimer = setTimeout(() => { el.style.opacity = '0'; }, 4000);
+    }
+})();
 
 /* ---- FOCUS SOUNDS ---- */
 let audioCtx=null,activeSoundNodes={};
@@ -6934,21 +6988,52 @@ function _renderInboxStories() {
     const onlineFriends = friendsList.filter(f => window._onlineStatus && window._onlineStatus[f.uid]);
     const offlineFriends = friendsList.filter(f => !(window._onlineStatus && window._onlineStatus[f.uid]));
     const sortedFriends = [...onlineFriends, ...offlineFriends].slice(0, 10);
+    const _friendNotes = window._inboxFriendNotes || {};
     sortedFriends.forEach(f => {
         const name = f.name || 'Friend';
         const dp = f.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(name)+'&background=0D8ABC&color=fff');
         const isOnline = !!(window._onlineStatus && window._onlineStatus[f.uid]);
         const unread = conversations[f.uid] ? (conversations[f.uid].unread || 0) : 0;
-        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;cursor:pointer;" onclick="openChatWith('${f.uid}')">
-            <div style="position:relative;width:56px;height:56px;">
-                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ${isOnline?'var(--success)':'var(--glass-border)'};">
+        const friendNote = _friendNotes[f.uid] || '';
+        const safeName = name.replace(/'/g,"\\'");
+        const safeDp = dp.replace(/'/g,"\\'");
+        const safeUid = f.uid.replace(/'/g,"\\'");
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;">
+            <div style="position:relative;width:56px;height:56px;cursor:pointer;" onclick="if(window._dashLbEntries&&window._dashLbEntries['${safeUid}'])showUserProfile(window._dashLbEntries['${safeUid}']);else showUserProfile({uid:'${safeUid}',name:'${safeName}',dp:'${safeDp}',streak:0,hours:0,tasks:0})">
+                <img src="${dp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ${friendNote?'var(--primary)':isOnline?'var(--success)':'var(--glass-border)'};">
                 ${isOnline?'<span style="position:absolute;bottom:1px;right:1px;width:13px;height:13px;background:var(--success);border-radius:50%;border:2px solid var(--bg-base);display:block;"></span>':''}
                 ${unread>0?`<span style="position:absolute;top:-2px;right:-2px;background:var(--accent);color:#fff;font-size:0.55rem;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;border:1.5px solid var(--bg-base);">${unread>9?'9+':unread}</span>`:''}
             </div>
-            <span style="font-size:0.65rem;color:${isOnline?'var(--success)':'var(--text-muted)'};max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;">${name.split(' ')[0]}</span>
+            <span style="font-size:0.65rem;color:${isOnline?'var(--success)':'var(--text-muted)'};max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;cursor:pointer;" onclick="openChatWith('${safeUid}')">${name.split(' ')[0]}</span>
+            ${friendNote?`<span style="font-size:0.6rem;color:var(--primary);max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;background:rgba(0,240,255,0.08);border-radius:10px;padding:2px 6px;cursor:pointer;border:1px solid rgba(0,240,255,0.2);" onclick="openChatWith('${safeUid}')" title="${friendNote}">${friendNote}</span>`:''}
         </div>`;
     });
     storiesContainer.innerHTML = html;
+    _loadFriendNotesFromFirestore();
+}
+
+async function _loadFriendNotesFromFirestore() {
+    if (!window._fbFirestore || !friendsList.length) return;
+    try {
+        const uids = friendsList.map(f => f.uid).filter(Boolean);
+        if (!uids.length) return;
+        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const notes = {};
+        await Promise.all(uids.map(async uid => {
+            try {
+                const snap = await getDoc(doc(window._fbFirestore, 'inbox_notes', uid));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    if (d.note && (Date.now() - (d.updatedAt || 0)) < 86400000) {
+                        notes[uid] = d.note;
+                    }
+                }
+            } catch(e) {}
+        }));
+        window._inboxFriendNotes = notes;
+        const storiesContainer = document.getElementById('inbox-stories-row');
+        if (storiesContainer) _renderInboxStories();
+    } catch(e) {}
 }
 
 async function loadInboxBadge() {
@@ -7270,6 +7355,21 @@ function _saveInboxNote() {
     const modal = document.getElementById('_sv_inbox_note_modal');
     if (modal) modal.remove();
     if (val) showToast('Note shared! ✦', 'success');
+    if (window._fbFirestore && currentUser) {
+        import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js').then(({ doc, setDoc, deleteDoc }) => {
+            if (val) {
+                setDoc(doc(window._fbFirestore, 'inbox_notes', currentUser), {
+                    uid: currentUser,
+                    note: val,
+                    name: (appData && appData.profile && appData.profile.name) || 'User',
+                    dp: (appData && appData.profile && appData.profile.dp) || '',
+                    updatedAt: Date.now()
+                }).catch(() => {});
+            } else {
+                deleteDoc(doc(window._fbFirestore, 'inbox_notes', currentUser)).catch(() => {});
+            }
+        });
+    }
 }
 function closeChatPanel() {
     currentChatUid = null;
@@ -7356,9 +7456,31 @@ function renderChatMessages(messages, friendName, friendDp) {
             return `<div style="background:rgba(255,255,255,0.12);border-left:3px solid ${isMe?'rgba(255,255,255,0.6)':'var(--primary)'};border-radius:6px;padding:5px 9px;margin-bottom:5px;font-size:0.75rem;color:${isMe?'rgba(255,255,255,0.8)':'var(--text-muted)'};max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="scrollToMsg('${msg.replyTo.msgId}')">${origText.substring(0,60)}</div>`;
         })() : '';
 
-        const msgContent = msg.imageUrl
-            ? `<div style="padding:4px;">${replyThread}<img src="${msg.imageUrl}" style="max-width:220px;max-height:280px;border-radius:12px;display:block;cursor:pointer;object-fit:cover;" onclick="openInAppImageViewer('${msg.imageUrl.replace(/'/g,'%27')}')" loading="lazy" onerror="this.style.display='none'"></div>`
-            : `<div style="background:${isMe?'linear-gradient(135deg,var(--secondary),var(--primary))':'rgba(255,255,255,0.1)'};color:${isMe?'#fff':'var(--text-main)'};padding:9px 13px;border-radius:${isMe?'18px 18px 4px 18px':'18px 18px 18px 4px'};font-size:0.88rem;word-break:break-word;line-height:1.45;text-align:left;">${replyThread}${safeText}${editedTag}</div>`;
+        let msgContent;
+        if (msg.imageUrl) {
+            msgContent = `<div style="padding:4px;">${replyThread}<img src="${msg.imageUrl}" style="max-width:220px;max-height:280px;border-radius:12px;display:block;cursor:pointer;object-fit:cover;" onclick="openInAppImageViewer('${msg.imageUrl.replace(/'/g,'%27')}')" loading="lazy" onerror="this.style.display='none'"></div>`;
+        } else if (msg.type === 'profile_card' && msg.profileCard) {
+            const pc = msg.profileCard;
+            const pcDp = pc.dp || ('https://ui-avatars.com/api/?name='+encodeURIComponent(pc.name||'U')+'&background=0D8ABC&color=fff');
+            const pcEntry = JSON.stringify(pc).replace(/"/g,'&quot;');
+            msgContent = `<div style="background:linear-gradient(135deg,rgba(112,0,255,0.18),rgba(0,240,255,0.12));border:1.5px solid rgba(0,240,255,0.3);border-radius:16px;padding:14px 16px;min-width:200px;max-width:240px;cursor:pointer;" onclick="showUserProfile(${pcEntry})">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <img src="${pcDp}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);flex-shrink:0;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;color:var(--text-main);font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(pc.name||'User').replace(/</g,'&lt;')}</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(pc.institution||'StudyVault').replace(/</g,'&lt;')}</div>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+                    <div style="background:rgba(255,204,0,0.1);border-radius:8px;padding:6px;text-align:center;"><div style="font-size:0.85rem;font-weight:700;color:var(--warning);">🔥${pc.streak||0}</div><div style="font-size:0.58rem;color:var(--text-muted);">Streak</div></div>
+                    <div style="background:rgba(0,240,255,0.08);border-radius:8px;padding:6px;text-align:center;"><div style="font-size:0.85rem;font-weight:700;color:var(--primary);">⏱${parseFloat((pc.hours||0).toFixed(1))}h</div><div style="font-size:0.58rem;color:var(--text-muted);">Hours</div></div>
+                    <div style="background:rgba(0,255,102,0.07);border-radius:8px;padding:6px;text-align:center;"><div style="font-size:0.85rem;font-weight:700;color:var(--success);">✅${pc.tasks||0}</div><div style="font-size:0.58rem;color:var(--text-muted);">Tasks</div></div>
+                </div>
+                <button style="width:100%;background:linear-gradient(135deg,var(--secondary),var(--primary));border:none;color:#fff;padding:7px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.78rem;font-family:var(--font-main);" onclick="event.stopPropagation();showUserProfile(${pcEntry})">👤 View Profile</button>
+            </div>`;
+        } else {
+            msgContent = `<div style="background:${isMe?'linear-gradient(135deg,var(--secondary),var(--primary))':'rgba(255,255,255,0.1)'};color:${isMe?'#fff':'var(--text-main)'};padding:9px 13px;border-radius:${isMe?'18px 18px 4px 18px':'18px 18px 18px 4px'};font-size:0.88rem;word-break:break-word;line-height:1.45;text-align:left;">${replyThread}${safeText}${editedTag}</div>`;
+        }
 
         // Swipe-to-reply state
         const msgWrapId = 'msgw_' + safeId;
@@ -8631,6 +8753,7 @@ function shareProfileWhatsApp() {
 }
 
 function shareUserProfileToChat(entry) {
+    window._lastSharedProfileEntry = entry;
     if (!friendsList.length) { showToast('প্রথমে friends যোগ করুন', 'error'); switchView('friends', null); return; }
     const profileUrl = 'https://oyasimsajjad-code.github.io/vault.com/?uid=' + encodeURIComponent(entry.uid || '');
     const msg = `👤 *${entry.name||'User'}*\n🏫 ${entry.institution||'StudyVault'}\n⏱ ${parseFloat((entry.hours||0).toFixed(1))}h studied • 🔥 ${entry.streak||0} day streak\n🔗 ${profileUrl}`;
@@ -8653,6 +8776,7 @@ function shareUserProfileToChat(entry) {
     </div>`;
 }
 function shareProfileToInbox() {
+    window._lastSharedProfileEntry = null;
     // Close share modal, switch to inbox
     const modal = document.getElementById('_sv_share_modal');
     if (modal) modal.remove();
@@ -8682,16 +8806,57 @@ function shareProfileToInbox() {
 }
 
 async function _sendProfileCard(toUid, msg) {
-    if (!window._fbSendMessage) { showToast('Firebase not ready','error'); return; }
+    if (!window._fbFirestore) { showToast('Firebase not ready','error'); return; }
     try {
-        await window._fbSendMessage(toUid, msg);
+        const uid = window._fbAuth && window._fbAuth.currentUser ? window._fbAuth.currentUser.uid : currentUser;
+        const chatId = [uid, toUid].sort().join('_');
+        const msgId = Date.now().toString() + '_pc_' + Math.random().toString(36).substr(2, 5);
+        const sharedEntry = window._lastSharedProfileEntry || null;
+        const cardData = sharedEntry ? {
+            uid: sharedEntry.uid || uid,
+            name: sharedEntry.name || appData.profile.name || 'Student',
+            dp: sharedEntry.dp || appData.profile.dp || '',
+            institution: sharedEntry.institution || appData.profile.institution || '',
+            streak: sharedEntry.streak || 0,
+            hours: parseFloat((sharedEntry.hours || 0).toFixed(1)),
+            tasks: sharedEntry.tasks || 0
+        } : {
+            uid: uid,
+            name: appData.profile.name || 'Student',
+            dp: appData.profile.dp || '',
+            institution: appData.profile.institution || '',
+            streak: appData.streak ? appData.streak.current || 0 : 0,
+            hours: parseFloat(((appData.stats ? appData.stats.studyMinutes || 0 : 0) / 60).toFixed(1)),
+            tasks: appData.stats ? appData.stats.completedTasks || 0 : 0
+        };
+        const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        await setDoc(doc(window._fbFirestore, 'chats', chatId, 'messages', msgId), {
+            id: msgId,
+            fromUid: uid,
+            toUid,
+            text: '👤 Profile Card: ' + cardData.name,
+            type: 'profile_card',
+            profileCard: cardData,
+            timestamp: Date.now(),
+            read: false
+        });
+        const myName = appData.profile.name || 'Anonymous';
+        const myDp = appData.profile.dp || '';
+        const friendInfo = friendsList.find(f => f.uid === toUid) || {};
+        await setDoc(doc(window._fbFirestore, 'users', uid, 'conversations', toUid), {
+            uid: toUid, name: friendInfo.name || 'Friend', dp: friendInfo.dp || '',
+            lastMsg: '👤 Profile Card', lastTimestamp: Date.now(), unread: 0
+        });
+        await setDoc(doc(window._fbFirestore, 'users', toUid, 'conversations', uid), {
+            uid, name: myName, dp: myDp,
+            lastMsg: '👤 Profile Card', lastTimestamp: Date.now(), unread: 1
+        });
+        if (window._fbSendPushToUser) window._fbSendPushToUser(toUid, '👤 ' + myName, 'Shared their profile with you');
         showToast('Profile card sent! 📨', 'success');
-        // Close any open pickers/modals
         const picker = document.getElementById('_sv_friend_picker');
         if (picker) picker.remove();
         const profileModal = document.getElementById('user-profile-modal');
         if (profileModal) profileModal.remove();
-        // Navigate to that exact conversation
         switchView('inbox', null);
         setTimeout(() => openChatWith(toUid), 400);
     } catch(e) {
