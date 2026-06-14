@@ -3239,10 +3239,14 @@ document.getElementById('pdf-upload').addEventListener('change', async function(
         reader.readAsDataURL(file);
     };
 
-    // Firebase Storage not available on current plan — save locally only
-
-    // Offline / no cloud access -> save to IndexedDB only (this device)
-    saveLocalPDF();
+    // Try cloud upload (Cloudinary, via fbUploadPDF) if this account has cloud PDF access;
+    // otherwise fall back to saving locally only (this device)
+    let usedCloud = false;
+    if (window._fbAuth && window._fbAuth.currentUser && window._canUseCloudPDF && await window._canUseCloudPDF()) {
+        usedCloud = await window._fbUploadPDF(file, subject);
+        if (usedCloud) e.target.value = '';
+    }
+    if (!usedCloud) saveLocalPDF();
 });
 
 async function loadPDFs() {
@@ -9932,6 +9936,10 @@ const firebaseConfig = {
     measurementId: "G-685PZHND2K"
 };
 
+/* ---- Cloudinary Config (unsigned upload preset, used for PDF cloud storage) ---- */
+const CLOUDINARY_CLOUD_NAME = 'dq7nwtylv';
+const CLOUDINARY_UPLOAD_PRESET = 'studyvault_preset';
+
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
@@ -10070,44 +10078,36 @@ async function fbUploadPDF(file, subject) {
 
     try {
         const uid = auth.currentUser.uid;
-        const token = await auth.currentUser.getIdToken();
         const fileId = Date.now().toString();
-        const bucket = 'studyvault-1102b.appspot.com';
-        const storagePath = `users/${uid}/pdfs/${fileId}/${encodeURIComponent(file.name)}`;
-        const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${encodeURIComponent(`users/${uid}/pdfs/${fileId}/${file.name}`)}`;
 
-        setProgress(10);
+        setProgress(5);
         if (cancelled) return false;
 
-        // Read file as ArrayBuffer
-        const arrayBuffer = await file.arrayBuffer();
-        if (cancelled) return false;
-
-        setProgress(30);
-
-        // Upload via fetch (works in Median WebView, no CORS/QUIC issues)
-        const uploadResp = await fetch(uploadUrl, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/pdf',
-                'X-Goog-Upload-Protocol': 'raw'
-            },
-            body: arrayBuffer
+        // Upload to Cloudinary via unsigned preset (works in Median WebView, no CORS issues)
+        const downloadURL = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            formData.append('public_id', `studyvault/${uid}/${fileId}`);
+            xhr.upload.onprogress = (ev) => {
+                if (ev.lengthComputable) setProgress(Math.round((ev.loaded / ev.total) * 90));
+            };
+            xhr.onload = () => {
+                if (cancelled) return;
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try { resolve(JSON.parse(xhr.responseText).secure_url); }
+                    catch(parseErr) { reject(new Error('Cloudinary response error')); }
+                } else {
+                    reject(new Error(`Cloudinary error ${xhr.status}: ${xhr.responseText.substring(0,120)}`));
+                }
+            };
+            xhr.onerror = () => reject(new Error('Network error during upload'));
+            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`);
+            xhr.send(formData);
         });
 
         if (cancelled) return false;
-        if (!uploadResp.ok) {
-            const errText = await uploadResp.text();
-            throw new Error(`Storage error ${uploadResp.status}: ${errText.substring(0,120)}`);
-        }
-
-        setProgress(80);
-        const uploadData = await uploadResp.json();
-        // Build download URL from response
-        const encodedPath = encodeURIComponent(uploadData.name);
-        const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media&token=${uploadData.downloadTokens}`;
-
         setProgress(95);
 
         const pdfMeta = {
@@ -10118,7 +10118,7 @@ async function fbUploadPDF(file, subject) {
             timestamp: Date.now(),
             fav: false,
             storageUrl: downloadURL,
-            storagePath: `users/${uid}/pdfs/${fileId}/${file.name}`
+            storagePath: `studyvault/${uid}/${fileId}`
         };
 
         await setDoc(doc(firestore, 'users', uid, 'pdfs', fileId), pdfMeta);
@@ -10157,10 +10157,9 @@ async function fbDeletePDF(id) {
     try {
         const snap = await getDoc(doc(firestore, 'users', uid, 'pdfs', id));
         if (snap.exists()) {
-            const data = snap.data();
-            if (data.storagePath) {
-                try { await deleteObject(ref(storage, data.storagePath)); } catch(e){}
-            }
+            // Note: the file itself stays on Cloudinary (deleting it requires a
+            // signed request with the API secret, which can't be done safely
+            // from client-side code). Only the Firestore reference is removed.
             await deleteDoc(doc(firestore, 'users', uid, 'pdfs', id));
         }
     } catch(e) { console.warn('PDF delete error:', e); }
