@@ -2499,6 +2499,7 @@
         <button class="ann-btn" id="ann-note-btn" onclick="addPageNote()"><i class="fa-solid fa-sticky-note"></i> Add Note</button>
         <button class="ann-btn" id="ann-bookmark-btn" onclick="bookmarkCurrentPage()"><i class="fa-solid fa-bookmark"></i> Bookmark</button>
         <button class="ann-btn" onclick="showAnnotations()"><i class="fa-solid fa-list"></i> Annotations</button>
+        <button class="ann-btn" id="ann-erase-btn" onclick="toggleAnnotMode('erase')" style="background:rgba(255,82,82,0.15);border-color:rgba(255,82,82,0.4);color:#ff5252;"><i class="fa-solid fa-eraser"></i> Erase</button>
     </div>
     <div id="pdf-frame-wrapper">
         <div id="pdf-loading-msg"><i class="fa-solid fa-spinner fa-spin"></i> Loading PDF...</div>
@@ -3238,18 +3239,7 @@ document.getElementById('pdf-upload').addEventListener('change', async function(
         reader.readAsDataURL(file);
     };
 
-    // Logged in + cloud-access granted -> upload to Firebase Storage + Firestore (syncs across devices)
-    if (window._fbAuth && window._fbAuth.currentUser && window._fbUploadPDF && window._canUseCloudPDF) {
-        const canCloud = await window._canUseCloudPDF();
-        if (canCloud) {
-            const ok = await window._fbUploadPDF(file, subject);
-            e.target.value = '';
-            if (!ok) saveLocalPDF();
-            return;
-        } else {
-            showToast('Cloud sync শুধু selected accounts-এর জন্য enabled। এই PDF এই ডিভাইসে save হচ্ছে।','success');
-        }
-    }
+    // Firebase Storage not available on current plan — save locally only
 
     // Offline / no cloud access -> save to IndexedDB only (this device)
     saveLocalPDF();
@@ -3547,6 +3537,11 @@ function toggleAnnotMode(mode) {
         document.getElementById('ann-highlight-btn').classList.add('active');
         if (picker) picker.style.display = 'flex';
         showToast('Drag over the page to highlight','success');
+    } else if (annotMode==='erase') {
+        const eraseBtn = document.getElementById('ann-erase-btn');
+        if (eraseBtn) eraseBtn.classList.add('active');
+        if (picker) picker.style.display = 'none';
+        showToast('Tap any highlight to erase it','success');
     } else {
         if (picker) picker.style.display = 'none';
     }
@@ -3584,7 +3579,7 @@ function renderAnnotationOnPage(wrapper, ann, vp) {
         el.setAttribute('data-ann-id', ann.id);
         el.style.cssText = `position:absolute;left:${(ann.x*100)}%;top:${(ann.y*100)}%;width:${(ann.w*100)}%;height:${(ann.h*100)}%;background:${ann.color||'rgba(255,235,59,0.4)'};border-radius:2px;cursor:pointer;z-index:5;`;
         el.title = 'Tap to remove highlight';
-        el.onclick = (e) => { e.stopPropagation(); if (confirm('Remove this highlight?')) deletePDFAnnotation(ann.id); };
+        el.onclick = (e) => { e.stopPropagation(); if (annotMode==='erase' || confirm('Remove this highlight?')) deletePDFAnnotation(ann.id); };
         wrapper.appendChild(el);
     }
 }
@@ -9121,9 +9116,7 @@ function renderAdminUsers(users) {
                 <button onclick="adminVerifyUser('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:rgba(0,240,255,0.12);color:var(--primary);border:1px solid rgba(0,240,255,0.3);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Verify User">
                     <i class="fa-solid fa-circle-check"></i>
                 </button>
-                <button onclick="adminToggleCloudPdf('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:rgba(0,200,255,0.12);color:#00c8ff;border:1px solid rgba(0,200,255,0.3);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Toggle Cloud PDF Access">
-                    <i class="fa-solid fa-cloud"></i>
-                </button>
+                
                 <button onclick="adminMessageUser('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:rgba(112,0,255,0.12);color:var(--secondary);border:1px solid rgba(112,0,255,0.3);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Message User">
                     <i class="fa-solid fa-message"></i>
                 </button>
@@ -9320,11 +9313,13 @@ async function adminToggleCloudPdf(uid, name, btn) {
     if (!isCreator()) { showToast('Access Denied', 'error'); return; }
     if (btn) { btn.disabled = true; }
     try {
-        const ref = doc(firestore, 'cloudPdfAccess', uid);
-        const snap = await getDoc(ref);
+        const { doc: _d, getDoc: _gd, setDoc: _sd } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const _fs = window._fbFirestore;
+        const cloudRef = _d(_fs, 'cloudPdfAccess', uid);
+        const snap = await _gd(cloudRef);
         const enabled = !(snap.exists() && snap.data().enabled === true);
-        await setDoc(ref, { enabled, name, grantedBy: currentUser, updatedAt: Date.now() });
-        await setDoc(doc(firestore, 'users', uid, 'notifications', Date.now().toString()), {
+        await _sd(cloudRef, { enabled, name, grantedBy: currentUser, updatedAt: Date.now() });
+        await _sd(_d(_fs, 'users', uid, 'notifications', Date.now().toString()), {
             msg: enabled ? '☁️ আপনার PDF এখন থেকে cloud-এ sync হবে (সব ডিভাইসে available)।' : '📴 আপনার PDF cloud sync বন্ধ করা হয়েছে। শুধু এই ডিভাইসে থাকবে।',
             type: enabled?'cloud_pdf_on':'cloud_pdf_off', timestamp: Date.now(), read:false
         });
@@ -10046,11 +10041,10 @@ async function _canUseCloudPDF() {
 }
 window._canUseCloudPDF = _canUseCloudPDF;
 
-/* ---- Firebase Storage: Upload PDF ---- */
+/* ---- Firebase Storage: Upload PDF (fetch-based, WebView-safe) ---- */
 async function fbUploadPDF(file, subject) {
     if (!auth.currentUser) { showToast('Not logged in','error'); return false; }
 
-    // Show progress overlay
     const overlay = document.createElement('div');
     overlay.className = 'upload-progress-overlay';
     overlay.id = 'upload-overlay';
@@ -10063,71 +10057,83 @@ async function fbUploadPDF(file, subject) {
     </div>`;
     document.body.appendChild(overlay);
 
-    const uid = auth.currentUser.uid;
-    const fileId = Date.now().toString();
-    const storageRef = ref(storage, `users/${uid}/pdfs/${fileId}/${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    let stallTimer = null;
-    const armStallTimer = () => {
-        if (stallTimer) clearTimeout(stallTimer);
-        stallTimer = setTimeout(() => { uploadTask.cancel(); }, 25000);
-    };
-    armStallTimer();
+    let cancelled = false;
     const cancelBtn = document.getElementById('upload-cancel-btn');
-    if (cancelBtn) cancelBtn.onclick = () => { clearTimeout(stallTimer); uploadTask.cancel(); };
+    if (cancelBtn) cancelBtn.onclick = () => { cancelled = true; if (overlay.parentNode) document.body.removeChild(overlay); showToast('Upload cancelled','error'); };
 
-    return new Promise((resolve) => {
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                armStallTimer();
-                const pct = snapshot.totalBytes ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100) : 0;
-                const fill = document.getElementById('upload-fill');
-                const txt = document.getElementById('upload-pct-text');
-                if (fill) fill.style.width = pct + '%';
-                if (txt) txt.innerText = pct + '%';
-            },
-            (error) => {
-                clearTimeout(stallTimer);
-                if (overlay.parentNode) document.body.removeChild(overlay);
-                if (error.code === 'storage/canceled') {
-                    showToast('Cloud upload ব্যর্থ (network সমস্যা) — PDF এই ডিভাইসে save হচ্ছে।', 'error');
-                } else {
-                    showToast('Upload failed: ' + error.message, 'error');
-                }
-                resolve(false);
-            },
-            async () => {
-                clearTimeout(stallTimer);
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                if (overlay.parentNode) document.body.removeChild(overlay);
+    const setProgress = (pct) => {
+        const fill = document.getElementById('upload-fill');
+        const txt = document.getElementById('upload-pct-text');
+        if (fill) fill.style.width = pct + '%';
+        if (txt) txt.innerText = pct + '%';
+    };
 
-                // Save PDF metadata to Firestore
-                const pdfMeta = {
-                    id: fileId,
-                    name: file.name.replace('.pdf',''),
-                    subject,
-                    date: new Date().toLocaleDateString(),
-                    timestamp: Date.now(),
-                    fav: false,
-                    storageUrl: downloadURL,
-                    storagePath: `users/${uid}/pdfs/${fileId}/${file.name}`
-                };
-                try {
-                    await setDoc(doc(firestore, 'users', uid, 'pdfs', fileId), pdfMeta);
-                    // Also save to IndexedDB for offline access with url reference
-                    await dbAdd('pdfs', { ...pdfMeta, data: null });
-                    await loadPDFs();
-                    showToast('PDF uploaded to cloud! ☁️', 'success');
-                    logEvent(analytics, 'pdf_uploaded', { subject });
-                    resolve(true);
-                } catch(e) {
-                    showToast('Metadata save failed', 'error');
-                    resolve(false);
-                }
-            }
-        );
-    });
+    try {
+        const uid = auth.currentUser.uid;
+        const token = await auth.currentUser.getIdToken();
+        const fileId = Date.now().toString();
+        const bucket = 'studyvault-1102b.appspot.com';
+        const storagePath = `users/${uid}/pdfs/${fileId}/${encodeURIComponent(file.name)}`;
+        const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?uploadType=media&name=${encodeURIComponent(`users/${uid}/pdfs/${fileId}/${file.name}`)}`;
+
+        setProgress(10);
+        if (cancelled) return false;
+
+        // Read file as ArrayBuffer
+        const arrayBuffer = await file.arrayBuffer();
+        if (cancelled) return false;
+
+        setProgress(30);
+
+        // Upload via fetch (works in Median WebView, no CORS/QUIC issues)
+        const uploadResp = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/pdf',
+                'X-Goog-Upload-Protocol': 'raw'
+            },
+            body: arrayBuffer
+        });
+
+        if (cancelled) return false;
+        if (!uploadResp.ok) {
+            const errText = await uploadResp.text();
+            throw new Error(`Storage error ${uploadResp.status}: ${errText.substring(0,120)}`);
+        }
+
+        setProgress(80);
+        const uploadData = await uploadResp.json();
+        // Build download URL from response
+        const encodedPath = encodeURIComponent(uploadData.name);
+        const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media&token=${uploadData.downloadTokens}`;
+
+        setProgress(95);
+
+        const pdfMeta = {
+            id: fileId,
+            name: file.name.replace('.pdf',''),
+            subject,
+            date: new Date().toLocaleDateString(),
+            timestamp: Date.now(),
+            fav: false,
+            storageUrl: downloadURL,
+            storagePath: `users/${uid}/pdfs/${fileId}/${file.name}`
+        };
+
+        await setDoc(doc(firestore, 'users', uid, 'pdfs', fileId), pdfMeta);
+        await dbAdd('pdfs', { ...pdfMeta, data: null });
+        setProgress(100);
+        if (overlay.parentNode) document.body.removeChild(overlay);
+        await loadPDFs();
+        showToast('PDF uploaded to cloud! ☁️', 'success');
+        logEvent(analytics, 'pdf_uploaded', { subject });
+        return true;
+    } catch(e) {
+        if (overlay.parentNode) document.body.removeChild(overlay);
+        if (!cancelled) showToast('Upload failed: ' + e.message, 'error');
+        return false;
+    }
 }
 window._fbUploadPDF = fbUploadPDF;
 
