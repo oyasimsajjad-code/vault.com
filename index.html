@@ -1107,7 +1107,7 @@
 </div>
 
 <!-- Splash -->
-<div id="splash-screen">
+<div id="splash-screen" style="display:none;">
     <i class="fa-solid fa-cube splash-icon"></i>
     <div class="splash-logo">StudyVault</div>
     <div class="splash-sub">Neural Learning OS</div>
@@ -1981,6 +1981,14 @@
     <h3 style="margin-bottom:14px;color:var(--primary);"><i class="fa-solid fa-users"></i> My Friends <span id="friends-count" style="color:var(--text-muted);font-size:0.85rem;"></span></h3>
     <div id="friends-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;"></div>
   </div>
+  <!-- Notes Feed -->
+  <div class="glass" style="padding:20px;margin-top:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="color:var(--primary);"><i class="fa-solid fa-newspaper"></i> Friends Notes Feed</h3>
+      <button onclick="loadFriendsFeed()" style="background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.25);color:var(--primary);padding:6px 14px;border-radius:10px;cursor:pointer;font-size:0.8rem;font-weight:700;font-family:var(--font-main);"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+    </div>
+    <div id="_sv_notes_feed_wrap"><div style="color:var(--text-muted);text-align:center;padding:24px;">Friends এর shared notes এখানে দেখাবে 📢</div></div>
+  </div>
 </section>
 
 <!-- Inbox Section -->
@@ -2731,6 +2739,92 @@ function getVerifiedBadge(uid, size) {
     : '<span class="verified-badge" title="Verified"></span>';
 }
 let viewOrder = ['dashboard','library','notes','todo','pomodoro','revision','analytics','goals','achievements','vault','routine','leaderboard','friends','inbox','challenge','groupfocus','profile'];
+
+/* ---- NOTES FRIENDS FEED ---- */
+async function shareNoteToFriendsFeed(noteId) {
+    if (!window._fbAuth || !window._fbAuth.currentUser) { showToast('Login করো', 'error'); return; }
+    const note = (appData.notes || []).find(n => n.id == noteId);
+    if (!note) return;
+    const uid = window._fbAuth.currentUser.uid;
+    const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const feedId = uid + '_' + noteId + '_' + Date.now();
+    await setDoc(doc(window._fbFirestore, 'notesFeed', feedId), {
+        feedId, uid,
+        name: appData.profile.name || 'Student',
+        dp: appData.profile.dp || '',
+        institution: appData.profile.institution || '',
+        noteTitle: note.title || 'Untitled Note',
+        noteContent: note.content || '',
+        noteSubject: note.subject || '',
+        timestamp: Date.now(),
+        replies: []
+    });
+    showToast('Note shared with friends! 📢', 'success');
+}
+
+async function loadFriendsFeed() {
+    const feedWrap = document.getElementById('_sv_notes_feed_wrap');
+    if (!feedWrap) return;
+    if (!window._fbFirestore || !window._fbAuth || !window._fbAuth.currentUser) {
+        feedWrap.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">Login করো feed দেখতে</div>';
+        return;
+    }
+    const myUid = window._fbAuth.currentUser.uid;
+    const friendUids = (friendsList || []).map(f => f.uid).concat([myUid]);
+    feedWrap.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">Loading...</div>';
+    try {
+        const { getDocs, collection, query, orderBy, limit } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const snap = await getDocs(query(collection(window._fbFirestore, 'notesFeed'), orderBy('timestamp','desc'), limit(50)));
+        const posts = [];
+        snap.forEach(d => { const v = d.data(); if (friendUids.includes(v.uid)) posts.push(v); });
+        if (!posts.length) { feedWrap.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:32px;">Friends কোনো note share করেনি এখনো 📭</div>'; return; }
+        feedWrap.innerHTML = posts.map(p => `
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:16px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <img src="${p.dp||'https://ui-avatars.com/api/?name='+encodeURIComponent(p.name)+'&background=7000ff&color=fff&size=64'}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,240,255,0.3);" onerror="this.src='https://ui-avatars.com/api/?name=S&background=7000ff&color=fff'">
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem;">${p.name}</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);">${p.institution || ''} · ${new Date(p.timestamp).toLocaleDateString()}</div>
+                </div>
+                ${p.noteSubject ? `<span style="margin-left:auto;background:rgba(0,240,255,0.1);color:var(--primary);border:1px solid rgba(0,240,255,0.2);border-radius:8px;padding:3px 8px;font-size:0.7rem;">${p.noteSubject}</span>` : ''}
+            </div>
+            <div style="font-weight:700;font-size:1rem;margin-bottom:6px;">📝 ${p.noteTitle}</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.5;max-height:80px;overflow:hidden;position:relative;">${(p.noteContent||'').substring(0,200)}${p.noteContent&&p.noteContent.length>200?'...':''}</div>
+            <div style="margin-top:12px;border-top:1px solid var(--glass-border);padding-top:10px;">
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">💬 Replies (${(p.replies||[]).length})</div>
+                ${(p.replies||[]).map(r => `<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;"><img src="${r.dp||'https://ui-avatars.com/api/?name='+encodeURIComponent(r.name||'S')+'&background=7000ff&color=fff&size=32'}" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;" onerror="this.src='https://ui-avatars.com/api/?name=S&background=7000ff&color=fff'"><div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:6px 10px;font-size:0.78rem;"><span style="font-weight:700;color:var(--primary);">${r.name}</span> <span style="color:var(--text-muted);">${r.text}</span></div></div>`).join('')}
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <input id="reply_${p.feedId}" placeholder="Reply লিখো..." style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;padding:7px 12px;color:var(--text);font-size:0.8rem;font-family:var(--font-main);outline:none;">
+                    <button onclick="_sendNoteReply('${p.feedId}',this)" style="background:rgba(0,240,255,0.12);border:1px solid rgba(0,240,255,0.3);color:var(--primary);border-radius:10px;padding:6px 14px;cursor:pointer;font-size:0.8rem;font-weight:700;font-family:var(--font-main);">Send</button>
+                </div>
+            </div>
+        </div>`).join('');
+    } catch(e) { feedWrap.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:24px;">Feed load হয়নি</div>'; }
+}
+
+async function _sendNoteReply(feedId, btn) {
+    const input = document.getElementById('reply_' + feedId);
+    if (!input || !input.value.trim()) return;
+    const replyText = input.value.trim();
+    input.value = '';
+    btn.disabled = true;
+    const { getDoc, updateDoc, doc, arrayUnion } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+    const uid = window._fbAuth.currentUser.uid;
+    try {
+        await updateDoc(doc(window._fbFirestore, 'notesFeed', feedId), {
+            replies: arrayUnion({
+                uid,
+                name: appData.profile.name || 'Student',
+                dp: appData.profile.dp || '',
+                text: replyText,
+                timestamp: Date.now()
+            })
+        });
+        showToast('Reply sent! ✅', 'success');
+        loadFriendsFeed();
+    } catch(e) { showToast('Reply পাঠানো যায়নি', 'error'); }
+    btn.disabled = false;
+}
 const screens = {
     lock: document.getElementById('app-lock-screen'),
     main: document.getElementById('main-app')
@@ -2754,11 +2848,21 @@ function showFbError(msg) {
 }
 
 /* ---- SPLASH ---- */
+(function(){ if(_shouldShowSplash===undefined||_shouldShowSplash()){const s=document.getElementById('splash-screen');if(s)s.style.display='';} })();
 function hideSplash() {
     const splash = document.getElementById('splash-screen');
     splash.style.opacity = '0';
     splash.style.transition = 'opacity 0.15s ease';
     setTimeout(() => splash.style.display = 'none', 150);
+}
+function _shouldShowSplash() {
+    try {
+        const key = 'sv_splash_date';
+        const today = new Date().toDateString();
+        if (localStorage.getItem(key) === today) return false;
+        localStorage.setItem(key, today);
+        return true;
+    } catch(e) { return true; }
 }
 
 /* ---- THEME ---- */
@@ -9627,6 +9731,7 @@ function openProfileShareCard() {
         <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
             <button class="btn btn-primary" onclick="downloadProfileCard()"><i class="fa-solid fa-download"></i> Save as PNG</button>
             <button class="btn" style="border-color:var(--primary);color:var(--primary);" onclick="shareProfileCard()"><i class="fa-solid fa-share-nodes"></i> Share</button>
+            <button class="btn" style="border-color:#00c8ff;color:#00c8ff;" onclick="document.getElementById('profile-card-modal').remove();window._lastSharedProfileEntry=null;shareProfileToInbox();"><i class="fa-solid fa-paper-plane"></i> Send in Chat</button>
             <button class="btn" onclick="document.getElementById('profile-card-modal').remove()"><i class="fa-solid fa-xmark"></i> Close</button>
         </div>
         <p style="font-size:0.72rem;color:var(--text-muted);text-align:center;">Tip: Use "Save as PNG" to download and share on social media</p>
@@ -10100,7 +10205,9 @@ async function fbUploadPDF(file, subject) {
         const downloadURL = await new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
-            formData.append('file', file);
+            // Strip .pdf extension from public_id so Cloudinary doesn't block it as a PDF type
+            const safeFileName = file.name.replace(/\.pdf$/i, '');
+            formData.append('file', new File([file], safeFileName, { type: 'application/octet-stream' }));
             formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
             formData.append('public_id', `studyvault/${uid}/${fileId}`);
             xhr.upload.onprogress = (ev) => {
