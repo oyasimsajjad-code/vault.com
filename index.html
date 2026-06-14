@@ -4967,7 +4967,8 @@ function updateGoalUI() {
     const goals=appData.goals||{};
     const dailyMins=goals.daily||0,weeklyHrs=goals.weekly||0,monthlyTasks=goals.monthly||0;
     const todayMin=appData.stats.todayMinutes||0;
-    const totalHrs=(appData.stats.studyMinutes||0)/60;
+    const weeklyData=getWeeklyHoursData();
+    const totalHrs=weeklyData.reduce((a,b)=>a+b,0);
     const completedTasks=appData.stats.completedTasks||0;
     if(document.getElementById('goal-daily'))document.getElementById('goal-daily').value=dailyMins||'';
     if(document.getElementById('goal-weekly'))document.getElementById('goal-weekly').value=weeklyHrs||'';
@@ -9816,7 +9817,9 @@ const auth = getAuth(app);
 let firestore;
 try {
     firestore = initializeFirestore(app, {
-        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+        experimentalAutoDetectLongPolling: true,
+        useFetchStreams: false
     });
 } catch(e) {
     // Already initialized (e.g. hot reload) — fall back to getFirestore
