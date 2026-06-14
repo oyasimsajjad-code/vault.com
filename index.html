@@ -9022,14 +9022,17 @@ async function loadAdminData() {
   try {
     const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
     // Load all data in parallel for speed
-    const [lbSnap, roomsSnap] = await Promise.all([
+    const [lbSnap, roomsSnap, cloudPdfSnap] = await Promise.all([
       getDocs(collection(window._fbFirestore, 'leaderboard')),
-      getDocs(collection(window._fbFirestore, 'groupRooms'))
+      getDocs(collection(window._fbFirestore, 'groupRooms')),
+      getDocs(collection(window._fbFirestore, 'cloudPdfAccess'))
     ]);
     // Users (leaderboard)
     const snap = lbSnap;
+    const cloudPdfMap = {};
+    cloudPdfSnap.forEach(d => { const v = d.data(); if (v && v.enabled) cloudPdfMap[d.id] = true; });
     _allUsersCache = [];
-    snap.forEach(d => { const v = d.data(); if (v && v.uid) _allUsersCache.push(v); });
+    snap.forEach(d => { const v = d.data(); if (v && v.uid) { v.cloudPdf = !!cloudPdfMap[v.uid]; _allUsersCache.push(v); } });
     const verifiedCount = _allUsersCache.filter(u => u.verified).length;
     const el_u = document.getElementById('admin-total-users');
     const el_v = document.getElementById('admin-total-verified');
@@ -9119,6 +9122,9 @@ function renderAdminUsers(users) {
             ${!isMe ? `<div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button onclick="adminVerifyUser('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:rgba(0,240,255,0.12);color:var(--primary);border:1px solid rgba(0,240,255,0.3);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Verify User">
                     <i class="fa-solid fa-circle-check"></i>
+                </button>
+                <button onclick="adminToggleCloudPdf('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:${u.cloudPdf?'rgba(0,200,255,0.15)':'rgba(255,255,255,0.06)'};color:${u.cloudPdf?'#00c8ff':'var(--text-muted)'};border:1px solid ${u.cloudPdf?'rgba(0,200,255,0.35)':'var(--glass-border)'};padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Toggle Cloud PDF Sync">
+                    <i class="fa-solid ${u.cloudPdf?'fa-cloud':'fa-cloud-slash'}"></i>
                 </button>
                 
                 <button onclick="adminMessageUser('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:rgba(112,0,255,0.12);color:var(--secondary);border:1px solid rgba(112,0,255,0.3);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Message User">
@@ -9328,7 +9334,14 @@ async function adminToggleCloudPdf(uid, name, btn) {
             type: enabled?'cloud_pdf_on':'cloud_pdf_off', timestamp: Date.now(), read:false
         });
         showToast(name + (enabled?' - Cloud PDF ON ☁️':' - Cloud PDF OFF'), 'success');
-        if (btn) { btn.innerHTML = enabled ? '<i class="fa-solid fa-cloud" style="color:#00c8ff;"></i>' : '<i class="fa-solid fa-cloud-slash"></i>'; }
+        const cu = _allUsersCache.find(x=>x.uid===uid);
+        if (cu) cu.cloudPdf = enabled;
+        if (btn) {
+            btn.innerHTML = enabled ? '<i class="fa-solid fa-cloud"></i>' : '<i class="fa-solid fa-cloud-slash"></i>';
+            btn.style.background = enabled ? 'rgba(0,200,255,0.15)' : 'rgba(255,255,255,0.06)';
+            btn.style.color = enabled ? '#00c8ff' : 'var(--text-muted)';
+            btn.style.borderColor = enabled ? 'rgba(0,200,255,0.35)' : 'var(--glass-border)';
+        }
     } catch(e) {
         showToast('Failed: ' + e.message, 'error');
     } finally {
@@ -10103,7 +10116,7 @@ async function fbUploadPDF(file, subject) {
                 }
             };
             xhr.onerror = () => reject(new Error('Network error during upload'));
-            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`);
+            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`);
             xhr.send(formData);
         });
 
@@ -11085,24 +11098,29 @@ window._fbSendImage = async function(toUid, blob, fileName, onProgress) {
     const myName = appData.profile.name || 'Anonymous';
     const myDp = appData.profile.dp || '';
     const msgId = Date.now().toString() + '_img_' + Math.random().toString(36).substr(2,5);
-    const imgRef = ref(storage, `chats/${chatId}/${msgId}.jpg`);
     let downloadURL;
     try {
-        const uploadResult = await new Promise((resolve, reject) => {
-            const task = uploadBytesResumable(imgRef, blob, {
-                contentType: 'image/jpeg',
-                customMetadata: { uploadedBy: uid, chatId: chatId }
-            });
-            task.on('state_changed',
-                (snapshot) => {
-                    const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                    if (typeof onProgress === 'function') onProgress(pct);
-                },
-                (error) => { reject(error); },
-                () => resolve(task.snapshot)
-            );
+        downloadURL = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', blob, fileName || (msgId + '.jpg'));
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            formData.append('public_id', `studyvault/chats/${chatId}/${msgId}`);
+            xhr.upload.onprogress = (ev) => {
+                if (ev.lengthComputable && typeof onProgress === 'function') onProgress(Math.round((ev.loaded / ev.total) * 100));
+            };
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try { resolve(JSON.parse(xhr.responseText).secure_url); }
+                    catch(parseErr) { reject(new Error('Cloudinary response error')); }
+                } else {
+                    reject(new Error(`Cloudinary error ${xhr.status}: ${xhr.responseText.substring(0,120)}`));
+                }
+            };
+            xhr.onerror = () => reject(new Error('Network error during upload'));
+            xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+            xhr.send(formData);
         });
-        downloadURL = await getDownloadURL(uploadResult.ref);
     } catch(uploadErr) {
         // Fallback: base64 for small images only
         const base64 = await new Promise(res => {
@@ -11110,7 +11128,7 @@ window._fbSendImage = async function(toUid, blob, fileName, onProgress) {
             reader.onload = () => res(reader.result);
             reader.readAsDataURL(blob);
         });
-        if (base64.length > 700000) { throw new Error('Storage upload failed and image too large for fallback'); }
+        if (base64.length > 700000) { throw new Error('Cloud upload failed and image too large for fallback'); }
         downloadURL = base64;
     }
     await setDoc(doc(firestore, 'chats', chatId, 'messages', msgId), {
