@@ -2490,6 +2490,12 @@
     </div>
     <div class="annotation-toolbar">
         <button class="ann-btn yellow" id="ann-highlight-btn" onclick="toggleAnnotMode('highlight')"><i class="fa-solid fa-highlighter"></i> Highlight</button>
+        <div id="highlight-color-picker" style="display:none;gap:8px;align-items:center;padding:0 6px;">
+            <span class="hl-swatch" data-color="rgba(255,235,59,0.4)" onclick="setHighlightColor('rgba(255,235,59,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#ffeb3b;cursor:pointer;outline:2px solid #fff;display:inline-block;"></span>
+            <span class="hl-swatch" data-color="rgba(76,175,80,0.4)" onclick="setHighlightColor('rgba(76,175,80,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#4caf50;cursor:pointer;display:inline-block;"></span>
+            <span class="hl-swatch" data-color="rgba(33,150,243,0.4)" onclick="setHighlightColor('rgba(33,150,243,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#2196f3;cursor:pointer;display:inline-block;"></span>
+            <span class="hl-swatch" data-color="rgba(255,82,82,0.4)" onclick="setHighlightColor('rgba(255,82,82,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#ff5252;cursor:pointer;display:inline-block;"></span>
+        </div>
         <button class="ann-btn" id="ann-note-btn" onclick="addPageNote()"><i class="fa-solid fa-sticky-note"></i> Add Note</button>
         <button class="ann-btn" id="ann-bookmark-btn" onclick="bookmarkCurrentPage()"><i class="fa-solid fa-bookmark"></i> Bookmark</button>
         <button class="ann-btn" onclick="showAnnotations()"><i class="fa-solid fa-list"></i> Annotations</button>
@@ -3189,6 +3195,13 @@ function setupSwipeGestures() {
 let currentPDFs = [], favFilterActive = false;
 let pdfDoc = null, pdfScale = 1.0, currentPDFId = null, currentPage = 1;
 let annotMode = null;
+let highlightColor = 'rgba(255,235,59,0.4)';
+function setHighlightColor(color) {
+    highlightColor = color;
+    document.querySelectorAll('#highlight-color-picker .hl-swatch').forEach(s => {
+        s.style.outline = s.getAttribute('data-color')===color ? '2px solid #fff' : 'none';
+    });
+}
 const PDF_DEVICE_PIXEL_RATIO = window.devicePixelRatio || 2;
 
 document.getElementById('pdf-upload').addEventListener('change', async function(e) {
@@ -3203,33 +3216,43 @@ document.getElementById('pdf-upload').addEventListener('change', async function(
     const subj = document.getElementById('pdf-subject-filter').value;
     const subject = subj==='All'?'Others':subj;
 
-    // Logged in -> upload to Firebase Storage + Firestore (syncs across devices)
-    if (window._fbAuth && window._fbAuth.currentUser && window._fbUploadPDF) {
-        await window._fbUploadPDF(file, subject);
-        e.target.value = '';
-        return;
+    const saveLocalPDF = () => {
+        showToast('Uploading...','success');
+        const reader = new FileReader();
+        reader.onload = async ev => {
+            const obj = { id:Date.now().toString(), name:file.name.replace('.pdf',''), subject, date:new Date().toLocaleDateString(), timestamp:Date.now(), data:ev.target.result, fav:false };
+            try {
+                await dbAdd('pdfs', obj);
+                showToast(t('pdfSaved'), 'success');
+                e.target.value = '';
+                await loadPDFs();
+            } catch(err) {
+                console.error('PDF save error:', err);
+                if (err.name === 'QuotaExceededError' || (err.inner && err.inner.name === 'QuotaExceededError')) {
+                    showToast('Storage full! Delete some PDFs first.', 'error');
+                } else {
+                    showToast('Storage error: ' + (err.message || 'Unknown'), 'error');
+                }
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Logged in + cloud-access granted -> upload to Firebase Storage + Firestore (syncs across devices)
+    if (window._fbAuth && window._fbAuth.currentUser && window._fbUploadPDF && window._canUseCloudPDF) {
+        const canCloud = await window._canUseCloudPDF();
+        if (canCloud) {
+            const ok = await window._fbUploadPDF(file, subject);
+            e.target.value = '';
+            if (!ok) saveLocalPDF();
+            return;
+        } else {
+            showToast('Cloud sync শুধু selected accounts-এর জন্য enabled। এই PDF এই ডিভাইসে save হচ্ছে।','success');
+        }
     }
 
-    // Offline / not logged in -> save to IndexedDB only
-    showToast('Uploading...','success');
-    const reader = new FileReader();
-    reader.onload = async ev => {
-        const obj = { id:Date.now().toString(), name:file.name.replace('.pdf',''), subject, date:new Date().toLocaleDateString(), timestamp:Date.now(), data:ev.target.result, fav:false };
-        try {
-            await dbAdd('pdfs', obj);
-            showToast(t('pdfSaved'), 'success');
-            e.target.value = '';
-            await loadPDFs();
-        } catch(err) {
-            console.error('PDF save error:', err);
-            if (err.name === 'QuotaExceededError' || (err.inner && err.inner.name === 'QuotaExceededError')) {
-                showToast('Storage full! Delete some PDFs first.', 'error');
-            } else {
-                showToast('Storage error: ' + (err.message || 'Unknown'), 'error');
-            }
-        }
-    };
-    reader.readAsDataURL(file);
+    // Offline / no cloud access -> save to IndexedDB only (this device)
+    saveLocalPDF();
 });
 
 async function loadPDFs() {
@@ -3519,9 +3542,13 @@ function trackPDFProgress() {
 function toggleAnnotMode(mode) {
     annotMode = annotMode===mode ? null : mode;
     document.querySelectorAll('.ann-btn').forEach(b=>b.classList.remove('active'));
+    const picker = document.getElementById('highlight-color-picker');
     if (annotMode==='highlight') {
         document.getElementById('ann-highlight-btn').classList.add('active');
+        if (picker) picker.style.display = 'flex';
         showToast('Drag over the page to highlight','success');
+    } else {
+        if (picker) picker.style.display = 'none';
     }
 }
 function addPageNote() {
@@ -3581,7 +3608,7 @@ function _attachHighlightDrag(wrapper, pageNum) {
         const p = getRel(e);
         startX = p.x; startY = p.y; dragging = true;
         tempEl = document.createElement('div');
-        tempEl.style.cssText = 'position:absolute;background:rgba(255,235,59,0.35);border:2px dashed #ffd700;border-radius:2px;z-index:6;pointer-events:none;';
+        tempEl.style.cssText = `position:absolute;background:${highlightColor};border:2px dashed rgba(255,255,255,0.7);border-radius:2px;z-index:6;pointer-events:none;`;
         wrapper.appendChild(tempEl);
         e.preventDefault();
     };
@@ -3603,7 +3630,7 @@ function _attachHighlightDrag(wrapper, pageNum) {
         if (w < 0.01 || h < 0.005) return;
         if (!currentPDFId) return;
         if (!appData.pdfAnnotations[currentPDFId]) appData.pdfAnnotations[currentPDFId]=[];
-        const ann = { id:Date.now().toString(), type:'highlight', page:pageNum, x, y, w, h, color:'rgba(255,235,59,0.4)', timestamp:Date.now() };
+        const ann = { id:Date.now().toString(), type:'highlight', page:pageNum, x, y, w, h, color:highlightColor, timestamp:Date.now() };
         appData.pdfAnnotations[currentPDFId].push(ann);
         saveAppData();
         renderAnnotationOnPage(wrapper, ann, null);
@@ -9094,6 +9121,9 @@ function renderAdminUsers(users) {
                 <button onclick="adminVerifyUser('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:rgba(0,240,255,0.12);color:var(--primary);border:1px solid rgba(0,240,255,0.3);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Verify User">
                     <i class="fa-solid fa-circle-check"></i>
                 </button>
+                <button onclick="adminToggleCloudPdf('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:rgba(0,200,255,0.12);color:#00c8ff;border:1px solid rgba(0,200,255,0.3);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Toggle Cloud PDF Access">
+                    <i class="fa-solid fa-cloud"></i>
+                </button>
                 <button onclick="adminMessageUser('${u.uid}','${(u.name||'').replace(/'/g,"\\'")}',this)" style="background:rgba(112,0,255,0.12);color:var(--secondary);border:1px solid rgba(112,0,255,0.3);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:0.75rem;font-weight:600;font-family:var(--font-main);" title="Message User">
                     <i class="fa-solid fa-message"></i>
                 </button>
@@ -9285,6 +9315,28 @@ async function adminVerifyUser(uid, name, btn) {
     filterAdminUsers(document.getElementById('admin-user-search')?.value || '');
   }
 }
+
+async function adminToggleCloudPdf(uid, name, btn) {
+    if (!isCreator()) { showToast('Access Denied', 'error'); return; }
+    if (btn) { btn.disabled = true; }
+    try {
+        const ref = doc(firestore, 'cloudPdfAccess', uid);
+        const snap = await getDoc(ref);
+        const enabled = !(snap.exists() && snap.data().enabled === true);
+        await setDoc(ref, { enabled, name, grantedBy: currentUser, updatedAt: Date.now() });
+        await setDoc(doc(firestore, 'users', uid, 'notifications', Date.now().toString()), {
+            msg: enabled ? '☁️ আপনার PDF এখন থেকে cloud-এ sync হবে (সব ডিভাইসে available)।' : '📴 আপনার PDF cloud sync বন্ধ করা হয়েছে। শুধু এই ডিভাইসে থাকবে।',
+            type: enabled?'cloud_pdf_on':'cloud_pdf_off', timestamp: Date.now(), read:false
+        });
+        showToast(name + (enabled?' - Cloud PDF ON ☁️':' - Cloud PDF OFF'), 'success');
+        if (btn) { btn.innerHTML = enabled ? '<i class="fa-solid fa-cloud" style="color:#00c8ff;"></i>' : '<i class="fa-solid fa-cloud-slash"></i>'; }
+    } catch(e) {
+        showToast('Failed: ' + e.message, 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+window.adminToggleCloudPdf = adminToggleCloudPdf;
 
 async function adminMessageUser(toUid, name, btn) {
     if (!isCreator()) { showToast('Access Denied', 'error'); return; }
@@ -9983,9 +10035,20 @@ function mergeCloudData(cloud) {
     if (cloud.earnedBadges) appData.earnedBadges = cloud.earnedBadges;
 }
 
+/* ---- Cloud PDF access check (owner-controlled whitelist) ---- */
+async function _canUseCloudPDF() {
+    if (!auth.currentUser) return false;
+    if (isCreator()) return true;
+    try {
+        const snap = await getDoc(doc(firestore, 'cloudPdfAccess', auth.currentUser.uid));
+        return snap.exists() && snap.data().enabled === true;
+    } catch(e) { return false; }
+}
+window._canUseCloudPDF = _canUseCloudPDF;
+
 /* ---- Firebase Storage: Upload PDF ---- */
 async function fbUploadPDF(file, subject) {
-    if (!auth.currentUser) { showToast('Not logged in','error'); return; }
+    if (!auth.currentUser) { showToast('Not logged in','error'); return false; }
 
     // Show progress overlay
     const overlay = document.createElement('div');
@@ -9996,6 +10059,7 @@ async function fbUploadPDF(file, subject) {
         <div class="upload-bar"><div class="upload-bar-fill" id="upload-fill" style="width:0%"></div></div>
         <div class="upload-pct" id="upload-pct-text">0%</div>
         <p style="font-size:0.78rem;color:var(--text-muted);margin-top:10px;">${file.name}</p>
+        <button id="upload-cancel-btn" style="margin-top:14px;background:rgba(255,0,60,0.15);color:var(--accent);border:1px solid rgba(255,0,60,0.3);padding:6px 16px;border-radius:8px;cursor:pointer;font-size:0.8rem;font-weight:600;">Cancel</button>
     </div>`;
     document.body.appendChild(overlay);
 
@@ -10004,23 +10068,39 @@ async function fbUploadPDF(file, subject) {
     const storageRef = ref(storage, `users/${uid}/pdfs/${fileId}/${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
+    let stallTimer = null;
+    const armStallTimer = () => {
+        if (stallTimer) clearTimeout(stallTimer);
+        stallTimer = setTimeout(() => { uploadTask.cancel(); }, 25000);
+    };
+    armStallTimer();
+    const cancelBtn = document.getElementById('upload-cancel-btn');
+    if (cancelBtn) cancelBtn.onclick = () => { clearTimeout(stallTimer); uploadTask.cancel(); };
+
     return new Promise((resolve) => {
         uploadTask.on('state_changed',
             (snapshot) => {
-                const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                armStallTimer();
+                const pct = snapshot.totalBytes ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100) : 0;
                 const fill = document.getElementById('upload-fill');
                 const txt = document.getElementById('upload-pct-text');
                 if (fill) fill.style.width = pct + '%';
                 if (txt) txt.innerText = pct + '%';
             },
             (error) => {
-                document.body.removeChild(overlay);
-                showToast('Upload failed: ' + error.message, 'error');
-                resolve();
+                clearTimeout(stallTimer);
+                if (overlay.parentNode) document.body.removeChild(overlay);
+                if (error.code === 'storage/canceled') {
+                    showToast('Cloud upload ব্যর্থ (network সমস্যা) — PDF এই ডিভাইসে save হচ্ছে।', 'error');
+                } else {
+                    showToast('Upload failed: ' + error.message, 'error');
+                }
+                resolve(false);
             },
             async () => {
+                clearTimeout(stallTimer);
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                document.body.removeChild(overlay);
+                if (overlay.parentNode) document.body.removeChild(overlay);
 
                 // Save PDF metadata to Firestore
                 const pdfMeta = {
@@ -10040,10 +10120,11 @@ async function fbUploadPDF(file, subject) {
                     await loadPDFs();
                     showToast('PDF uploaded to cloud! ☁️', 'success');
                     logEvent(analytics, 'pdf_uploaded', { subject });
+                    resolve(true);
                 } catch(e) {
                     showToast('Metadata save failed', 'error');
+                    resolve(false);
                 }
-                resolve();
             }
         );
     });
