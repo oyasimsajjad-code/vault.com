@@ -2853,7 +2853,6 @@ function showFbError(msg) {
 }
 
 /* ---- SPLASH ---- */
-(function(){ if(_shouldShowSplash===undefined||_shouldShowSplash()){const s=document.getElementById('splash-screen');if(s)s.style.display='';} })();
 function hideSplash() {
     const splash = document.getElementById('splash-screen');
     splash.style.opacity = '0';
@@ -3287,7 +3286,7 @@ function setupSwipeGestures() {
                 showToast('Refreshing...', 'success');
                 if (currentView === 'leaderboard') loadLeaderboard();
                 else if (currentView === 'library') loadPDFs();
-                else if (currentView === 'friends') { loadFriendsList().then(renderFriendsSection); }
+                else if (currentView === 'friends') { loadFriendsList().then(renderFriendsSection).then(()=>loadFriendsFeed()); }
                 else if (currentView === 'inbox') renderInbox();
                 else if (currentView === 'dashboard') { renderDashLeaderboard(); renderRecentPDFs(); updateGreeting(); }
                 else if (currentView === 'groupfocus') { _startGFRoomsListener(); }
@@ -9088,8 +9087,10 @@ async function _sendProfileCard(toUid, msg) {
         if (picker) picker.remove();
         const profileModal = document.getElementById('user-profile-modal');
         if (profileModal) profileModal.remove();
+        const profileCardModal = document.getElementById('profile-card-modal');
+        if (profileCardModal) profileCardModal.remove();
         switchView('inbox', null);
-        setTimeout(() => openChatWith(toUid), 400);
+        setTimeout(() => openChatWith(toUid), 500);
     } catch(e) {
         showToast('Could not send profile card', 'error');
     }
