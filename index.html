@@ -267,6 +267,8 @@
         body.theme-transitioning, body.theme-transitioning * { transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important; }
         .circle-timer, .splash-fill, .pdf-progress-fill, .goal-fill, .task-progress-bar, .subj-fill, .bg-animated, .focus-bg, img, canvas, #pdf-canvas-container { transition: none !important; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); color: var(--text-main); }
+        * { -webkit-overflow-scrolling: touch; }
+        .view-content, #pdf-frame-wrapper, #friends-list, #inbox-list, #notif-list { will-change: scroll-position; }
         body { background-color: var(--bg-base); height: 100vh; overflow: hidden; position: relative; max-width: 100vw; }
         * { min-width: 0; }
         .bg-animated { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: radial-gradient(circle at 15% 50%, rgba(112,0,255,0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(0,240,255,0.15), transparent 25%); animation: bgShift 20s infinite alternate; pointer-events: none; }
@@ -2329,6 +2331,7 @@
                     <div id="pin-setup-area" class="hidden">
                         <input type="password" id="setting-pin" placeholder="Set PIN (min 4 digits)" style="margin-bottom:8px;" autocomplete="new-password">
                         <p><i class="fa-solid fa-circle-exclamation" style="color:var(--warning);"></i> Remember your PIN — you cannot recover it.</p>
+                        <button onclick="saveAppLock()" style="width:100%;margin-top:8px;padding:10px;background:linear-gradient(135deg,var(--secondary),var(--primary));border:none;color:#fff;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.88rem;font-family:var(--font-main);"><i class="fa-solid fa-lock"></i> Save App Lock</button>
                     </div>
                     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--glass-border);">
                         <h4 style="margin-bottom:10px;font-size:0.88rem;color:var(--text-muted);">Change Vault Password</h4>
@@ -2494,7 +2497,8 @@
             <button onclick="resetPDFZoom()" title="Fit"><i class="fa-solid fa-expand"></i></button>
         </div>
         <span id="page-indicator"></span>
-        <button class="icon-btn danger" onclick="closePdfViewer()" style="margin-left:8px;flex-shrink:0;"><i class="fa-solid fa-xmark"></i></button>
+        <button class="icon-btn" onclick="(function(){const m=document.getElementById('pdf-viewer-modal');if(!document.fullscreenElement){m.requestFullscreen&&m.requestFullscreen();}else{document.exitFullscreen&&document.exitFullscreen();}})();" title="Fullscreen" style="margin-left:4px;flex-shrink:0;"><i class="fa-solid fa-expand"></i></button>
+<button class="icon-btn danger" onclick="closePdfViewer()" style="margin-left:8px;flex-shrink:0;"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="annotation-toolbar">
         <button class="ann-btn yellow" id="ann-highlight-btn" onclick="toggleAnnotMode('highlight')"><i class="fa-solid fa-highlighter"></i> Highlight</button>
@@ -2760,6 +2764,7 @@ async function shareNoteToFriendsFeed(noteId) {
         replies: []
     });
     showToast('Note shared with friends! 📢', 'success');
+    if (currentView === 'friends') loadFriendsFeed();
 }
 
 async function loadFriendsFeed() {
@@ -5417,7 +5422,27 @@ function toggleLockSettings() {
     const on=document.getElementById('setting-applock').checked;
     const pinArea=document.getElementById('pin-setup-area');
     if(on){pinArea.classList.remove('hidden');document.getElementById('setting-pin').focus();}
-    else{pinArea.classList.add('hidden');}
+    else{
+        pinArea.classList.add('hidden');
+        appData.settings.appLock=false;
+        appData.settings.pin='';
+        saveAppData();
+        showToast('App Lock disabled ✓','success');
+    }
+}
+function saveAppLock() {
+    const on=document.getElementById('setting-applock').checked;
+    if(on){
+        const pin=document.getElementById('setting-pin').value.trim();
+        if(pin.length<4){showToast('PIN কমপক্ষে ৪ সংখ্যার হতে হবে','error');return;}
+        appData.settings.appLock=true;
+        appData.settings.pin=pin;
+    } else {
+        appData.settings.appLock=false;
+        appData.settings.pin='';
+    }
+    saveAppData();
+    showToast('App Lock saved! 🔒','success');
 }
 
 /* ---- EXPORT / IMPORT BACKUP ---- */
@@ -9048,7 +9073,7 @@ async function _sendProfileCard(toUid, msg) {
         });
         const myName = appData.profile.name || 'Anonymous';
         const myDp = appData.profile.dp || '';
-        const friendInfo = friendsList.find(f => f.uid === toUid) || {};
+        const friendInfo = (window.friendsList || friendsList || []).find(f => f.uid === toUid) || {};
         await setDoc(doc(window._fbFirestore, 'users', uid, 'conversations', toUid), {
             uid: toUid, name: friendInfo.name || 'Friend', dp: friendInfo.dp || '',
             lastMsg: '👤 Profile Card', lastTimestamp: Date.now(), unread: 0
@@ -10066,7 +10091,7 @@ let firestore;
 try {
     firestore = initializeFirestore(app, {
         localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-        experimentalAutoDetectLongPolling: true,
+        experimentalForceLongPolling: true,
         useFetchStreams: false
     });
 } catch(e) {
@@ -10206,7 +10231,11 @@ async function fbUploadPDF(file, subject) {
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
             // Strip .pdf extension from public_id so Cloudinary doesn't block it as a PDF type
-            const safeFileName = file.name.replace(/\.pdf$/i, '');
+            if (file.size > 10 * 1024 * 1024) {
+            showToast('PDF too large! Maximum size is 10MB for cloud upload. Saving locally.', 'error');
+            return false;
+        }
+        const safeFileName = file.name.replace(/\.pdf$/i, '');
             formData.append('file', new File([file], safeFileName, { type: 'application/octet-stream' }));
             formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
             formData.append('public_id', `studyvault/${uid}/${fileId}`);
@@ -10393,16 +10422,25 @@ window.handleGoogleLogin = async function() {
 };
 
 window.handleForgotPassword = async function() {
-    const email = document.getElementById('fb-login-email').value.trim();
-    if (!email) { showFbError('Enter your email address first.'); return; }
+    const emailEl = document.getElementById('fb-login-email');
+    const email = emailEl ? emailEl.value.trim() : '';
+    if (!email) {
+        showFbError('⚠️ উপরের Email field এ তোমার email লিখে তারপর "Forgot password?" click করো।');
+        if (emailEl) { emailEl.focus(); emailEl.style.borderColor='var(--accent)'; setTimeout(()=>emailEl.style.borderColor='',3000); }
+        return;
+    }
     try {
+        showFbError('⏳ Sending reset email...');
         await sendPasswordResetEmail(auth, email);
-        showFbError('✅ Reset email sent! Check your inbox.');
+        showFbError('✅ Reset link পাঠানো হয়েছে! তোমার ' + email + ' inbox (এবং spam folder) চেক করো।');
         document.getElementById('fb-auth-error').style.borderColor = 'var(--success)';
         document.getElementById('fb-auth-error').style.background = 'rgba(0,255,102,0.08)';
         document.getElementById('fb-auth-error').style.color = 'var(--success)';
     } catch(e) {
-        showFbError('Could not send reset email. Check the address.');
+        const msg = e.code === 'auth/user-not-found' ? 'এই email এ কোনো account নেই।' :
+                    e.code === 'auth/invalid-email' ? 'Email address টা সঠিক না।' :
+                    'Reset email পাঠানো যায়নি। আবার চেষ্টা করো।';
+        showFbError('❌ ' + msg);
     }
 };
 
@@ -10467,6 +10505,11 @@ onAuthStateChanged(auth, async (user) => {
 
             // Hide splash early so user sees something
             hideSplash();
+            // Show main app immediately with cached data (don't wait for cloud)
+            try {
+                document.getElementById('firebase-auth-overlay').style.display = 'none';
+                document.getElementById('main-app').classList.remove('hidden');
+            } catch(_) {}
 
             // 2. Merge in cloud data (authoritative) — never block rendering
             try {
