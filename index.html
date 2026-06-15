@@ -993,7 +993,7 @@
 @keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 </style>
 </head>
-<body>
+<body><script>(function(){try{var d=JSON.parse(localStorage.getItem('sv_appdata')||'{}');if(d.settings&&d.settings.darkMode===false)document.body.classList.add('light-mode');}catch(e){}}());</script>
 
 <div class="bg-animated"></div>
 
@@ -2491,10 +2491,10 @@
     <div class="viewer-header">
         <h3 id="viewer-title">Document Viewer</h3>
         <div class="viewer-zoom-btns">
-            <button onclick="zoomPDF(-0.25)" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+            <button ontouchstart="event.preventDefault();zoomPDF(-0.25);" onclick="zoomPDF(-0.25)" title="Zoom Out" style="min-width:36px;min-height:36px;"><i class="fa-solid fa-minus"></i></button>
             <span id="zoom-display">100%</span>
-            <button onclick="zoomPDF(0.25)" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
-            <button onclick="resetPDFZoom()" title="Fit"><i class="fa-solid fa-expand"></i></button>
+            <button ontouchstart="event.preventDefault();zoomPDF(0.25);" onclick="zoomPDF(0.25)" title="Zoom In" style="min-width:36px;min-height:36px;"><i class="fa-solid fa-plus"></i></button>
+            <button onclick="resetPDFZoom()" title="Fit Width"><i class="fa-solid fa-arrows-left-right"></i></button>
         </div>
         <span id="page-indicator"></span>
         <button class="icon-btn" onclick="(function(){const m=document.getElementById('pdf-viewer-modal');if(!document.fullscreenElement){m.requestFullscreen&&m.requestFullscreen();}else{document.exitFullscreen&&document.exitFullscreen();}})();" title="Fullscreen" style="margin-left:4px;flex-shrink:0;"><i class="fa-solid fa-expand"></i></button>
