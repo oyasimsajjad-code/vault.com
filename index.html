@@ -2164,18 +2164,7 @@
     <div id="weak-results-area"></div>
   </div>
 
-  <!-- XP Bar at bottom -->
-  <div class="glass" style="padding:14px 18px;margin-top:20px;display:flex;align-items:center;gap:14px;" id="ai-xp-bar">
-    <div>
-      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;">AI Assistant XP</div>
-      <div style="width:160px;height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
-        <div id="ai-xp-fill" style="height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:10px;width:0%;transition:width 0.5s;"></div>
-      </div>
-    </div>
-    <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--primary);" id="ai-xp-label">0 XP</div>
-    <div style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);" id="ai-usage-count">0 queries today</div>
-  </div>
-</section>
+  </section>
 
 <!-- Group Focus Mode -->
 <section id="view-groupfocus" class="view-section">
@@ -2461,11 +2450,11 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
-        <div class="b-nav-item" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i>AI</div>
         <div class="b-nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i>Routine</div>
         <div class="b-nav-item" onclick="switchView('islamdash',this)"><i class="fa-solid fa-mosque"></i>Islam</div>
         <div class="b-nav-item" onclick="switchView('inbox',this)" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
+        <div class="b-nav-item" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i>AI</div>
     </nav>
 </div>
 
@@ -8025,7 +8014,7 @@ let aiChatHistory = [];
 let aiXP = 0;
 let aiQueriestoday = 0;
 let aiXPHistory = [];
-const AI_MODEL = 'claude-sonnet-4-20250514';
+const AI_MODEL = 'gemini-2.0-flash';
 
 function switchAIMode(mode, btn) {
     document.querySelectorAll('.ai-panel').forEach(p => p.style.display = 'none');
@@ -8127,13 +8116,17 @@ async function generateMCQs() {
             })
         });
         const data = await response.json();
-        const text = (data.content?.[0]?.text || '[]').replace(/```json|```/g, '').trim();
+        let rawText = (data.content?.[0]?.text || '');
+        // Gemini sometimes wraps in markdown or adds extra text — strip aggressively
+        rawText = rawText.replace(/```json[\s\S]*?```/g, m => m.replace(/```json|```/g,''))
+                         .replace(/```[\s\S]*?```/g, m => m.replace(/```/g,''))
+                         .trim();
         let mcqs = [];
-        try { mcqs = JSON.parse(text); } catch(pe) {
-            const match = text.match(/\[[\s\S]*\]/);
-            if (match) mcqs = JSON.parse(match[0]);
+        try { mcqs = JSON.parse(rawText); } catch(pe) {
+            const match = rawText.match(/\[[\s\S]*?\]/);
+            if (match) { try { mcqs = JSON.parse(match[0]); } catch(e2) {} }
         }
-        if (!mcqs.length) throw new Error('No MCQs generated');
+        if (!Array.isArray(mcqs) || !mcqs.length) throw new Error('No MCQs generated');
         renderMCQs(mcqs, area);
         addAIXP(20, 'MCQ Generated');
         updateAIXPBar();
