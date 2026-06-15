@@ -2060,44 +2060,47 @@
 </section>
 
 <!-- AI Study Assistant -->
-<section id="view-ai" class="view-section" style="padding:0;display:flex;flex-direction:column;height:100%;overflow:hidden;">
-  <!-- AI Header -->
-  <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--glass-border);flex-shrink:0;">
-    <i class="fa-solid fa-robot" style="color:var(--primary);font-size:1.3rem;"></i>
-    <span style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;">AI Study Assistant</span>
+<section id="view-ai" class="view-section">
+  <div class="section-header">
+    <h2 class="section-title"><i class="fa-solid fa-robot" style="color:var(--primary);margin-right:10px;"></i>AI Study Assistant</h2>
   </div>
-  <!-- Mode Tabs (শুধু Ask AI, MCQs, Weak Topics) -->
-  <div style="padding:10px 16px;display:flex;gap:8px;flex-shrink:0;border-bottom:1px solid var(--glass-border);overflow-x:auto;">
-    <button class="mode-btn active" id="ai-mode-chat" onclick="switchAIMode('chat',this)" style="white-space:nowrap;"><i class="fa-solid fa-comments"></i> Ask AI</button>
-    <button class="mode-btn" id="ai-mode-mcq" onclick="switchAIMode('mcq',this)" style="white-space:nowrap;"><i class="fa-solid fa-list-check"></i> Generate MCQs</button>
+  <!-- Mode Tabs -->
+  <div class="glass" style="padding:6px;display:flex;gap:6px;margin-bottom:20px;border-radius:30px;flex-wrap:wrap;">
+    <button class="mode-btn active" id="ai-mode-chat" onclick="switchAIMode('chat',this)"><i class="fa-solid fa-comments"></i> Ask AI</button>
+    <button class="mode-btn" id="ai-mode-mcq" onclick="switchAIMode('mcq',this)"><i class="fa-solid fa-list-check"></i> Generate MCQs</button>
+    <button class="mode-btn" id="ai-mode-explain" onclick="switchAIMode('explain',this)"><i class="fa-solid fa-book-open"></i> Explain Topic</button>
+    <button class="mode-btn" id="ai-mode-weak" onclick="switchAIMode('weak',this)"><i class="fa-solid fa-triangle-exclamation"></i> Weak Topics</button>
   </div>
 
-  <!-- Chat Mode — Full screen flex layout -->
-  <div id="ai-panel-chat" class="ai-panel" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-    <div id="ai-chat-history" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;">
-      <div style="text-align:center;color:var(--text-muted);padding:60px 20px 40px;">
-        <i class="fa-solid fa-robot" style="font-size:3rem;color:var(--primary);margin-bottom:14px;display:block;opacity:0.6;"></i>
-        <p style="font-size:0.95rem;line-height:1.6;">আমি তোমার AI Study Assistant।<br>যেকোনো বিষয়ে প্রশ্ন করো!</p>
+  <!-- Chat Mode -->
+  <div id="ai-panel-chat" class="ai-panel">
+    <div id="ai-chat-history" class="glass" style="min-height:220px;max-height:380px;overflow-y:auto;padding:16px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;border-radius:var(--radius-md);">
+      <div style="text-align:center;color:var(--text-muted);padding:40px 20px;">
+        <i class="fa-solid fa-robot" style="font-size:2.5rem;color:var(--primary);margin-bottom:12px;display:block;opacity:0.6;"></i>
+        <p style="font-size:0.9rem;">আমি তোমার AI Study Assistant। যেকোনো বিষয়ে প্রশ্ন করো!</p>
       </div>
     </div>
-    <!-- Input bar fixed at bottom -->
-    <div style="padding:12px 16px;border-top:1px solid var(--glass-border);background:var(--sidebar-bg);flex-shrink:0;">
-      <div style="display:flex;gap:10px;align-items:flex-end;">
-        <select id="ai-subject-select" style="width:120px;padding:10px 10px;font-size:0.8rem;flex-shrink:0;border-radius:14px;">
-          <option value="">General</option>
-          <option value="Physics">Physics</option>
-          <option value="Chemistry">Chemistry</option>
-          <option value="Higher Math">Higher Math</option>
-          <option value="Biology">Biology</option>
-          <option value="ICT">ICT</option>
-          <option value="English">English</option>
-          <option value="Bangla">Bangla</option>
-        </select>
-        <textarea id="ai-chat-input" placeholder="প্রশ্ন লিখুন..." rows="1" style="flex:1;resize:none;min-height:44px;max-height:160px;padding:12px 16px;border-radius:22px;font-size:0.95rem;line-height:1.5;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,160)+'px';"></textarea>
-        <button class="btn btn-primary" onclick="sendAIMessage()" style="padding:12px 16px;flex-shrink:0;border-radius:22px;min-width:46px;min-height:46px;">
-          <i class="fa-solid fa-paper-plane"></i>
-        </button>
-      </div>
+    <div style="display:flex;gap:10px;align-items:flex-end;">
+      <select id="ai-subject-select" style="width:150px;padding:10px 12px;font-size:0.82rem;flex-shrink:0;">
+        <option value="">General</option>
+        <option value="Physics">Physics</option>
+        <option value="Chemistry">Chemistry</option>
+        <option value="Higher Math">Higher Math</option>
+        <option value="Biology">Biology</option>
+        <option value="ICT">ICT</option>
+        <option value="English">English</option>
+        <option value="Bangla">Bangla</option>
+      </select>
+      <textarea id="ai-chat-input" placeholder="প্রশ্ন লিখুন... (Enter to send)" rows="1" style="flex:1;resize:none;min-height:42px;max-height:110px;padding:10px 14px;border-radius:20px;font-size:0.9rem;line-height:1.4;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';"></textarea>
+      <button class="btn btn-primary" onclick="sendAIMessage()" style="padding:10px 16px;flex-shrink:0;border-radius:20px;">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+    <div id="ai-quick-prompts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এই বিষয়টি সহজভাবে বুঝিয়ে দাও')">সহজ ব্যাখ্যা</button>
+      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এর উপর ৫টি গুরুত্বপূর্ণ প্রশ্ন তৈরি করো')">গুরুত্বপূর্ণ প্রশ্ন</button>
+      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এই অধ্যায়ের মূল ধারণাগুলো সংক্ষেপে বলো')">মূল ধারণা</button>
+      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('পরীক্ষার জন্য এটি কতটা গুরুত্বপূর্ণ?')">পরীক্ষা টিপস</button>
     </div>
   </div>
 
@@ -2161,7 +2164,18 @@
     <div id="weak-results-area"></div>
   </div>
 
-  </section>
+  <!-- XP Bar at bottom -->
+  <div class="glass" style="padding:14px 18px;margin-top:20px;display:flex;align-items:center;gap:14px;" id="ai-xp-bar">
+    <div>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;">AI Assistant XP</div>
+      <div style="width:160px;height:6px;background:rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
+        <div id="ai-xp-fill" style="height:100%;background:linear-gradient(90deg,var(--secondary),var(--primary));border-radius:10px;width:0%;transition:width 0.5s;"></div>
+      </div>
+    </div>
+    <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--primary);" id="ai-xp-label">0 XP</div>
+    <div style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);" id="ai-usage-count">0 queries today</div>
+  </div>
+</section>
 
 <!-- Group Focus Mode -->
 <section id="view-groupfocus" class="view-section">
@@ -2447,11 +2461,11 @@
     <nav id="bottom-nav">
         <div class="b-nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i>Home</div>
         <div class="b-nav-item" onclick="switchView('library',this)"><i class="fa-solid fa-book-open"></i>PDFs</div>
+        <div class="b-nav-item" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i>AI</div>
         <div class="b-nav-item" onclick="switchView('routine',this)"><i class="fa-solid fa-calendar-days"></i>Routine</div>
         <div class="b-nav-item" onclick="switchView('islamdash',this)"><i class="fa-solid fa-mosque"></i>Islam</div>
         <div class="b-nav-item" onclick="switchView('inbox',this)" style="position:relative;"><i class="fa-solid fa-envelope"></i>Inbox<span id="bnav-inbox-badge" style="display:none;position:absolute;top:4px;right:6px;background:var(--accent);color:#fff;font-size:0.55rem;width:14px;height:14px;border-radius:50%;align-items:center;justify-content:center;font-weight:700;">0</span></div>
         <div class="b-nav-item" onclick="switchView('pomodoro',this)"><i class="fa-solid fa-stopwatch"></i>Timer</div>
-        <div class="b-nav-item" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i>AI</div>
     </nav>
 </div>
 
@@ -8113,17 +8127,13 @@ async function generateMCQs() {
             })
         });
         const data = await response.json();
-        let rawText = (data.content?.[0]?.text || '');
-        // Gemini sometimes wraps in markdown or adds extra text — strip aggressively
-        rawText = rawText.replace(/```json[\s\S]*?```/g, m => m.replace(/```json|```/g,''))
-                         .replace(/```[\s\S]*?```/g, m => m.replace(/```/g,''))
-                         .trim();
+        const text = (data.content?.[0]?.text || '[]').replace(/```json|```/g, '').trim();
         let mcqs = [];
-        try { mcqs = JSON.parse(rawText); } catch(pe) {
-            const match = rawText.match(/\[[\s\S]*?\]/);
-            if (match) { try { mcqs = JSON.parse(match[0]); } catch(e2) {} }
+        try { mcqs = JSON.parse(text); } catch(pe) {
+            const match = text.match(/\[[\s\S]*\]/);
+            if (match) mcqs = JSON.parse(match[0]);
         }
-        if (!Array.isArray(mcqs) || !mcqs.length) throw new Error('No MCQs generated');
+        if (!mcqs.length) throw new Error('No MCQs generated');
         renderMCQs(mcqs, area);
         addAIXP(20, 'MCQ Generated');
         updateAIXPBar();
