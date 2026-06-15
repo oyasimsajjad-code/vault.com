@@ -10233,7 +10233,8 @@ async function fbUploadPDF(file, subject) {
             const formData = new FormData();
             // Strip .pdf extension from public_id so Cloudinary doesn't block it as a PDF type
             if (file.size > 10 * 1024 * 1024) {
-            showToast('PDF too large! Maximum size is 10MB for cloud upload. Saving locally.', 'error');
+            showToast('PDF too large for cloud (10MB limit). Saving to this device only.', 'info');
+            saveLocalPDF();
             return false;
         }
         const safeFileName = file.name.replace(/\.pdf$/i, '');
