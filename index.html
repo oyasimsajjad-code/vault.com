@@ -1129,6 +1129,7 @@
         </div>
         <div class="nav-links" id="sidebar-nav-links">
             <div class="nav-item active" onclick="switchView('dashboard',this)"><i class="fa-solid fa-border-all"></i> Dashboard</div>
+            <div class="nav-item" id="snav-ai" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i> AI Assistant</div>
             <div class="nav-item" onclick="switchView('friends',this)"><i class="fa-solid fa-user-group"></i> Friends</div>
             <div class="nav-item" onclick="switchView('todo',this)"><i class="fa-solid fa-list-check"></i> Task Manager</div>
             <div class="nav-item" id="snav-notes" onclick="switchView('notes',this)"><i class="fa-solid fa-note-sticky"></i> Notes</div>
@@ -1138,6 +1139,8 @@
             <div class="nav-item" onclick="switchView('goals',this)"><i class="fa-solid fa-bullseye"></i> Goals</div>
             <div class="nav-item" onclick="switchView('achievements',this)"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
+            <div class="nav-item" id="snav-ai" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i> AI Assistant</div>
+            <div class="nav-item" id="snav-ai" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i> AI Assistant</div>
             <div class="nav-item" onclick="switchView('groupfocus',this)"><i class="fa-solid fa-users"></i> Group Focus</div>
             <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
@@ -6773,7 +6776,7 @@ async function searchInstitution(val) {
     clearTimeout(instSearchTimeout);
     instSearchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const response = await fetch('https://studyvault-functions.vercel.app/api/ai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -8079,7 +8082,7 @@ async function sendAIMessage() {
     showAITyping();
     try {
         const systemPrompt = `You are a smart, friendly AI study assistant for Bangladeshi students (SSC/HSC/Medical Admission). ${subj ? 'The student is studying ' + subj + '.' : ''} Answer concisely in a mix of Bengali and English as appropriate. Use bullet points, bold key terms, and keep explanations exam-focused. If asked in Bangla, reply in Bangla.`;
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const response = await fetch('https://studyvault-functions.vercel.app/api/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -8114,7 +8117,7 @@ async function generateMCQs() {
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> তৈরি হচ্ছে...';
     area.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;"></i></div>';
     try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const response = await fetch('https://studyvault-functions.vercel.app/api/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -8212,7 +8215,7 @@ async function explainTopic() {
     area.style.display = 'none';
     const levelMap = { simple:'সহজ ও সংক্ষিপ্তভাবে বাংলায়', detailed:'বিস্তারিত ও উদাহরণসহ', exam:'পরীক্ষামুখী key points দিয়ে', story:'মজার গল্পের মতো করে' };
     try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const response = await fetch('https://studyvault-functions.vercel.app/api/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -8249,7 +8252,7 @@ async function analyzeWeakTopics() {
     }).map(r => r.topic + ' (' + r.subject + ')');
     const completionRate = appData.stats.completedTasks ? Math.round((appData.stats.completedTasks / Math.max(appData.tasks.length, 1)) * 100) : 0;
     try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const response = await fetch('https://studyvault-functions.vercel.app/api/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
