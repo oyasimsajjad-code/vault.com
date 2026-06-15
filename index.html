@@ -1139,8 +1139,6 @@
             <div class="nav-item" onclick="switchView('goals',this)"><i class="fa-solid fa-bullseye"></i> Goals</div>
             <div class="nav-item" onclick="switchView('achievements',this)"><i class="fa-solid fa-trophy"></i> Achievements</div>
             <div class="nav-item" onclick="switchView('vault',this)"><i class="fa-solid fa-shield-halved"></i> Vault</div>
-            <div class="nav-item" id="snav-ai" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i> AI Assistant</div>
-            <div class="nav-item" id="snav-ai" onclick="switchView('ai',this)"><i class="fa-solid fa-robot"></i> AI Assistant</div>
             <div class="nav-item" onclick="switchView('groupfocus',this)"><i class="fa-solid fa-users"></i> Group Focus</div>
             <div class="nav-item" onclick="switchView('profile',this)"><i class="fa-solid fa-gear"></i> Settings</div>
         </div>
@@ -3138,7 +3136,7 @@ const VIEW_ID_MAP = {
     dashboard:0, todo:1, notes:2, pomodoro:3, revision:4,
     analytics:5, goals:6, achievements:7, vault:8, routine:9,
     leaderboard:10, groupfocus:11, friends:12, islamdash:13, profile:14,
-    challenge:-1, library:-1, inbox:-1, admin:-1, ai:-1
+    challenge:-1, library:-1, inbox:-1, admin:-1, ai:1
 };
 
 function syncNavHighlight(viewId) {
