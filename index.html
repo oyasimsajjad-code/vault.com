@@ -442,23 +442,26 @@
         .pdf-progress-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; transition: width 0.5s; }
         .pdf-progress-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
         #pdf-viewer-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.98); display: flex; flex-direction: column; }
-        .viewer-header { padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); gap: 10px; flex-wrap: wrap; background: rgba(10,10,20,0.95); }
-        .viewer-header h3 { color: #fff; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; }
-        .viewer-zoom-btns { display: flex; gap: 8px; align-items: center; }
-        .viewer-zoom-btns button { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
-        .viewer-zoom-btns button:hover { background: var(--primary); color: #000; }
-        #zoom-display { color: white; font-size: 0.85rem; min-width: 45px; text-align: center; }
-        #pdf-frame-wrapper { flex: 1; overflow: auto; background: #525659; -webkit-overflow-scrolling: touch; }
-       #pdf-canvas-container { display: flex; flex-direction: column; align-items: center; padding: 10px 4px; gap: 6px; width: 100%; box-sizing: border-box; }
-        .pdf-page-canvas { display: block; width: 100%; height: auto; box-shadow: 0 2px 12px rgba(0,0,0,0.5); image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; border-radius: 2px; }
-        .pdf-page-placeholder { border-radius: 4px; }
-        #pdf-loading-msg { color: #ccc; padding: 60px 20px; font-size: 1.1rem; text-align: center; width: 100%; }
-        .annotation-toolbar { display: flex; gap: 8px; align-items: center; padding: 8px 24px; background: rgba(10,10,20,0.85); border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; }
-        .ann-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
-        .ann-btn:hover, .ann-btn.active { background: var(--primary); color: #000; }
-        .ann-btn.yellow { background: rgba(255,204,0,0.25); border-color: var(--warning); color: var(--warning); }
-        .ann-btn.yellow.active, .ann-btn.yellow:hover { background: var(--warning); color: #000; }
-        #page-indicator { color: #aaa; font-size: 0.82rem; margin-left: auto; }
+        .viewer-header { min-height:52px; padding:8px 10px; display:grid; grid-template-columns:42px minmax(0,1fr) auto auto; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); gap:8px; background:rgba(10,10,20,0.96); flex-shrink:0; }
+        .viewer-header h3 { color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.92rem; font-weight:700; min-width:0; }
+        .viewer-zoom-btns { display:flex; gap:4px; align-items:center; flex-shrink:0; }
+        .viewer-zoom-btns button { width:34px; height:34px; min-width:34px; border-radius:50%; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.16); color:white; padding:0; cursor:pointer; transition:background 0.2s; display:flex; align-items:center; justify-content:center; }
+        .viewer-zoom-btns button:hover { background:var(--primary); color:#000; }
+        #zoom-display { color:white; font-size:0.72rem; min-width:34px; text-align:center; }
+        #page-indicator { color:#ddd; font-size:0.75rem; white-space:nowrap; }
+        #pdf-frame-wrapper { flex:1; min-height:0; overflow:auto; background:#525659; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; scroll-behavior:smooth; padding-bottom:82px; }
+       #pdf-canvas-container { display:flex; flex-direction:column; align-items:center; padding:6px 0; gap:8px; width:100%; box-sizing:border-box; transform-origin:top center; }
+        .pdf-page-canvas { display:block; max-width:100%; height:auto; box-shadow:0 2px 10px rgba(0,0,0,0.45); image-rendering:auto; border-radius:2px; background:#fff; }
+        .pdf-page-placeholder { border-radius:4px; contain:layout paint; }
+        #pdf-loading-msg { color:#ccc; padding:42px 20px; font-size:0.98rem; text-align:center; width:100%; }
+        .annotation-toolbar { position:fixed; left:50%; bottom:calc(14px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:2100; display:flex; gap:8px; align-items:center; padding:8px; background:rgba(10,10,20,0.9); border:1px solid rgba(255,255,255,0.12); border-radius:999px; box-shadow:0 8px 28px rgba(0,0,0,0.35); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+        .ann-btn { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.14); color:white; width:38px; height:38px; border-radius:50%; cursor:pointer; font-size:0.92rem; display:flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; padding:0; flex-shrink:0; }
+        .ann-btn:hover, .ann-btn.active { background:var(--primary); color:#000; }
+        .ann-btn.yellow { background:rgba(255,204,0,0.2); border-color:rgba(255,204,0,0.55); color:var(--warning); }
+        .ann-btn.yellow.active, .ann-btn.yellow:hover { background:var(--warning); color:#000; }
+        .ann-color-picker { position:absolute; bottom:52px; left:50%; transform:translateX(-50%); display:none; gap:8px; align-items:center; padding:8px; border-radius:999px; background:rgba(10,10,20,0.92); border:1px solid rgba(255,255,255,0.12); }
+        .ann-swatch, .hl-swatch { width:24px; height:24px; border-radius:50%; cursor:pointer; display:inline-block; border:1px solid rgba(255,255,255,0.35); }
+        .pdf-annotation-mark { position:absolute; z-index:6; }
         .todo-container { display: grid; grid-template-columns: 1fr 350px; gap: 30px; }
         .todo-input-area { background: rgba(0,0,0,0.2); padding: 25px; border-radius: var(--radius-md); margin-bottom: 20px; }
         .task-list { display: flex; flex-direction: column; gap: 12px; }
@@ -630,12 +633,24 @@
         .upload-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); border-radius: 10px; transition: width 0.3s; }
         .upload-pct { margin-top: 10px; color: var(--text-muted); font-size: 0.88rem; }
         /* ── AI ASSISTANT ── */
+        #view-ai.active { overflow:hidden !important; padding-bottom:0; }
+        #view-ai .section-header { flex-shrink:0; margin-bottom:12px; }
+        #ai-panel-chat { flex:1; min-height:0; display:flex; flex-direction:column; animation:fadeIn 0.3s ease; }
         .ai-panel { animation: fadeIn 0.3s ease; }
-        .ai-msg { display:flex; gap:10px; align-items:flex-start; }
+        #ai-chat-history { flex:1; min-height:0; overflow-y:auto; padding:14px 10px 12px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px; border-radius:var(--radius-md); scroll-behavior:smooth; -webkit-overflow-scrolling:touch; }
+        .ai-welcome-card { text-align:left; color:var(--text-main); padding:16px 14px; margin:auto 0; }
+        .ai-welcome-title { font-family:var(--font-display); font-size:1.2rem; font-weight:800; margin-bottom:8px; }
+        .ai-welcome-sub { color:var(--text-muted); font-size:0.95rem; }
+        #ai-input-row { display:flex; gap:8px; align-items:flex-end; justify-content:center; flex-shrink:0; padding:8px 0 calc(8px + env(safe-area-inset-bottom)); }
+        #ai-chat-input { flex:0 1 88%; width:88%; max-width:760px; }
+        .ai-msg { display:flex; gap:8px; align-items:flex-end; }
         .ai-msg.user { flex-direction:row-reverse; }
-        .ai-msg-bubble { padding:10px 14px; border-radius:18px; max-width:80%; font-size:0.88rem; line-height:1.5; word-break:break-word; }
+        .ai-msg img { width:26px !important; height:26px !important; }
+        .ai-msg-bubble { position:relative; padding:9px 13px; border-radius:18px; max-width:min(82%, 680px); font-size:0.9rem; line-height:1.55; word-break:break-word; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
         .ai-msg-bubble.user-bubble { background:linear-gradient(135deg,var(--secondary),var(--primary)); color:#fff; border-radius:18px 18px 4px 18px; }
-        .ai-msg-bubble.ai-bubble { background:rgba(255,255,255,0.07); color:var(--text-main); border-radius:18px 18px 18px 4px; border:1px solid var(--glass-border); }
+        .ai-msg-bubble.ai-bubble { background:rgba(255,255,255,0.075); color:var(--text-main); border-radius:18px 18px 18px 4px; border:1px solid var(--glass-border); padding-right:36px; }
+        .ai-copy-btn { position:absolute; right:7px; top:7px; width:24px; height:24px; border:none; border-radius:50%; background:rgba(255,255,255,0.08); color:var(--text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.72rem; }
+        .ai-copy-btn:hover { background:var(--primary); color:#000; }
         .ai-typing { display:flex; gap:4px; align-items:center; padding:12px 14px; }
         .ai-typing span { width:7px; height:7px; background:var(--primary); border-radius:50%; animation:aiTyping 1.2s infinite; }
         .ai-typing span:nth-child(2) { animation-delay:0.2s; }
@@ -2068,25 +2083,15 @@
 
   <!-- Chat Mode -->
   <div id="ai-panel-chat" class="ai-panel">
-    <div id="ai-chat-history" class="glass" style="min-height:220px;max-height:380px;overflow-y:auto;padding:16px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;border-radius:var(--radius-md);">
-      <div style="text-align:center;color:var(--text-muted);padding:40px 20px;">
-        <i class="fa-solid fa-robot" style="font-size:2.5rem;color:var(--primary);margin-bottom:12px;display:block;opacity:0.6;"></i>
-        <p style="font-size:0.9rem;">আমি তোমার AI Study Assistant। যেকোনো বিষয়ে প্রশ্ন করো!</p>
+    <div id="ai-chat-history" class="glass">
+      <div class="ai-welcome-card">
+        <div class="ai-welcome-title">👋 Assalamu Alaikum, <span id="ai-welcome-name">Student</span></div>
+        <div class="ai-welcome-sub">আজ কী নিয়ে আলোচনা করব?</div>
       </div>
     </div>
-    <div style="display:flex;gap:10px;align-items:flex-end;">
-      <select id="ai-subject-select" style="width:150px;padding:10px 12px;font-size:0.82rem;flex-shrink:0;">
-        <option value="">General</option>
-        <option value="Physics">Physics</option>
-        <option value="Chemistry">Chemistry</option>
-        <option value="Higher Math">Higher Math</option>
-        <option value="Biology">Biology</option>
-        <option value="ICT">ICT</option>
-        <option value="English">English</option>
-        <option value="Bangla">Bangla</option>
-      </select>
-      <textarea id="ai-chat-input" placeholder="প্রশ্ন লিখুন... (Enter to send)" rows="1" style="flex:1;resize:none;min-height:42px;max-height:110px;padding:10px 14px;border-radius:20px;font-size:0.9rem;line-height:1.4;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';"></textarea>
-      <button class="btn btn-primary" onclick="sendAIMessage()" style="padding:10px 16px;flex-shrink:0;border-radius:20px;">
+    <div id="ai-input-row">
+      <textarea id="ai-chat-input" placeholder="প্রশ্ন লিখুন..." rows="1" style="resize:none;min-height:44px;max-height:110px;padding:11px 15px;border-radius:22px;font-size:0.92rem;line-height:1.4;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';"></textarea>
+      <button class="btn btn-primary" onclick="sendAIMessage()" style="padding:10px 16px;flex-shrink:0;border-radius:50%;width:44px;height:44px;">
         <i class="fa-solid fa-paper-plane"></i>
       </button>
     </div>
@@ -2416,27 +2421,34 @@
 <!-- PDF Viewer Modal -->
 <div id="pdf-viewer-modal" class="hidden">
     <div class="viewer-header">
+        <button class="icon-btn" onclick="closePdfViewer()" title="Back"><i class="fa-solid fa-arrow-left"></i></button>
         <h3 id="viewer-title">Document Viewer</h3>
+        <span id="page-indicator"></span>
         <div class="viewer-zoom-btns">
-            <button ontouchstart="event.preventDefault();zoomPDF(-0.25);" onclick="zoomPDF(-0.25)" title="Zoom Out" style="min-width:36px;min-height:36px;"><i class="fa-solid fa-minus"></i></button>
-            <span id="zoom-display">100%</span>
-            <button ontouchstart="event.preventDefault();zoomPDF(0.25);" onclick="zoomPDF(0.25)" title="Zoom In" style="min-width:36px;min-height:36px;"><i class="fa-solid fa-plus"></i></button>
+            <button ontouchstart="event.preventDefault();zoomPDF(-0.25);" onclick="zoomPDF(-0.25)" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+            <span id="zoom-display">Fit</span>
+            <button ontouchstart="event.preventDefault();zoomPDF(0.25);" onclick="zoomPDF(0.25)" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
             <button onclick="resetPDFZoom()" title="Fit Width"><i class="fa-solid fa-arrows-left-right"></i></button>
         </div>
-        <span id="page-indicator"></span>
-        <button class="icon-btn" onclick="(function(){const m=document.getElementById('pdf-viewer-modal');if(!document.fullscreenElement){m.requestFullscreen&&m.requestFullscreen();}else{document.exitFullscreen&&document.exitFullscreen();}})();" title="Fullscreen" style="margin-left:4px;flex-shrink:0;"><i class="fa-solid fa-expand"></i></button>
-<button class="icon-btn danger" onclick="closePdfViewer()" style="margin-left:8px;flex-shrink:0;"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="annotation-toolbar">
-        <button class="ann-btn yellow" id="ann-highlight-btn" onclick="toggleAnnotMode('highlight')"><i class="fa-solid fa-highlighter"></i> Highlight</button>
-        <div id="highlight-color-picker" style="display:none;gap:8px;align-items:center;padding:0 6px;">
-            <span class="hl-swatch" data-color="rgba(255,235,59,0.4)" onclick="setHighlightColor('rgba(255,235,59,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#ffeb3b;cursor:pointer;outline:2px solid #fff;display:inline-block;"></span>
-            <span class="hl-swatch" data-color="rgba(76,175,80,0.4)" onclick="setHighlightColor('rgba(76,175,80,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#4caf50;cursor:pointer;display:inline-block;"></span>
-            <span class="hl-swatch" data-color="rgba(33,150,243,0.4)" onclick="setHighlightColor('rgba(33,150,243,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#2196f3;cursor:pointer;display:inline-block;"></span>
-            <span class="hl-swatch" data-color="rgba(255,82,82,0.4)" onclick="setHighlightColor('rgba(255,82,82,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#ff5252;cursor:pointer;display:inline-block;"></span>
+        <button class="ann-btn" id="ann-pen-btn" onclick="toggleAnnotMode('pen')" title="Pen"><i class="fa-solid fa-pen"></i></button>
+        <div id="pen-color-picker" class="ann-color-picker">
+            <span class="ann-swatch" data-color="#ff5252" onclick="setPenColor('#ff5252')" style="background:#ff5252;outline:2px solid #fff;"></span>
+            <span class="ann-swatch" data-color="#00e676" onclick="setPenColor('#00e676')" style="background:#00e676;"></span>
+            <span class="ann-swatch" data-color="#40c4ff" onclick="setPenColor('#40c4ff')" style="background:#40c4ff;"></span>
+            <span class="ann-swatch" data-color="#ffffff" onclick="setPenColor('#ffffff')" style="background:#ffffff;"></span>
         </div>
-        
-        <button class="ann-btn" id="ann-erase-btn" onclick="toggleAnnotMode('erase')" style="background:rgba(255,82,82,0.15);border-color:rgba(255,82,82,0.4);color:#ff5252;"><i class="fa-solid fa-eraser"></i> Erase</button>
+        <button class="ann-btn yellow" id="ann-highlight-btn" onclick="toggleAnnotMode('highlight')" title="Highlighter"><i class="fa-solid fa-highlighter"></i></button>
+        <div id="highlight-color-picker" class="ann-color-picker">
+            <span class="hl-swatch" data-color="rgba(255,235,59,0.4)" onclick="setHighlightColor('rgba(255,235,59,0.4)')" style="background:#ffeb3b;outline:2px solid #fff;"></span>
+            <span class="hl-swatch" data-color="rgba(76,175,80,0.4)" onclick="setHighlightColor('rgba(76,175,80,0.4)')" style="background:#4caf50;"></span>
+            <span class="hl-swatch" data-color="rgba(33,150,243,0.4)" onclick="setHighlightColor('rgba(33,150,243,0.4)')" style="background:#2196f3;"></span>
+            <span class="hl-swatch" data-color="rgba(255,82,82,0.4)" onclick="setHighlightColor('rgba(255,82,82,0.4)')" style="background:#ff5252;"></span>
+        </div>
+        <button class="ann-btn" id="ann-erase-btn" onclick="toggleAnnotMode('erase')" title="Eraser"><i class="fa-solid fa-eraser"></i></button>
+        <button class="ann-btn" onclick="pdfUndoAnnotation()" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
+        <button class="ann-btn" onclick="pdfRedoAnnotation()" title="Redo"><i class="fa-solid fa-rotate-right"></i></button>
     </div>
     <div id="pdf-frame-wrapper">
         <div id="pdf-loading-msg"><i class="fa-solid fa-spinner fa-spin"></i> Loading PDF...</div>
@@ -3105,7 +3117,7 @@ function switchView(viewId, navEl) {
     if (viewId === 'routine') { loadRoutine(); renderRoutine(); }
     if (viewId === 'dashboard') { renderRecentPDFs(); updateGreeting(); initDashReminderScroll(); }
     if (viewId === 'leaderboard') { switchLeaderboardTab('streak'); }
-    if (viewId === 'ai') { updateAIXPBar(); }
+    if (viewId === 'ai') { updateAIXPBar(); updateAIWelcome(); setTimeout(scrollAIToBottom, 60); }
     if (viewId === 'groupfocus') { if (typeof _startGFRoomsListener === 'function') _startGFRoomsListener(); renderGroupRooms(); }
     if (viewId === 'challenge') { renderDailyChallenge(); updateXPDisplay(); }
     if (viewId === 'friends') {
@@ -3230,13 +3242,62 @@ let currentPDFs = [], favFilterActive = false;
 let pdfDoc = null, pdfScale = 1.0, currentPDFId = null, currentPage = 1;
 let annotMode = null;
 let highlightColor = 'rgba(255,235,59,0.4)';
+let penColor = '#ff5252';
+let pdfAnnUndoStack = [], pdfAnnRedoStack = [];
 function setHighlightColor(color) {
     highlightColor = color;
     document.querySelectorAll('#highlight-color-picker .hl-swatch').forEach(s => {
         s.style.outline = s.getAttribute('data-color')===color ? '2px solid #fff' : 'none';
     });
 }
-const PDF_DEVICE_PIXEL_RATIO = window.devicePixelRatio || 2;
+function setPenColor(color) {
+    penColor = color;
+    document.querySelectorAll('#pen-color-picker .ann-swatch').forEach(s => {
+        s.style.outline = s.getAttribute('data-color')===color ? '2px solid #fff' : 'none';
+    });
+}
+function pdfSaveAnnotations() {
+    saveAppData();
+}
+function pdfPushAnnotation(ann) {
+    if (!currentPDFId) return;
+    if (!appData.pdfAnnotations) appData.pdfAnnotations = {};
+    if (!appData.pdfAnnotations[currentPDFId]) appData.pdfAnnotations[currentPDFId] = [];
+    appData.pdfAnnotations[currentPDFId].push(ann);
+    pdfAnnUndoStack.push(ann);
+    pdfAnnRedoStack = [];
+    pdfSaveAnnotations();
+}
+function pdfRemoveAnnotationById(id, silent=false) {
+    if (!currentPDFId) return null;
+    const list = appData.pdfAnnotations[currentPDFId] || [];
+    const ann = list.find(a => a.id === id);
+    appData.pdfAnnotations[currentPDFId] = list.filter(a => a.id !== id);
+    document.querySelectorAll(`.pdf-annotation-mark[data-ann-id="${id}"], .pdf-highlight-mark[data-ann-id="${id}"]`).forEach(el => el.remove());
+    pdfSaveAnnotations();
+    if (!silent) showToast('Annotation removed','success');
+    return ann || null;
+}
+function pdfRenderAnnotationNow(ann) {
+    const wrapper = document.querySelector(`#pdf-canvas-container > div[data-page="${ann.page}"][data-rendered="1"]`);
+    if (wrapper) renderAnnotationOnPage(wrapper, ann, null);
+}
+function pdfUndoAnnotation() {
+    const ann = pdfAnnUndoStack.pop();
+    if (!ann) { showToast('Nothing to undo','success'); return; }
+    pdfRemoveAnnotationById(ann.id, true);
+    pdfAnnRedoStack.push(ann);
+}
+function pdfRedoAnnotation() {
+    const ann = pdfAnnRedoStack.pop();
+    if (!ann || !currentPDFId) { showToast('Nothing to redo','success'); return; }
+    if (!appData.pdfAnnotations[currentPDFId]) appData.pdfAnnotations[currentPDFId] = [];
+    appData.pdfAnnotations[currentPDFId].push(ann);
+    pdfAnnUndoStack.push(ann);
+    pdfSaveAnnotations();
+    pdfRenderAnnotationNow(ann);
+}
+const PDF_DEVICE_PIXEL_RATIO = Math.min(window.devicePixelRatio || 1.5, 2);
 
 document.getElementById('pdf-upload').addEventListener('change', async function(e) {
     const file = e.target.files[0];
@@ -3420,9 +3481,11 @@ async function openPDF(id, continueReading=false) {
     document.getElementById('pdf-loading-msg').style.display = 'block';
     document.getElementById('pdf-canvas-container').innerHTML = '';
     pdfScale = 1.0;
-    document.getElementById('zoom-display').innerText = '100%';
+    document.getElementById('zoom-display').innerText = 'Fit';
     annotMode = null;
+    pdfAnnUndoStack = []; pdfAnnRedoStack = [];
     document.querySelectorAll('.ann-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.ann-color-picker').forEach(p=>p.style.display='none');
     appData.recentPDFs = appData.recentPDFs.filter(r=>r.id!==id);
     appData.recentPDFs.unshift({ id, name:pdf.name, timestamp:Date.now() });
     if (appData.recentPDFs.length>10) appData.recentPDFs=appData.recentPDFs.slice(0,10);
@@ -3471,7 +3534,7 @@ async function renderPDFData(dataUrl, startPage=1) {
         };
         pdfDoc = await loadingTask.promise;
         document.getElementById('pdf-loading-msg').style.display = 'none';
-        await renderAllPages(pdfDoc, pdfScale);
+        await renderAllPages(pdfDoc, pdfScale, startPage);
         updatePageIndicator();
         _attachPDFPinchZoom();
         // Restore last page after layout settles
@@ -3491,49 +3554,51 @@ async function renderPDFData(dataUrl, startPage=1) {
     }
 }
 
-async function renderAllPages(doc, scale) {
+async function renderAllPages(doc, scale, startPage=currentPage) {
     const container = document.getElementById('pdf-canvas-container');
     container.innerHTML = '';
     const frameWrapper = document.getElementById('pdf-frame-wrapper');
-    const availableWidth = frameWrapper.clientWidth - 20;
+    const availableWidth = Math.max(240, frameWrapper.clientWidth - 8);
     const dpr = PDF_DEVICE_PIXEL_RATIO;
-    // Build placeholder wrappers first (prevents page disorder)
     const wrappers = [];
+    const pageSizes = {};
     for (let i = 1; i <= doc.numPages; i++) {
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'position:relative;display:block;width:100%;';
+        wrapper.style.cssText = 'position:relative;display:block;width:100%;max-width:100%;contain:layout paint;';
         wrapper.setAttribute('data-page', i);
         wrapper.setAttribute('data-rendered', '0');
         const placeholder = document.createElement('div');
         placeholder.className = 'pdf-page-placeholder';
-        placeholder.style.cssText = 'width:100%;height:300px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;color:#aaa;font-size:0.85rem;border-radius:4px;';
+        placeholder.style.cssText = 'width:100%;height:320px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;color:#aaa;font-size:0.85rem;border-radius:4px;';
         placeholder.innerText = 'Page ' + i;
         wrapper.appendChild(placeholder);
         container.appendChild(wrapper);
         wrappers.push(wrapper);
     }
-    // Render visible pages immediately, rest lazily via IntersectionObserver
     const renderPage = async (wrapper) => {
         if (wrapper.getAttribute('data-rendered') === '1') return;
         wrapper.setAttribute('data-rendered', '1');
         const i = parseInt(wrapper.getAttribute('data-page'));
         try {
             const page = await doc.getPage(i);
-            // Auto-fit to screen width
             const baseVP = page.getViewport({ scale: 1.0 });
-            const fitScale = scale === 1.0 ? (availableWidth / baseVP.width) : scale;
-            const viewport = page.getViewport({ scale: fitScale });
+            const fitScale = availableWidth / baseVP.width;
+            const renderScale = scale === 1.0 ? fitScale : Math.max(fitScale, scale);
+            const viewport = page.getViewport({ scale: renderScale });
+            pageSizes[i] = { width: viewport.width, height: viewport.height };
             const canvas = document.createElement('canvas');
             canvas.className = 'pdf-page-canvas';
             canvas.width = Math.floor(viewport.width * dpr);
             canvas.height = Math.floor(viewport.height * dpr);
-            canvas.style.width = '100%';
-            canvas.style.maxWidth = Math.floor(viewport.width) + 'px';
+            canvas.style.width = Math.floor(viewport.width) + 'px';
+            canvas.style.maxWidth = '100%';
             canvas.style.height = 'auto';
             canvas.setAttribute('data-page', i);
-            const ctx = canvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-            await page.render({ canvasContext: ctx, viewport }).promise;
+            const ctx = canvas.getContext('2d', { alpha:false });
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            await page.render({ canvasContext: ctx, viewport, renderInteractiveForms:false }).promise;
+            wrapper.style.width = Math.floor(viewport.width) + 'px';
+            wrapper.style.maxWidth = '100%';
             wrapper.innerHTML = '';
             wrapper.appendChild(canvas);
             _attachHighlightDrag(wrapper, i);
@@ -3543,24 +3608,24 @@ async function renderAllPages(doc, scale) {
             }
         } catch(e) { wrapper.setAttribute('data-rendered', '0'); }
     };
-    // Immediately render first 3 pages
-    for (let i = 0; i < Math.min(3, wrappers.length); i++) await renderPage(wrappers[i]);
-    // Lazy-render remaining pages via IntersectionObserver
+    const first = Math.max(1, Math.min(doc.numPages, startPage || 1));
+    const priority = [first, first + 1, first - 1, 1, 2].filter((v, idx, arr) => v >= 1 && v <= doc.numPages && arr.indexOf(v) === idx);
+    for (const p of priority) await renderPage(wrappers[p - 1]);
     if ('IntersectionObserver' in window) {
         const obs = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    renderPage(entry.target);
-                }
-            });
-        }, { root: frameWrapper, rootMargin: '200px' });
-        wrappers.slice(3).forEach(w => obs.observe(w));
+            entries.forEach(entry => { if (entry.isIntersecting) renderPage(entry.target); });
+        }, { root: frameWrapper, rootMargin: '800px 0px' });
+        wrappers.forEach(w => { if (w.getAttribute('data-rendered') !== '1') obs.observe(w); });
         frameWrapper._pdfObserver = obs;
     } else {
-        // Fallback: render all sequentially
-        for (let i = 3; i < wrappers.length; i++) await renderPage(wrappers[i]);
+        for (let i = 0; i < wrappers.length; i++) if (wrappers[i].getAttribute('data-rendered') !== '1') await renderPage(wrappers[i]);
     }
-    frameWrapper.onscroll = trackPDFProgress;
+    let ticking = false;
+    frameWrapper.onscroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => { trackPDFProgress(); ticking = false; });
+    };
 }
 
 function updatePageIndicator() {
@@ -3592,18 +3657,20 @@ function trackPDFProgress() {
 function toggleAnnotMode(mode) {
     annotMode = annotMode===mode ? null : mode;
     document.querySelectorAll('.ann-btn').forEach(b=>b.classList.remove('active'));
-    const picker = document.getElementById('highlight-color-picker');
-    if (annotMode==='highlight') {
-        document.getElementById('ann-highlight-btn').classList.add('active');
+    document.querySelectorAll('.ann-color-picker').forEach(p=>p.style.display='none');
+    if (annotMode==='pen') {
+        document.getElementById('ann-pen-btn')?.classList.add('active');
+        const picker = document.getElementById('pen-color-picker');
+        if (picker) picker.style.display = 'flex';
+        showToast('Draw with your finger','success');
+    } else if (annotMode==='highlight') {
+        document.getElementById('ann-highlight-btn')?.classList.add('active');
+        const picker = document.getElementById('highlight-color-picker');
         if (picker) picker.style.display = 'flex';
         showToast('Drag over the page to highlight','success');
     } else if (annotMode==='erase') {
-        const eraseBtn = document.getElementById('ann-erase-btn');
-        if (eraseBtn) eraseBtn.classList.add('active');
-        if (picker) picker.style.display = 'none';
-        showToast('Tap any highlight to erase it','success');
-    } else {
-        if (picker) picker.style.display = 'none';
+        document.getElementById('ann-erase-btn')?.classList.add('active');
+        showToast('Tap an annotation to erase it','success');
     }
 }
 function addPageNote() {
@@ -3635,60 +3702,97 @@ function renderAnnotationOnPage(wrapper, ann, vp) {
         wrapper.appendChild(el);
     } else if (ann.type==='highlight') {
         const el = document.createElement('div');
-        el.className = 'pdf-highlight-mark';
+        el.className = 'pdf-highlight-mark pdf-annotation-mark';
         el.setAttribute('data-ann-id', ann.id);
         el.style.cssText = `position:absolute;left:${(ann.x*100)}%;top:${(ann.y*100)}%;width:${(ann.w*100)}%;height:${(ann.h*100)}%;background:${ann.color||'rgba(255,235,59,0.4)'};border-radius:2px;cursor:pointer;z-index:5;`;
         el.title = 'Tap to remove highlight';
         el.onclick = (e) => { e.stopPropagation(); if (annotMode==='erase' || confirm('Remove this highlight?')) deletePDFAnnotation(ann.id); };
         wrapper.appendChild(el);
+    } else if (ann.type==='pen') {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.classList.add('pdf-annotation-mark');
+        svg.setAttribute('data-ann-id', ann.id);
+        svg.setAttribute('viewBox','0 0 1000 1000');
+        svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:auto;overflow:visible;cursor:pointer;';
+        const poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+        poly.setAttribute('points',(ann.points||[]).map(p=>`${p.x*1000},${p.y*1000}`).join(' '));
+        poly.setAttribute('fill','none');
+        poly.setAttribute('stroke',ann.color||penColor);
+        poly.setAttribute('stroke-width',ann.width||4);
+        poly.setAttribute('stroke-linecap','round');
+        poly.setAttribute('stroke-linejoin','round');
+        svg.appendChild(poly);
+        svg.onclick = (e) => { e.stopPropagation(); if (annotMode==='erase' || confirm('Remove this drawing?')) deletePDFAnnotation(ann.id); };
+        wrapper.appendChild(svg);
     }
 }
 function deletePDFAnnotation(id) {
-    if (!currentPDFId) return;
-    appData.pdfAnnotations[currentPDFId] = (appData.pdfAnnotations[currentPDFId]||[]).filter(a=>a.id!==id);
-    saveAppData();
-    document.querySelectorAll(`.pdf-highlight-mark[data-ann-id="${id}"]`).forEach(el=>el.remove());
-    showToast('Highlight removed','success');
+    const ann = pdfRemoveAnnotationById(id, false);
+    if (ann) pdfAnnUndoStack = pdfAnnUndoStack.filter(a => a.id !== id);
 }
 function _attachHighlightDrag(wrapper, pageNum) {
-    let startX=0, startY=0, tempEl=null, dragging=false;
+    let startX=0, startY=0, tempEl=null, dragging=false, penPoints=[];
     const getRel = (src) => {
         const rect = wrapper.getBoundingClientRect();
         const pt = src.touches ? src.touches[0] : src;
         return { x:(pt.clientX-rect.left)/rect.width, y:(pt.clientY-rect.top)/rect.height };
     };
     const onDown = (e) => {
-        if (annotMode!=='highlight') return;
-        if (e.target.classList && e.target.classList.contains('pdf-highlight-mark')) return;
+        if (annotMode!=='highlight' && annotMode!=='pen' && annotMode!=='erase') return;
+        if (e.target.classList && (e.target.classList.contains('pdf-annotation-mark') || e.target.classList.contains('pdf-highlight-mark'))) {
+            if (annotMode==='erase') deletePDFAnnotation(e.target.getAttribute('data-ann-id'));
+            return;
+        }
+        if (annotMode==='erase') return;
         const p = getRel(e);
-        startX = p.x; startY = p.y; dragging = true;
-        tempEl = document.createElement('div');
-        tempEl.style.cssText = `position:absolute;background:${highlightColor};border:2px dashed rgba(255,255,255,0.7);border-radius:2px;z-index:6;pointer-events:none;`;
+        startX = p.x; startY = p.y; dragging = true; penPoints = [p];
+        if (annotMode==='highlight') {
+            tempEl = document.createElement('div');
+            tempEl.style.cssText = `position:absolute;background:${highlightColor};border:2px dashed rgba(255,255,255,0.7);border-radius:2px;z-index:6;pointer-events:none;`;
+        } else {
+            tempEl = document.createElementNS('http://www.w3.org/2000/svg','svg');
+            tempEl.setAttribute('viewBox','0 0 1000 1000');
+            tempEl.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:8;pointer-events:none;overflow:visible;';
+            const poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+            poly.setAttribute('fill','none'); poly.setAttribute('stroke',penColor); poly.setAttribute('stroke-width','4'); poly.setAttribute('stroke-linecap','round'); poly.setAttribute('stroke-linejoin','round');
+            tempEl.appendChild(poly);
+        }
         wrapper.appendChild(tempEl);
         e.preventDefault();
     };
     const onMove = (e) => {
         if (!dragging || !tempEl) return;
         const p = getRel(e);
-        const x = Math.min(startX,p.x), y = Math.min(startY,p.y);
-        const w = Math.abs(p.x-startX), h = Math.abs(p.y-startY);
-        tempEl.style.left=(x*100)+'%'; tempEl.style.top=(y*100)+'%'; tempEl.style.width=(w*100)+'%'; tempEl.style.height=(h*100)+'%';
+        if (annotMode==='highlight') {
+            const x = Math.min(startX,p.x), y = Math.min(startY,p.y);
+            const w = Math.abs(p.x-startX), h = Math.abs(p.y-startY);
+            tempEl.style.left=(x*100)+'%'; tempEl.style.top=(y*100)+'%'; tempEl.style.width=(w*100)+'%'; tempEl.style.height=(h*100)+'%';
+        } else if (annotMode==='pen') {
+            penPoints.push(p);
+            const poly = tempEl.querySelector('polyline');
+            if (poly) poly.setAttribute('points', penPoints.map(pt=>`${pt.x*1000},${pt.y*1000}`).join(' '));
+        }
         e.preventDefault();
     };
     const onUp = (e) => {
         if (!dragging) return;
         dragging = false;
         const p = getRel(e.changedTouches ? { touches:e.changedTouches } : e);
-        const x = Math.min(startX,p.x), y = Math.min(startY,p.y);
-        const w = Math.abs(p.x-startX), h = Math.abs(p.y-startY);
         if (tempEl) { tempEl.remove(); tempEl=null; }
-        if (w < 0.01 || h < 0.005) return;
         if (!currentPDFId) return;
-        if (!appData.pdfAnnotations[currentPDFId]) appData.pdfAnnotations[currentPDFId]=[];
-        const ann = { id:Date.now().toString(), type:'highlight', page:pageNum, x, y, w, h, color:highlightColor, timestamp:Date.now() };
-        appData.pdfAnnotations[currentPDFId].push(ann);
-        saveAppData();
-        renderAnnotationOnPage(wrapper, ann, null);
+        if (annotMode==='highlight') {
+            const x = Math.min(startX,p.x), y = Math.min(startY,p.y);
+            const w = Math.abs(p.x-startX), h = Math.abs(p.y-startY);
+            if (w < 0.01 || h < 0.005) return;
+            const ann = { id:Date.now().toString(), type:'highlight', page:pageNum, x, y, w, h, color:highlightColor, timestamp:Date.now() };
+            pdfPushAnnotation(ann);
+            renderAnnotationOnPage(wrapper, ann, null);
+        } else if (annotMode==='pen') {
+            if (penPoints.length < 2) return;
+            const ann = { id:Date.now().toString(), type:'pen', page:pageNum, points:penPoints, color:penColor, width:4, timestamp:Date.now() };
+            pdfPushAnnotation(ann);
+            renderAnnotationOnPage(wrapper, ann, null);
+        }
     };
     wrapper.addEventListener('mousedown', onDown);
     wrapper.addEventListener('mousemove', onMove);
@@ -3711,13 +3815,15 @@ function showAnnotations() {
 
 async function zoomPDF(delta) {
     if (!pdfDoc) return;
-    pdfScale = Math.max(0.5, Math.min(4.0, pdfScale+delta));
+    pdfScale = Math.max(0.75, Math.min(4.0, pdfScale+delta));
     document.getElementById('zoom-display').innerText = Math.round(pdfScale*100)+'%';
     const fw = document.getElementById('pdf-frame-wrapper');
     if (fw && fw._pdfObserver) { fw._pdfObserver.disconnect(); fw._pdfObserver = null; }
     document.getElementById('pdf-loading-msg').style.display='block';
-    await renderAllPages(pdfDoc, pdfScale);
+    await renderAllPages(pdfDoc, pdfScale, currentPage);
     document.getElementById('pdf-loading-msg').style.display='none';
+    const target = document.querySelector(`#pdf-canvas-container > div[data-page="${currentPage}"]`);
+    if (target) target.scrollIntoView({ behavior:'instant', block:'start' });
 }
 async function resetPDFZoom() {
     pdfScale=1.0;
@@ -3726,7 +3832,7 @@ async function resetPDFZoom() {
     const fw = document.getElementById('pdf-frame-wrapper');
     if (fw && fw._pdfObserver) { fw._pdfObserver.disconnect(); fw._pdfObserver = null; }
     document.getElementById('pdf-loading-msg').style.display='block';
-    await renderAllPages(pdfDoc, pdfScale);
+    await renderAllPages(pdfDoc, pdfScale, currentPage);
     document.getElementById('pdf-loading-msg').style.display='none';
 }
 // Pinch-to-zoom on PDF frame
@@ -3775,7 +3881,7 @@ function closePdfViewer() {
     document.getElementById('pdf-viewer-modal').classList.add('hidden');
     document.getElementById('pdf-canvas-container').innerHTML='';
     document.getElementById('pdf-loading-msg').style.display='block';
-    pdfDoc=null; currentPDFId=null; annotMode=null;
+    pdfDoc=null; currentPDFId=null; annotMode=null; pdfAnnUndoStack=[]; pdfAnnRedoStack=[];
     renderPDFs();
 }
 
@@ -7984,11 +8090,53 @@ function setAIPrompt(text) {
     if (inp) { inp.value = text; inp.focus(); inp.style.height = 'auto'; inp.style.height = Math.min(inp.scrollHeight, 110) + 'px'; }
 }
 
+function updateAIWelcome() {
+    const el = document.getElementById('ai-welcome-name');
+    if (el) el.textContent = (appData.profile && appData.profile.name) || currentUser || 'Student';
+}
+
+function scrollAIToBottom() {
+    const container = document.getElementById('ai-chat-history');
+    if (container) requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+}
+
+function detectAISubject(text) {
+    const t = (text || '').toLowerCase();
+    const rules = [
+        ['Physics', ['physics','force','motion','newton','current','voltage','wave','আলোক','বল','গতি','তড়িৎ','চুম্বক']],
+        ['Chemistry', ['chemistry','mole','acid','base','organic','reaction','bond','রসায়ন','অম্ল','ক্ষার','যৌগ']],
+        ['Higher Math', ['math','calculus','matrix','vector','integration','differentiation','trigonometry','গণিত','সমাকলন','অন্তরকলন','ভেক্টর']],
+        ['Biology', ['biology','cell','plant','animal','genetics','dna','জীববিজ্ঞান','কোষ','উদ্ভিদ','প্রাণী']],
+        ['ICT', ['ict','programming','html','css','javascript','database','algorithm','আইসিটি','প্রোগ্রামিং']],
+        ['English', ['english','grammar','paragraph','essay','translation','ইংরেজি','গ্রামার']],
+        ['Bangla', ['bangla','বাংলা','ব্যাকরণ','রচনা','ভাবসম্প্রসারণ']]
+    ];
+    const hit = rules.find(([_, keys]) => keys.some(k => t.includes(k)));
+    return hit ? hit[0] : '';
+}
+
+function escapeAIHTML(text) {
+    return String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatAIReply(text) {
+    return escapeAIHTML(text)
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+}
+
+function copyAIResponse(btn) {
+    const bubble = btn && btn.closest('.ai-msg-bubble');
+    const text = bubble ? bubble.innerText.replace(/\s*copy\s*$/i, '').trim() : '';
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(()=>showToast('Copied!','success')).catch(()=>showToast('Copy failed','error'));
+}
+
 function appendAIMessage(role, html) {
     const container = document.getElementById('ai-chat-history');
     if (!container) return;
-    // Clear placeholder on first message
-    const placeholder = container.querySelector('div[style*="text-align:center"]');
+    const placeholder = container.querySelector('.ai-welcome-card, div[style*="text-align:center"]');
     if (placeholder) placeholder.remove();
     const isUser = role === 'user';
     const dp = isUser
@@ -7996,10 +8144,10 @@ function appendAIMessage(role, html) {
         : 'https://ui-avatars.com/api/?name=AI&background=7000ff&color=fff';
     const div = document.createElement('div');
     div.className = 'ai-msg ' + (isUser ? 'user' : 'assistant');
-    div.innerHTML = `<img src="${dp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isUser ? 'var(--primary)' : 'var(--secondary)'};">
-        <div class="ai-msg-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}">${html}</div>`;
+    div.innerHTML = `<img src="${dp}" style="object-fit:cover;flex-shrink:0;border:2px solid ${isUser ? 'var(--primary)' : 'var(--secondary)'};">
+        <div class="ai-msg-bubble ${isUser ? 'user-bubble' : 'ai-bubble'}">${html}${isUser ? '' : '<button class="ai-copy-btn" onclick="copyAIResponse(this)" title="Copy"><i class="fa-regular fa-copy"></i></button>'}</div>`;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    scrollAIToBottom();
 }
 
 function showAITyping() {
@@ -8007,25 +8155,36 @@ function showAITyping() {
     if (!container) return;
     const div = document.createElement('div');
     div.className = 'ai-msg assistant'; div.id = 'ai-typing-indicator';
-    div.innerHTML = `<img src="https://ui-avatars.com/api/?name=AI&background=7000ff&color=fff" style="width:30px;height:30px;border-radius:50;flex-shrink:0;border:2px solid var(--secondary);">
+    div.innerHTML = `<img src="https://ui-avatars.com/api/?name=AI&background=7000ff&color=fff" style="object-fit:cover;flex-shrink:0;border:2px solid var(--secondary);">
         <div class="ai-msg-bubble ai-bubble ai-typing"><span></span><span></span><span></span></div>`;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    scrollAIToBottom();
 }
 function hideAITyping() { const t = document.getElementById('ai-typing-indicator'); if (t) t.remove(); }
 
+function extractAIReply(data) {
+    return (data && data.content && data.content[0] && (data.content[0].text || data.content[0].content))
+        || (data && (data.text || data.reply || data.message || data.answer))
+        || '';
+}
+
+function buildAIFallback(text, subject) {
+    const sub = subject || 'General';
+    return `আমি এখন live AI response আনতে পারছি না, তবে প্রশ্নটা ${sub} হিসেবে ধরছি।\n\n**কীভাবে এগোবে:**\n1. প্রশ্নের key terms আলাদা করো।\n2. সূত্র/definition লিখে known values বসাও।\n3. শেষ লাইনে final answer + unit/check লিখো।\n\nতুমি চাইলে একই প্রশ্নটা আরেকবার পাঠাও, আমি আবার server response আনার চেষ্টা করব।`;
+}
+
 async function sendAIMessage() {
     const inp = document.getElementById('ai-chat-input');
-    const subj = document.getElementById('ai-subject-select').value;
     if (!inp) return;
     const text = inp.value.trim();
     if (!text) return;
+    const subj = detectAISubject(text);
     inp.value = ''; inp.style.height = 'auto';
-    appendAIMessage('user', text.replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    appendAIMessage('user', escapeAIHTML(text));
     aiChatHistory.push({ role: 'user', content: text });
     showAITyping();
     try {
-        const systemPrompt = `You are a smart, friendly AI study assistant for Bangladeshi students (SSC/HSC/Medical Admission). ${subj ? 'The student is studying ' + subj + '.' : ''} Answer concisely in a mix of Bengali and English as appropriate. Use bullet points, bold key terms, and keep explanations exam-focused. If asked in Bangla, reply in Bangla.`;
+        const systemPrompt = `You are a smart, friendly AI study assistant for Bangladeshi students (SSC/HSC/Medical Admission). ${subj ? 'Detected subject: ' + subj + '.' : 'Detect the subject automatically from the question.'} Answer concisely in a mix of Bengali and English as appropriate. Use bullet points, bold key terms, and keep explanations exam-focused. If asked in Bangla, reply in Bangla. If unsure, ask one short clarifying question instead of refusing.`;
         const response = await fetch('https://studyvault-functions.vercel.app/api/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -8035,23 +8194,21 @@ async function sendAIMessage() {
                 messages: aiChatHistory.slice(-8)
             })
         });
-        const data = await response.json();
+        let data = null;
+        try { data = await response.json(); } catch(_) {}
         hideAITyping();
-        if (!data || !data.content || !data.content[0]) {
-            appendAIMessage('assistant', '<span style="color:var(--accent);">⚠️ AI error. Please try again.</span>');
-            return;
-        }
-        const reply = data.content[0].text || 'দুঃখিত, উত্তর দেওয়া সম্ভব হলো না।';
+        let reply = extractAIReply(data);
+        if (!reply) reply = buildAIFallback(text, subj);
         aiChatHistory.push({ role: 'assistant', content: reply });
-        // Format reply
-        const formatted = reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
-        appendAIMessage('assistant', formatted);
+        appendAIMessage('assistant', formatAIReply(reply));
         addAIXP(15, 'AI Chat');
         aiQueriestoday++;
         updateAIXPBar();
     } catch(e) {
         hideAITyping();
-        appendAIMessage('assistant', '<span style="color:var(--accent);">⚠️ Connection error. Please try again.</span>');
+        const reply = buildAIFallback(text, subj);
+        aiChatHistory.push({ role: 'assistant', content: reply });
+        appendAIMessage('assistant', formatAIReply(reply));
     }
 }
 
