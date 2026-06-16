@@ -3275,7 +3275,6 @@ function pdfRemoveAnnotationById(id, silent=false) {
     appData.pdfAnnotations[currentPDFId] = list.filter(a => a.id !== id);
     document.querySelectorAll(`.pdf-annotation-mark[data-ann-id="${id}"], .pdf-highlight-mark[data-ann-id="${id}"]`).forEach(el => el.remove());
     pdfSaveAnnotations();
-    if (!silent) showToast('Annotation removed','success');
     return ann || null;
 }
 function pdfRenderAnnotationNow(ann) {
@@ -3662,15 +3661,12 @@ function toggleAnnotMode(mode) {
         document.getElementById('ann-pen-btn')?.classList.add('active');
         const picker = document.getElementById('pen-color-picker');
         if (picker) picker.style.display = 'flex';
-        showToast('Draw with your finger','success');
     } else if (annotMode==='highlight') {
         document.getElementById('ann-highlight-btn')?.classList.add('active');
         const picker = document.getElementById('highlight-color-picker');
         if (picker) picker.style.display = 'flex';
-        showToast('Drag over the page to highlight','success');
     } else if (annotMode==='erase') {
         document.getElementById('ann-erase-btn')?.classList.add('active');
-        showToast('Tap an annotation to erase it','success');
     }
 }
 function addPageNote() {
@@ -8163,14 +8159,88 @@ function showAITyping() {
 function hideAITyping() { const t = document.getElementById('ai-typing-indicator'); if (t) t.remove(); }
 
 function extractAIReply(data) {
-    return (data && data.content && data.content[0] && (data.content[0].text || data.content[0].content))
-        || (data && (data.text || data.reply || data.message || data.answer))
-        || '';
+    if (!data) return '';
+    const direct = data.text || data.reply || data.message || data.answer || data.output_text;
+    if (typeof direct === 'string' && direct.trim()) return direct.trim();
+
+    const readPart = (part) => {
+        if (!part) return '';
+        if (typeof part === 'string') return part.trim();
+        if (typeof part.text === 'string') return part.text.trim();
+        if (typeof part.content === 'string') return part.content.trim();
+        if (typeof part.output_text === 'string') return part.output_text.trim();
+        if (Array.isArray(part.parts)) return part.parts.map(readPart).filter(Boolean).join('\n').trim();
+        if (Array.isArray(part.content)) return part.content.map(readPart).filter(Boolean).join('\n').trim();
+        return '';
+    };
+
+    const pools = [
+        data.content,
+        data.output,
+        data.choices,
+        data.candidates,
+        data.response,
+        data.result
+    ];
+
+    for (const pool of pools) {
+        if (Array.isArray(pool)) {
+            const found = pool.map(item => readPart(item) || readPart(item.message) || readPart(item.delta)).filter(Boolean).join('\n').trim();
+            if (found) return found;
+        } else {
+            const found = readPart(pool);
+            if (found) return found;
+        }
+    }
+    return '';
 }
 
 function buildAIFallback(text, subject) {
     const sub = subject || 'General';
     return `আমি এখন live AI response আনতে পারছি না, তবে প্রশ্নটা ${sub} হিসেবে ধরছি।\n\n**কীভাবে এগোবে:**\n1. প্রশ্নের key terms আলাদা করো।\n2. সূত্র/definition লিখে known values বসাও।\n3. শেষ লাইনে final answer + unit/check লিখো।\n\nতুমি চাইলে একই প্রশ্নটা আরেকবার পাঠাও, আমি আবার server response আনার চেষ্টা করব।`;
+}
+
+function fetchAIWithTimeout(payload, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch('https://studyvault-functions.vercel.app/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify(payload)
+    }).then(async response => {
+        let data = null;
+        const raw = await response.text().catch(() => '');
+        if (raw) {
+            try { data = JSON.parse(raw); }
+            catch(_) { data = { text: raw }; }
+        }
+        if (!response.ok && !extractAIReply(data)) {
+            const err = new Error('AI request failed: ' + response.status);
+            err.status = response.status;
+            err.data = data;
+            throw err;
+        }
+        return data;
+    }).finally(() => clearTimeout(timer));
+}
+
+async function requestAIWithRetry(payload) {
+    const attempts = [16000, 24000];
+    let lastError = null;
+    for (let i = 0; i < attempts.length; i++) {
+        try {
+            const data = await fetchAIWithTimeout(payload, attempts[i]);
+            const reply = extractAIReply(data);
+            if (reply) return reply;
+            lastError = new Error('Empty AI response');
+        } catch(e) {
+            lastError = e;
+            if (e && e.status && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) break;
+            await new Promise(resolve => setTimeout(resolve, 450 + i * 650));
+        }
+    }
+    throw lastError || new Error('AI unavailable');
 }
 
 async function sendAIMessage() {
@@ -8183,22 +8253,18 @@ async function sendAIMessage() {
     appendAIMessage('user', escapeAIHTML(text));
     aiChatHistory.push({ role: 'user', content: text });
     showAITyping();
+
+    const systemPrompt = `You are a smart, friendly AI study assistant for Bangladeshi students (SSC/HSC/Medical Admission). ${subj ? 'Detected subject: ' + subj + '.' : 'Detect the subject automatically from the question.'} Answer concisely in a mix of Bengali and English as appropriate. Use bullet points, bold key terms, and keep explanations exam-focused. If asked in Bangla, reply in Bangla. If unsure, ask one short clarifying question instead of refusing.`;
+    const payload = {
+        model: AI_MODEL,
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: aiChatHistory.slice(-8)
+    };
+
     try {
-        const systemPrompt = `You are a smart, friendly AI study assistant for Bangladeshi students (SSC/HSC/Medical Admission). ${subj ? 'Detected subject: ' + subj + '.' : 'Detect the subject automatically from the question.'} Answer concisely in a mix of Bengali and English as appropriate. Use bullet points, bold key terms, and keep explanations exam-focused. If asked in Bangla, reply in Bangla. If unsure, ask one short clarifying question instead of refusing.`;
-        const response = await fetch('https://studyvault-functions.vercel.app/api/ai', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: AI_MODEL, max_tokens: 1000,
-                system: systemPrompt,
-                messages: aiChatHistory.slice(-8)
-            })
-        });
-        let data = null;
-        try { data = await response.json(); } catch(_) {}
+        const reply = await requestAIWithRetry(payload);
         hideAITyping();
-        let reply = extractAIReply(data);
-        if (!reply) reply = buildAIFallback(text, subj);
         aiChatHistory.push({ role: 'assistant', content: reply });
         appendAIMessage('assistant', formatAIReply(reply));
         addAIXP(15, 'AI Chat');
