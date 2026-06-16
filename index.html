@@ -2060,22 +2060,28 @@
 </section>
 
 <!-- AI Study Assistant -->
-<section id="view-ai" class="view-section" style="display:flex;flex-direction:column;padding:0;gap:0;">
-  <div class="section-header" style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);">
-    <button class="icon-btn" onclick="showNav('home')" style="flex-shrink:0;"><i class="fa-solid fa-arrow-left"></i></button>
-    <h2 class="section-title" style="flex:1;margin:0;font-size:1rem;"><i class="fa-solid fa-robot" style="color:var(--primary);margin-right:10px;"></i>AI Study Assistant</h2>
+<section id="view-ai" class="view-section">
+  <div class="section-header">
+    <h2 class="section-title"><i class="fa-solid fa-robot" style="color:var(--primary);margin-right:10px;"></i>AI Study Assistant</h2>
+  </div>
+  <!-- Mode Tabs -->
+  <div class="glass" style="padding:6px;display:flex;gap:6px;margin-bottom:20px;border-radius:30px;flex-wrap:wrap;">
+    <button class="mode-btn active" id="ai-mode-chat" onclick="switchAIMode('chat',this)"><i class="fa-solid fa-comments"></i> Ask AI</button>
+    <button class="mode-btn" id="ai-mode-mcq" onclick="switchAIMode('mcq',this)"><i class="fa-solid fa-list-check"></i> Generate MCQs</button>
+    <button class="mode-btn" id="ai-mode-explain" onclick="switchAIMode('explain',this)"><i class="fa-solid fa-book-open"></i> Explain Topic</button>
+    <button class="mode-btn" id="ai-mode-weak" onclick="switchAIMode('weak',this)"><i class="fa-solid fa-triangle-exclamation"></i> Weak Topics</button>
   </div>
 
   <!-- Chat Mode -->
-  <div id="ai-panel-chat" class="ai-panel" style="display:flex;flex-direction:column;height:calc(100vh - 140px);gap:0;padding:0;margin:0;flex:1;">
-    <div id="ai-chat-history" class="glass" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;border-radius:0;background:var(--card-bg);">
+  <div id="ai-panel-chat" class="ai-panel">
+    <div id="ai-chat-history" class="glass" style="min-height:220px;max-height:380px;overflow-y:auto;padding:16px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;border-radius:var(--radius-md);">
       <div style="text-align:center;color:var(--text-muted);padding:40px 20px;">
         <i class="fa-solid fa-robot" style="font-size:2.5rem;color:var(--primary);margin-bottom:12px;display:block;opacity:0.6;"></i>
         <p style="font-size:0.9rem;">আমি তোমার AI Study Assistant। যেকোনো বিষয়ে প্রশ্ন করো!</p>
       </div>
     </div>
-    <div style="display:flex;gap:10px;align-items:flex-end;padding:12px 16px;background:rgba(0,0,0,0.2);border-top:1px solid rgba(255,255,255,0.08);">
-      <select id="ai-subject-select" style="width:120px;padding:8px 10px;font-size:0.8rem;flex-shrink:0;border-radius:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--text-main);">
+    <div style="display:flex;gap:10px;align-items:flex-end;">
+      <select id="ai-subject-select" style="width:150px;padding:10px 12px;font-size:0.82rem;flex-shrink:0;">
         <option value="">General</option>
         <option value="Physics">Physics</option>
         <option value="Chemistry">Chemistry</option>
@@ -2085,18 +2091,78 @@
         <option value="English">English</option>
         <option value="Bangla">Bangla</option>
       </select>
-      <textarea id="ai-chat-input" placeholder="প্রশ্ন লিখুন..." rows="1" style="flex:1;resize:none;min-height:40px;max-height:100px;padding:8px 12px;border-radius:20px;font-size:0.9rem;line-height:1.4;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--text-main);" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';"></textarea>
-      <button class="btn btn-primary" onclick="sendAIMessage()" style="padding:8px 14px;flex-shrink:0;border-radius:20px;min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;">
+      <textarea id="ai-chat-input" placeholder="প্রশ্ন লিখুন... (Enter to send)" rows="1" style="flex:1;resize:none;min-height:42px;max-height:110px;padding:10px 14px;border-radius:20px;font-size:0.9rem;line-height:1.4;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';"></textarea>
+      <button class="btn btn-primary" onclick="sendAIMessage()" style="padding:10px 16px;flex-shrink:0;border-radius:20px;">
         <i class="fa-solid fa-paper-plane"></i>
       </button>
     </div>
+    <div id="ai-quick-prompts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এই বিষয়টি সহজভাবে বুঝিয়ে দাও')">সহজ ব্যাখ্যা</button>
+      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এর উপর ৫টি গুরুত্বপূর্ণ প্রশ্ন তৈরি করো')">গুরুত্বপূর্ণ প্রশ্ন</button>
+      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এই অধ্যায়ের মূল ধারণাগুলো সংক্ষেপে বলো')">মূল ধারণা</button>
+      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('পরীক্ষার জন্য এটি কতটা গুরুত্বপূর্ণ?')">পরীক্ষা টিপস</button>
+    </div>
   </div>
 
-  
+  <!-- MCQ Generator Mode -->
+  <div id="ai-panel-mcq" class="ai-panel" style="display:none;">
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <h3 style="margin-bottom:14px;color:var(--text-main);">MCQ Generator</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <input type="text" id="mcq-topic-input" placeholder="Topic দাও (যেমন: Newton's Laws, Acid-Base...)" style="flex:2;min-width:200px;">
+        <select id="mcq-subject" style="flex:1;min-width:130px;">
+          <option value="Physics">Physics</option>
+          <option value="Chemistry">Chemistry</option>
+          <option value="Higher Math">Higher Math</option>
+          <option value="Biology">Biology</option>
+          <option value="ICT">ICT</option>
+          <option value="English">English</option>
+        </select>
+        <select id="mcq-count" style="width:100px;">
+          <option value="5">5 MCQs</option>
+          <option value="10" selected>10 MCQs</option>
+          <option value="15">15 MCQs</option>
+          <option value="20">20 MCQs</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="generateMCQs()" style="width:100%;justify-content:center;" id="mcq-gen-btn">
+        <i class="fa-solid fa-magic-wand-sparkles"></i> MCQ Generate করো
+      </button>
+    </div>
+    <div id="mcq-results-area"></div>
+  </div>
 
-  
+  <!-- Explain Topic Mode -->
+  <div id="ai-panel-explain" class="ai-panel" style="display:none;">
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <h3 style="margin-bottom:14px;color:var(--text-main);">Topic Explainer</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <input type="text" id="explain-topic-input" placeholder="Chapter বা topic এর নাম লিখুন..." style="flex:2;min-width:200px;">
+        <select id="explain-level" style="flex:1;min-width:130px;">
+          <option value="simple">সহজ ভাষায়</option>
+          <option value="detailed">বিস্তারিত</option>
+          <option value="exam">পরীক্ষামুখী</option>
+          <option value="story">গল্পের ছলে</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="explainTopic()" style="width:100%;justify-content:center;" id="explain-btn">
+        <i class="fa-solid fa-book-open-reader"></i> ব্যাখ্যা করো
+      </button>
+    </div>
+    <div id="explain-results-area" class="glass" style="padding:20px;display:none;max-height:500px;overflow-y:auto;border-radius:var(--radius-md);"></div>
+  </div>
 
-  
+  <!-- Weak Topics Mode -->
+  <div id="ai-panel-weak" class="ai-panel" style="display:none;">
+    <div class="glass" style="padding:20px;margin-bottom:16px;">
+      <h3 style="margin-bottom:12px;color:var(--text-main);"><i class="fa-solid fa-magnifying-glass-chart" style="color:var(--warning);margin-right:8px;"></i>Weak Topic Detector</h3>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:14px;">তোমার study data বিশ্লেষণ করে AI দুর্বল বিষয়গুলো চিহ্নিত করবে এবং revision plan দেবে।</p>
+      <button class="btn btn-primary" onclick="analyzeWeakTopics()" style="width:100%;justify-content:center;" id="weak-analyze-btn">
+        <i class="fa-solid fa-brain"></i> দুর্বল বিষয় খুঁজে বের করো
+      </button>
+    </div>
+    <div id="weak-results-area"></div>
+  </div>
 
   </section>
 
@@ -2415,30 +2481,29 @@
 <!-- PDF Viewer Modal -->
 <div id="pdf-viewer-modal" class="hidden">
     <div class="viewer-header">
-        <button class="icon-btn" onclick="closePdfViewer()" style="flex-shrink:0;"><i class="fa-solid fa-arrow-left"></i></button>
-        <span id="page-indicator" style="flex:1;text-align:center;font-weight:600;"></span>
-        <div class="viewer-zoom-btns" style="display:flex;gap:4px;align-items:center;">
-            <button ontouchstart="event.preventDefault();zoomPDF(-0.25);" onclick="zoomPDF(-0.25)" title="Zoom Out" style="min-width:32px;min-height:32px;padding:0;"><i class="fa-solid fa-minus"></i></button>
-            <span id="zoom-display" style="min-width:45px;text-align:center;font-size:0.75rem;">100%</span>
-            <button ontouchstart="event.preventDefault();zoomPDF(0.25);" onclick="zoomPDF(0.25)" title="Zoom In" style="min-width:32px;min-height:32px;padding:0;"><i class="fa-solid fa-plus"></i></button>
+        <h3 id="viewer-title">Document Viewer</h3>
+        <div class="viewer-zoom-btns">
+            <button ontouchstart="event.preventDefault();zoomPDF(-0.25);" onclick="zoomPDF(-0.25)" title="Zoom Out" style="min-width:36px;min-height:36px;"><i class="fa-solid fa-minus"></i></button>
+            <span id="zoom-display">100%</span>
+            <button ontouchstart="event.preventDefault();zoomPDF(0.25);" onclick="zoomPDF(0.25)" title="Zoom In" style="min-width:36px;min-height:36px;"><i class="fa-solid fa-plus"></i></button>
+            <button onclick="resetPDFZoom()" title="Fit Width"><i class="fa-solid fa-arrows-left-right"></i></button>
         </div>
-        <button class="icon-btn" onclick="(function(){const m=document.getElementById('pdf-viewer-modal');if(!document.fullscreenElement){m.requestFullscreen&&m.requestFullscreen();}else{document.exitFullscreen&&document.exitFullscreen();}})();" title="Fullscreen" style="flex-shrink:0;"><i class="fa-solid fa-expand"></i></button>
+        <span id="page-indicator"></span>
+        <button class="icon-btn" onclick="(function(){const m=document.getElementById('pdf-viewer-modal');if(!document.fullscreenElement){m.requestFullscreen&&m.requestFullscreen();}else{document.exitFullscreen&&document.exitFullscreen();}})();" title="Fullscreen" style="margin-left:4px;flex-shrink:0;"><i class="fa-solid fa-expand"></i></button>
+<button class="icon-btn danger" onclick="closePdfViewer()" style="margin-left:8px;flex-shrink:0;"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="annotation-toolbar" style="flex-direction:column;gap:0;padding:0;border:none;height:auto;">
-        <div id="highlight-color-picker" style="display:none;gap:6px;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.05);justify-content:center;">
-            <span class="hl-swatch" data-color="rgba(255,235,59,0.4)" onclick="setHighlightColor('rgba(255,235,59,0.4)')" style="width:28px;height:28px;border-radius:50%;background:#ffeb3b;cursor:pointer;outline:2px solid rgba(255,235,59,0.6);display:inline-block;"></span>
-            <span class="hl-swatch" data-color="rgba(76,175,80,0.4)" onclick="setHighlightColor('rgba(76,175,80,0.4)')" style="width:28px;height:28px;border-radius:50%;background:#4caf50;cursor:pointer;display:inline-block;"></span>
-            <span class="hl-swatch" data-color="rgba(33,150,243,0.4)" onclick="setHighlightColor('rgba(33,150,243,0.4)')" style="width:28px;height:28px;border-radius:50%;background:#2196f3;cursor:pointer;display:inline-block;"></span>
-            <span class="hl-swatch" data-color="rgba(255,82,82,0.4)" onclick="setHighlightColor('rgba(255,82,82,0.4)')" style="width:28px;height:28px;border-radius:50%;background:#ff5252;cursor:pointer;display:inline-block;"></span>
+    <div class="annotation-toolbar">
+        <button class="ann-btn yellow" id="ann-highlight-btn" onclick="toggleAnnotMode('highlight')"><i class="fa-solid fa-highlighter"></i> Highlight</button>
+        <div id="highlight-color-picker" style="display:none;gap:8px;align-items:center;padding:0 6px;">
+            <span class="hl-swatch" data-color="rgba(255,235,59,0.4)" onclick="setHighlightColor('rgba(255,235,59,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#ffeb3b;cursor:pointer;outline:2px solid #fff;display:inline-block;"></span>
+            <span class="hl-swatch" data-color="rgba(76,175,80,0.4)" onclick="setHighlightColor('rgba(76,175,80,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#4caf50;cursor:pointer;display:inline-block;"></span>
+            <span class="hl-swatch" data-color="rgba(33,150,243,0.4)" onclick="setHighlightColor('rgba(33,150,243,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#2196f3;cursor:pointer;display:inline-block;"></span>
+            <span class="hl-swatch" data-color="rgba(255,82,82,0.4)" onclick="setHighlightColor('rgba(255,82,82,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#ff5252;cursor:pointer;display:inline-block;"></span>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;justify-content:center;padding:10px 12px;background:rgba(0,0,0,0.3);">
-            <button class="ann-btn" id="ann-draw-btn" onclick="toggleAnnotMode('draw')" style="flex:1;justify-content:center;padding:8px 12px;min-height:40px;"><i class="fa-solid fa-pen" style="color:#ff6b6b;"></i><span style="font-size:0.7rem;">Draw</span></button>
-            <button class="ann-btn" id="ann-highlight-btn" onclick="toggleAnnotMode('highlight')" style="flex:1;justify-content:center;padding:8px 12px;min-height:40px;"><i class="fa-solid fa-highlighter" style="color:#ffeb3b;"></i><span style="font-size:0.7rem;">Highlight</span></button>
-            <button class="ann-btn" id="ann-erase-btn" onclick="toggleAnnotMode('erase')" style="flex:1;justify-content:center;padding:8px 12px;min-height:40px;background:rgba(255,82,82,0.15);border-color:rgba(255,82,82,0.4);color:#ff5252;"><i class="fa-solid fa-eraser"></i><span style="font-size:0.7rem;">Erase</span></button>
-            <button class="ann-btn" onclick="undoAnnotation()" style="flex:1;justify-content:center;padding:8px 12px;min-height:40px;"><i class="fa-solid fa-arrow-rotate-left"></i><span style="font-size:0.7rem;">Undo</span></button>
-            <button class="ann-btn" onclick="redoAnnotation()" style="flex:1;justify-content:center;padding:8px 12px;min-height:40px;"><i class="fa-solid fa-arrow-rotate-right"></i><span style="font-size:0.7rem;">Redo</span></button>
-            <button class="ann-btn" onclick="document.getElementById('highlight-color-picker').style.display=document.getElementById('highlight-color-picker').style.display==='none'?'flex':'none';" style="flex:1;justify-content:center;padding:8px 12px;min-height:40px;"><i class="fa-solid fa-palette"></i><span style="font-size:0.7rem;">Color</span></button>
-        </div>
+        <button class="ann-btn" id="ann-note-btn" onclick="addPageNote()"><i class="fa-solid fa-sticky-note"></i> Add Note</button>
+        <button class="ann-btn" id="ann-bookmark-btn" onclick="bookmarkCurrentPage()"><i class="fa-solid fa-bookmark"></i> Bookmark</button>
+        <button class="ann-btn" onclick="showAnnotations()"><i class="fa-solid fa-list"></i> Annotations</button>
+        <button class="ann-btn" id="ann-erase-btn" onclick="toggleAnnotMode('erase')" style="background:rgba(255,82,82,0.15);border-color:rgba(255,82,82,0.4);color:#ff5252;"><i class="fa-solid fa-eraser"></i> Erase</button>
     </div>
     <div id="pdf-frame-wrapper">
         <div id="pdf-loading-msg"><i class="fa-solid fa-spinner fa-spin"></i> Loading PDF...</div>
@@ -3417,6 +3482,7 @@ async function openPDF(id, continueReading=false) {
     const pdf = currentPDFs.find(p=>p.id===id);
     if (!pdf) return;
     currentPDFId = id;
+    document.getElementById('viewer-title').innerText = pdf.name;
     document.getElementById('pdf-viewer-modal').classList.remove('hidden');
     document.getElementById('pdf-loading-msg').style.display = 'block';
     document.getElementById('pdf-canvas-container').innerHTML = '';
@@ -3590,43 +3656,11 @@ function trackPDFProgress() {
 }
 
 /* ---- ANNOTATIONS ---- */
-let annotHistory = [];
-let annotHistoryIndex = -1;
-
-function saveAnnotHistory() {
-    if (!currentPDFId || !appData.pdfAnnotations[currentPDFId]) return;
-    annotHistory = annotHistory.slice(0, annotHistoryIndex + 1);
-    annotHistory.push(JSON.parse(JSON.stringify(appData.pdfAnnotations[currentPDFId])));
-    annotHistoryIndex++;
-}
-
-function undoAnnotation() {
-    if (annotHistoryIndex > 0) {
-        annotHistoryIndex--;
-        appData.pdfAnnotations[currentPDFId] = JSON.parse(JSON.stringify(annotHistory[annotHistoryIndex]));
-        saveAppData();
-        renderCurrentPage();
-    }
-}
-
-function redoAnnotation() {
-    if (annotHistoryIndex < annotHistory.length - 1) {
-        annotHistoryIndex++;
-        appData.pdfAnnotations[currentPDFId] = JSON.parse(JSON.stringify(annotHistory[annotHistoryIndex]));
-        saveAppData();
-        renderCurrentPage();
-    }
-}
-
 function toggleAnnotMode(mode) {
     annotMode = annotMode===mode ? null : mode;
     document.querySelectorAll('.ann-btn').forEach(b=>b.classList.remove('active'));
     const picker = document.getElementById('highlight-color-picker');
-    if (annotMode==='draw') {
-        document.getElementById('ann-draw-btn').classList.add('active');
-        if (picker) picker.style.display = 'none';
-        showToast('Draw freely on the page','success');
-    } else if (annotMode==='highlight') {
+    if (annotMode==='highlight') {
         document.getElementById('ann-highlight-btn').classList.add('active');
         if (picker) picker.style.display = 'flex';
         showToast('Drag over the page to highlight','success');
@@ -3722,6 +3756,7 @@ function _attachHighlightDrag(wrapper, pageNum) {
         appData.pdfAnnotations[currentPDFId].push(ann);
         saveAppData();
         renderAnnotationOnPage(wrapper, ann, null);
+        showToast('Highlight saved','success');
     };
     wrapper.addEventListener('mousedown', onDown);
     wrapper.addEventListener('mousemove', onMove);
@@ -5285,7 +5320,7 @@ function renderVaultItems(){
     });
 }
 async function editVaultNote(id){const item=vaultItems.find(v=>v.id===id);if(!item) return;const nt=prompt('Edit title:',item.name);if(nt===null) return;const nc=prompt('Edit content:',item.content||'');if(nc===null) return;item.name=nt||item.name;item.content=nc;await dbAdd('vault',item);showToast('Note updated','success');loadVaultItems();}
-async function viewVaultItem(id){const item=vaultItems.find(v=>v.id===id);if(!item||!item.data) return;if(item.type==='pdf'){document.getElementById('pdf-viewer-modal').classList.remove('hidden');document.getElementById('pdf-loading-msg').style.display='block';document.getElementById('pdf-canvas-container').innerHTML='';pdfScale=1.0;document.getElementById('zoom-display').innerText='100%';await renderPDFData(item.data);}else if(item.type==='image'){const w=window.open('','_blank');if(w)w.document.write('<body style="margin:0;background:#000;"><img src="'+item.data+'" style="max-width:100%;display:block;"><\/body>');}}
+async function viewVaultItem(id){const item=vaultItems.find(v=>v.id===id);if(!item||!item.data) return;if(item.type==='pdf'){document.getElementById('viewer-title').innerText=item.name;document.getElementById('pdf-viewer-modal').classList.remove('hidden');document.getElementById('pdf-loading-msg').style.display='block';document.getElementById('pdf-canvas-container').innerHTML='';pdfScale=1.0;document.getElementById('zoom-display').innerText='100%';await renderPDFData(item.data);}else if(item.type==='image'){const w=window.open('','_blank');if(w)w.document.write('<body style="margin:0;background:#000;"><img src="'+item.data+'" style="max-width:100%;display:block;"><\/body>');}}
 async function deleteVaultItem(id){if(confirm('Destroy this secure file forever?')){await dbDelete('vault',id);showToast('File destroyed','success');loadVaultItems();}}
 
 /* ---- PROFILE / SETTINGS ---- */
@@ -8070,11 +8105,7 @@ async function sendAIMessage() {
         });
         const data = await response.json();
         hideAITyping();
-        if (!data || !data.content || !data.content[0]) {
-            appendAIMessage('assistant', '<span style="color:var(--accent);">⚠️ AI error. Please try again.</span>');
-            return;
-        }
-        const reply = data.content[0].text || 'দুঃখিত, উত্তর দেওয়া সম্ভব হলো না।';
+        const reply = data.content?.[0]?.text || 'দুঃখিত, উত্তর দেওয়া সম্ভব হলো না।';
         aiChatHistory.push({ role: 'assistant', content: reply });
         // Format reply
         const formatted = reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
