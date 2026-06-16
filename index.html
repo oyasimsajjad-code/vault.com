@@ -2064,13 +2064,7 @@
   <div class="section-header">
     <h2 class="section-title"><i class="fa-solid fa-robot" style="color:var(--primary);margin-right:10px;"></i>AI Study Assistant</h2>
   </div>
-  <!-- Mode Tabs -->
-  <div class="glass" style="padding:6px;display:flex;gap:6px;margin-bottom:20px;border-radius:30px;flex-wrap:wrap;">
-    <button class="mode-btn active" id="ai-mode-chat" onclick="switchAIMode('chat',this)"><i class="fa-solid fa-comments"></i> Ask AI</button>
-    <button class="mode-btn" id="ai-mode-mcq" onclick="switchAIMode('mcq',this)"><i class="fa-solid fa-list-check"></i> Generate MCQs</button>
-    <button class="mode-btn" id="ai-mode-explain" onclick="switchAIMode('explain',this)"><i class="fa-solid fa-book-open"></i> Explain Topic</button>
-    <button class="mode-btn" id="ai-mode-weak" onclick="switchAIMode('weak',this)"><i class="fa-solid fa-triangle-exclamation"></i> Weak Topics</button>
-  </div>
+  
 
   <!-- Chat Mode -->
   <div id="ai-panel-chat" class="ai-panel">
@@ -2096,73 +2090,14 @@
         <i class="fa-solid fa-paper-plane"></i>
       </button>
     </div>
-    <div id="ai-quick-prompts" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এই বিষয়টি সহজভাবে বুঝিয়ে দাও')">সহজ ব্যাখ্যা</button>
-      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এর উপর ৫টি গুরুত্বপূর্ণ প্রশ্ন তৈরি করো')">গুরুত্বপূর্ণ প্রশ্ন</button>
-      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('এই অধ্যায়ের মূল ধারণাগুলো সংক্ষেপে বলো')">মূল ধারণা</button>
-      <button class="btn" style="font-size:0.75rem;padding:5px 12px;border-radius:20px;" onclick="setAIPrompt('পরীক্ষার জন্য এটি কতটা গুরুত্বপূর্ণ?')">পরীক্ষা টিপস</button>
-    </div>
+    
   </div>
 
-  <!-- MCQ Generator Mode -->
-  <div id="ai-panel-mcq" class="ai-panel" style="display:none;">
-    <div class="glass" style="padding:20px;margin-bottom:16px;">
-      <h3 style="margin-bottom:14px;color:var(--text-main);">MCQ Generator</h3>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-        <input type="text" id="mcq-topic-input" placeholder="Topic দাও (যেমন: Newton's Laws, Acid-Base...)" style="flex:2;min-width:200px;">
-        <select id="mcq-subject" style="flex:1;min-width:130px;">
-          <option value="Physics">Physics</option>
-          <option value="Chemistry">Chemistry</option>
-          <option value="Higher Math">Higher Math</option>
-          <option value="Biology">Biology</option>
-          <option value="ICT">ICT</option>
-          <option value="English">English</option>
-        </select>
-        <select id="mcq-count" style="width:100px;">
-          <option value="5">5 MCQs</option>
-          <option value="10" selected>10 MCQs</option>
-          <option value="15">15 MCQs</option>
-          <option value="20">20 MCQs</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="generateMCQs()" style="width:100%;justify-content:center;" id="mcq-gen-btn">
-        <i class="fa-solid fa-magic-wand-sparkles"></i> MCQ Generate করো
-      </button>
-    </div>
-    <div id="mcq-results-area"></div>
-  </div>
+  
 
-  <!-- Explain Topic Mode -->
-  <div id="ai-panel-explain" class="ai-panel" style="display:none;">
-    <div class="glass" style="padding:20px;margin-bottom:16px;">
-      <h3 style="margin-bottom:14px;color:var(--text-main);">Topic Explainer</h3>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-        <input type="text" id="explain-topic-input" placeholder="Chapter বা topic এর নাম লিখুন..." style="flex:2;min-width:200px;">
-        <select id="explain-level" style="flex:1;min-width:130px;">
-          <option value="simple">সহজ ভাষায়</option>
-          <option value="detailed">বিস্তারিত</option>
-          <option value="exam">পরীক্ষামুখী</option>
-          <option value="story">গল্পের ছলে</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="explainTopic()" style="width:100%;justify-content:center;" id="explain-btn">
-        <i class="fa-solid fa-book-open-reader"></i> ব্যাখ্যা করো
-      </button>
-    </div>
-    <div id="explain-results-area" class="glass" style="padding:20px;display:none;max-height:500px;overflow-y:auto;border-radius:var(--radius-md);"></div>
-  </div>
+  
 
-  <!-- Weak Topics Mode -->
-  <div id="ai-panel-weak" class="ai-panel" style="display:none;">
-    <div class="glass" style="padding:20px;margin-bottom:16px;">
-      <h3 style="margin-bottom:12px;color:var(--text-main);"><i class="fa-solid fa-magnifying-glass-chart" style="color:var(--warning);margin-right:8px;"></i>Weak Topic Detector</h3>
-      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:14px;">তোমার study data বিশ্লেষণ করে AI দুর্বল বিষয়গুলো চিহ্নিত করবে এবং revision plan দেবে।</p>
-      <button class="btn btn-primary" onclick="analyzeWeakTopics()" style="width:100%;justify-content:center;" id="weak-analyze-btn">
-        <i class="fa-solid fa-brain"></i> দুর্বল বিষয় খুঁজে বের করো
-      </button>
-    </div>
-    <div id="weak-results-area"></div>
-  </div>
+  
 
   </section>
 
@@ -2500,9 +2435,7 @@
             <span class="hl-swatch" data-color="rgba(33,150,243,0.4)" onclick="setHighlightColor('rgba(33,150,243,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#2196f3;cursor:pointer;display:inline-block;"></span>
             <span class="hl-swatch" data-color="rgba(255,82,82,0.4)" onclick="setHighlightColor('rgba(255,82,82,0.4)')" style="width:22px;height:22px;border-radius:50%;background:#ff5252;cursor:pointer;display:inline-block;"></span>
         </div>
-        <button class="ann-btn" id="ann-note-btn" onclick="addPageNote()"><i class="fa-solid fa-sticky-note"></i> Add Note</button>
-        <button class="ann-btn" id="ann-bookmark-btn" onclick="bookmarkCurrentPage()"><i class="fa-solid fa-bookmark"></i> Bookmark</button>
-        <button class="ann-btn" onclick="showAnnotations()"><i class="fa-solid fa-list"></i> Annotations</button>
+        
         <button class="ann-btn" id="ann-erase-btn" onclick="toggleAnnotMode('erase')" style="background:rgba(255,82,82,0.15);border-color:rgba(255,82,82,0.4);color:#ff5252;"><i class="fa-solid fa-eraser"></i> Erase</button>
     </div>
     <div id="pdf-frame-wrapper">
@@ -3756,7 +3689,6 @@ function _attachHighlightDrag(wrapper, pageNum) {
         appData.pdfAnnotations[currentPDFId].push(ann);
         saveAppData();
         renderAnnotationOnPage(wrapper, ann, null);
-        showToast('Highlight saved','success');
     };
     wrapper.addEventListener('mousedown', onDown);
     wrapper.addEventListener('mousemove', onMove);
@@ -8105,7 +8037,11 @@ async function sendAIMessage() {
         });
         const data = await response.json();
         hideAITyping();
-        const reply = data.content?.[0]?.text || 'দুঃখিত, উত্তর দেওয়া সম্ভব হলো না।';
+        if (!data || !data.content || !data.content[0]) {
+            appendAIMessage('assistant', '<span style="color:var(--accent);">⚠️ AI error. Please try again.</span>');
+            return;
+        }
+        const reply = data.content[0].text || 'দুঃখিত, উত্তর দেওয়া সম্ভব হলো না।';
         aiChatHistory.push({ role: 'assistant', content: reply });
         // Format reply
         const formatted = reply.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
