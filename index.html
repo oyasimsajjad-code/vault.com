@@ -497,13 +497,12 @@
         .timer-custom-item label { font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 5px; }
         .timer-custom-item input { padding: 8px 10px; font-size: 0.88rem; }
         #focus-mode-screen { position: fixed; inset: 0; z-index: 3000; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .focus-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; background: #000; }
-        .focus-scene-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.2s ease; pointer-events: none; }
-        .focus-scene-video.active { opacity: 1; }
-        .focus-scene-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.38); pointer-events: none; }
+        .focus-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
+        .focus-bg-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
         .focus-scene-label { position: absolute; top: 28px; left: 28px; font-size: 0.75rem; color: rgba(255,255,255,0.45); font-family: var(--font-display); letter-spacing: 1.5px; text-transform: uppercase; pointer-events: none; }
-        .focus-timer-glass { background: rgba(0,0,0,0.35); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); border: 1px solid rgba(255,255,255,0.14); border-radius: 32px; padding: 40px 60px 36px; box-shadow: 0 8px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08); display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
-        .focus-timer-glow { position: absolute; inset: -1px; border-radius: 33px; background: transparent; border: 1px solid rgba(255,255,255,0.1); pointer-events: none; }
+        .focus-timer-glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.13); border-radius: 32px; padding: 40px 60px 36px; box-shadow: 0 8px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
+        .focus-timer-glow { position: absolute; inset: -1px; border-radius: 33px; background: transparent; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 0 28px var(--fm-glow, rgba(0,200,255,0.2)); pointer-events: none; animation: fmGlowPulse 3s ease-in-out infinite; }
+        @keyframes fmGlowPulse { 0%,100%{opacity:0.6;} 50%{opacity:1;} }
         @media (max-width:600px) {
             .focus-timer-glass { padding: 24px 28px 22px; border-radius: 24px; }
             .focus-scene-label { top: auto; bottom: 90px; left: 50%; transform: translateX(-50%); }
@@ -2412,9 +2411,7 @@
 <!-- Focus Mode -->
 <div id="focus-mode-screen" class="hidden">
     <div class="focus-bg" id="fm-scene-bg">
-        <video id="fm-video-a" class="focus-scene-video" autoplay muted loop playsinline preload="none"></video>
-        <video id="fm-video-b" class="focus-scene-video" autoplay muted loop playsinline preload="none"></video>
-        <div class="focus-scene-overlay"></div>
+        <canvas id="fm-bg-canvas" class="focus-bg-canvas"></canvas>
         <div class="focus-scene-label" id="fm-scene-label"></div>
     </div>
     <button class="exit-focus" onclick="exitFocusMode()"><i class="fa-solid fa-compress"></i> Exit Focus</button>
@@ -4639,17 +4636,17 @@ function handleAutoCycleBreakEnd() {
 }
 
 const _FM_SCENES = [
-    { name:'Rainy Study Cabin',  mp4:'https://cdn.coverr.co/videos/coverr-rain-falling-on-a-window-1584/1080p.mp4',  webm:'https://cdn.coverr.co/videos/coverr-rain-falling-on-a-window-1584/720p.webm'  },
-    { name:'Snow Mountain',      mp4:'https://cdn.coverr.co/videos/coverr-snowy-mountain-landscape-4745/1080p.mp4',  webm:'https://cdn.coverr.co/videos/coverr-snowy-mountain-landscape-4745/720p.webm'  },
-    { name:'River Side Focus',   mp4:'https://cdn.coverr.co/videos/coverr-a-river-flowing-through-a-forest-1591/1080p.mp4', webm:'https://cdn.coverr.co/videos/coverr-a-river-flowing-through-a-forest-1591/720p.webm' },
-    { name:'Sunrise Focus',      mp4:'https://cdn.coverr.co/videos/coverr-sunrise-over-the-mountains-1639/1080p.mp4', webm:'https://cdn.coverr.co/videos/coverr-sunrise-over-the-mountains-1639/720p.webm' },
-    { name:'Night Sky',          mp4:'https://cdn.coverr.co/videos/coverr-starry-night-sky-time-lapse-2133/1080p.mp4', webm:'https://cdn.coverr.co/videos/coverr-starry-night-sky-time-lapse-2133/720p.webm' },
-    { name:'Forest Study',       mp4:'https://cdn.coverr.co/videos/coverr-sunlight-through-trees-in-a-forest-1647/1080p.mp4', webm:'https://cdn.coverr.co/videos/coverr-sunlight-through-trees-in-a-forest-1647/720p.webm' },
-    { name:'Coffee Shop',        mp4:'https://cdn.coverr.co/videos/coverr-barista-making-coffee-5595/1080p.mp4', webm:'https://cdn.coverr.co/videos/coverr-barista-making-coffee-5595/720p.webm' },
-    { name:'Peaceful Courtyard', mp4:'https://cdn.coverr.co/videos/coverr-a-peaceful-garden-with-a-fountain-5089/1080p.mp4', webm:'https://cdn.coverr.co/videos/coverr-a-peaceful-garden-with-a-fountain-5089/720p.webm' },
+    { name:'Rainy Study Cabin', colors:['#0b1a2e','#0d2840','#081525'], glow:'rgba(100,180,255,0.22)', particles:28, pColor:'rgba(180,220,255,0.7)', pSize:1.2, pSpeed:2.2, drift:true  },
+    { name:'Snow Mountain',     colors:['#0a0f1e','#0d1530','#060a18'], glow:'rgba(180,200,255,0.2)',  particles:35, pColor:'rgba(220,235,255,0.8)', pSize:1.0, pSpeed:1.2, drift:true  },
+    { name:'River Side Focus',  colors:['#041a0a','#071f0c','#020f08'], glow:'rgba(0,200,100,0.2)',    particles:22, pColor:'rgba(150,255,180,0.65)', pSize:1.5, pSpeed:1.8, drift:false },
+    { name:'Sunrise Focus',     colors:['#1a0800','#2a1000','#0f0500'], glow:'rgba(255,120,30,0.28)',  particles:20, pColor:'rgba(255,190,80,0.65)',  pSize:1.8, pSpeed:1.4, drift:false },
+    { name:'Night Sky',         colors:['#02020f','#05051a','#000008'], glow:'rgba(100,80,255,0.25)',  particles:45, pColor:'rgba(220,220,255,0.85)', pSize:0.9, pSpeed:0.6, drift:false },
+    { name:'Forest Study',      colors:['#031208','#051a0a','#020d05'], glow:'rgba(0,180,80,0.22)',    particles:18, pColor:'rgba(120,255,150,0.55)', pSize:2.0, pSpeed:1.0, drift:true  },
+    { name:'Coffee Shop',       colors:['#1a0f00','#241500','#120a00'], glow:'rgba(200,120,0,0.25)',   particles:16, pColor:'rgba(255,200,100,0.6)',  pSize:1.6, pSpeed:0.9, drift:true  },
+    { name:'Peaceful Courtyard',colors:['#050d12','#081420','#03090e'], glow:'rgba(0,160,200,0.22)',   particles:20, pColor:'rgba(100,220,255,0.6)',  pSize:1.4, pSpeed:1.3, drift:false },
 ];
 let _fmRecentScenes = [];
-let _fmActiveVideoSlot = 'a';
+let _fmCanvasRAF = null;
 function _pickFocusScene() {
     let available = _FM_SCENES.filter(s => !_fmRecentScenes.includes(s.name));
     if (!available.length) { _fmRecentScenes = []; available = _FM_SCENES; }
@@ -4659,30 +4656,77 @@ function _pickFocusScene() {
     return scene;
 }
 function _applyFocusScene(scene) {
-    const vA = document.getElementById('fm-video-a');
-    const vB = document.getElementById('fm-video-b');
     const label = document.getElementById('fm-scene-label');
-    if (!vA || !vB) return;
-    const next = _fmActiveVideoSlot === 'a' ? vB : vA;
-    const prev = _fmActiveVideoSlot === 'a' ? vA : vB;
-    next.src = '';
-    next.innerHTML = '';
-    const isMobile = window.innerWidth <= 768;
-    const src = (isMobile && scene.webm) ? scene.webm : scene.mp4;
-    next.src = src;
-    next.load();
-    next.play().catch(() => {});
-    next.classList.add('active');
-    setTimeout(() => { prev.classList.remove('active'); prev.pause(); prev.src = ''; }, 1400);
-    _fmActiveVideoSlot = _fmActiveVideoSlot === 'a' ? 'b' : 'a';
     if (label) label.textContent = scene.name;
+    const screen = document.getElementById('focus-mode-screen');
+    if (screen) screen.style.setProperty('--fm-glow', scene.glow);
+    _startFocusCanvas(scene);
+}
+function _startFocusCanvas(scene) {
+    if (_fmCanvasRAF) { cancelAnimationFrame(_fmCanvasRAF); _fmCanvasRAF = null; }
+    const canvas = document.getElementById('fm-bg-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = window.innerWidth;
+    let H = canvas.height = window.innerHeight;
+    const onResize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+    window.addEventListener('resize', onResize);
+    canvas._fmResizeCleanup = () => window.removeEventListener('resize', onResize);
+    const c0 = scene.colors[0], c1 = scene.colors[1], c2 = scene.colors[2];
+    const pts = [];
+    for (let i = 0; i < scene.particles; i++) {
+        pts.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: scene.pSize * (0.6 + Math.random() * 0.8),
+            vy: -(scene.pSpeed * (0.4 + Math.random() * 0.6)),
+            vx: scene.drift ? (Math.random() - 0.5) * 0.4 : 0,
+            op: 0.2 + Math.random() * 0.7,
+            phase: Math.random() * Math.PI * 2
+        });
+    }
+    let t = 0;
+    function draw() {
+        t += 0.004;
+        ctx.clearRect(0, 0, W, H);
+        const grad = ctx.createLinearGradient(0, 0, W * 0.6, H);
+        grad.addColorStop(0, c0);
+        grad.addColorStop(0.55, c1);
+        grad.addColorStop(1, c2);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+        const rg = ctx.createRadialGradient(W*0.3, H*0.25, 0, W*0.3, H*0.25, W*0.55);
+        rg.addColorStop(0, scene.glow);
+        rg.addColorStop(1, 'transparent');
+        ctx.fillStyle = rg;
+        ctx.fillRect(0, 0, W, H);
+        const rg2 = ctx.createRadialGradient(W*0.78, H*0.72, 0, W*0.78, H*0.72, W*0.4);
+        rg2.addColorStop(0, scene.glow.replace(/[\d.]+\)$/, '0.12)'));
+        rg2.addColorStop(1, 'transparent');
+        ctx.fillStyle = rg2;
+        ctx.fillRect(0, 0, W, H);
+        for (let i = 0; i < pts.length; i++) {
+            const p = pts[i];
+            p.y += p.vy;
+            p.x += p.vx;
+            if (p.y < -10) { p.y = H + 5; p.x = Math.random() * W; }
+            if (p.x < -5) p.x = W + 5;
+            if (p.x > W + 5) p.x = -5;
+            const flicker = 0.75 + 0.25 * Math.sin(t * 1.8 + p.phase);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = scene.pColor.replace(/[\d.]+\)$/, (p.op * flicker).toFixed(2) + ')');
+            ctx.fill();
+        }
+        _fmCanvasRAF = requestAnimationFrame(draw);
+    }
+    draw();
 }
 function _pauseFocusSceneVideos() {
-    const vA = document.getElementById('fm-video-a');
-    const vB = document.getElementById('fm-video-b');
-    if (vA) { vA.pause(); vA.src = ''; vA.classList.remove('active'); }
-    if (vB) { vB.pause(); vB.src = ''; vB.classList.remove('active'); }
-    _fmActiveVideoSlot = 'a';
+    if (_fmCanvasRAF) { cancelAnimationFrame(_fmCanvasRAF); _fmCanvasRAF = null; }
+    const canvas = document.getElementById('fm-bg-canvas');
+    if (canvas && canvas._fmResizeCleanup) { canvas._fmResizeCleanup(); canvas._fmResizeCleanup = null; }
+    if (canvas) { const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
 }
 function enterFocusMode() {
     isFocusModeActive=true;
@@ -4696,8 +4740,8 @@ function enterFocusMode() {
 }
 function exitFocusMode() {
     isFocusModeActive = false;
-    document.getElementById('focus-mode-screen').classList.add('hidden');
     _pauseFocusSceneVideos();
+    document.getElementById('focus-mode-screen').classList.add('hidden');
     stopAllSounds();
     releaseWakeLock();
     if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
