@@ -496,54 +496,9 @@
         .timer-custom-item { flex: 1; min-width: 100px; }
         .timer-custom-item label { font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 5px; }
         .timer-custom-item input { padding: 8px 10px; font-size: 0.88rem; }
-        /* ── SPLIT-SCREEN FOCUS MODE ── */
-        #focus-mode-screen { position: fixed; inset: 0; z-index: 3000; background: #000; display: flex; flex-direction: row; overflow: hidden; }
+        /* ── FOCUS MODE: SHARED BASE ── */
+        #focus-mode-screen { position: fixed; inset: 0; z-index: 3000; background: #1a0a10; display: flex; flex-direction: row; overflow: hidden; }
         #focus-mode-screen.hidden { display: none !important; }
-        /* Half panels */
-        .fm-half { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: opacity 0.5s ease, filter 0.5s ease; overflow: hidden; }
-        .fm-half-focus { background: #6b1c2c; }
-        .fm-half-break { background: #f2e6e9; }
-        /* Active / Faded states */
-        .fm-half.fm-active { opacity: 1; filter: none; }
-        .fm-half.fm-faded { opacity: 0.45; filter: saturate(0.4); }
-        /* Section labels */
-        .fm-section-label { font-family: var(--font-display); font-size: clamp(1rem, 2.5vw, 1.6rem); font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: clamp(24px, 5vh, 52px); }
-        .fm-half-focus .fm-section-label { color: rgba(242,224,228,0.92); }
-        .fm-half-break .fm-section-label { color: rgba(150,110,118,0.7); }
-        /* Icon circle */
-        .fm-icon-circle { width: clamp(140px, 22vw, 260px); height: clamp(140px, 22vw, 260px); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: clamp(24px, 5vh, 52px); }
-        .fm-half-focus .fm-icon-circle { border: 3px solid rgba(242,224,228,0.7); }
-        .fm-half-break .fm-icon-circle { border: 3px solid rgba(150,110,118,0.4); }
-        .fm-icon-svg { width: 55%; height: 55%; }
-        /* Timer display */
-        .fm-split-time { font-family: var(--font-display); font-weight: 800; line-height: 1; letter-spacing: -0.02em; font-size: clamp(3.5rem, 9vw, 8rem); }
-        .fm-half-focus .fm-split-time { color: rgba(242,224,228,0.97); }
-        .fm-half-break .fm-split-time { color: rgba(150,110,118,0.7); }
-        /* Divider line */
-        .fm-divider { width: 2px; background: rgba(255,255,255,0.12); flex-shrink: 0; align-self: stretch; }
-        /* Top-right clock */
-        .fm-clock { position: absolute; top: 20px; right: 24px; font-size: 0.82rem; color: rgba(255,255,255,0.55); font-family: var(--font-display); letter-spacing: 0.05em; pointer-events: none; z-index: 5; }
-        /* Session info strip */
-        .fm-session-strip { position: absolute; top: 20px; left: 24px; display: flex; flex-direction: column; gap: 4px; z-index: 5; pointer-events: none; }
-        .fm-session-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); font-family: var(--font-display); letter-spacing: 0.08em; }
-        .fm-progress-row { display: flex; align-items: center; gap: 8px; }
-        .fm-progress-bar { width: 80px; height: 3px; background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden; }
-        .fm-progress-fill { height: 100%; background: rgba(255,255,255,0.6); border-radius: 10px; transition: width 1s linear; }
-        .fm-progress-pct { font-size: 0.7rem; color: rgba(255,255,255,0.5); font-family: var(--font-display); }
-        /* Companion message */
-        .fm-companion { position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%); max-width: min(88vw,460px); text-align: center; font-size: 0.88rem; color: rgba(255,255,255,0.72); font-family: var(--font-display); font-style: italic; line-height: 1.5; pointer-events: none; z-index: 5; opacity: 0; transition: opacity 0.5s ease; white-space: nowrap; }
-        /* Controls bar */
-        .fm-controls { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; z-index: 10; }
-        .fm-ctrl-btn { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); color: #fff; padding: 9px 18px; border-radius: 22px; cursor: pointer; font-size: 0.82rem; font-family: var(--font-main); display: flex; align-items: center; gap: 6px; transition: background 0.2s; white-space: nowrap; }
-        .fm-ctrl-btn:hover { background: rgba(255,255,255,0.22); }
-        .fm-ctrl-btn.primary { background: rgba(255,255,255,0.9); color: #3a0010; font-weight: 700; }
-        .fm-ctrl-btn.primary:hover { background: #fff; }
-        .fm-ctrl-btn.exit-btn { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
-        /* Sound buttons — keep functional */
-        .focus-sounds { position: absolute; bottom: 72px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; flex-wrap: wrap; justify-content: center; padding: 0 16px; }
-        .sound-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 16px; color: rgba(255,255,255,0.7) !important; cursor: pointer; font-size: 0.75rem; transition: background 0.2s; display: flex; align-items: center; gap: 5px; }
-        .sound-btn.active { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); color: #fff !important; }
-        .sound-btn:hover { background: rgba(255,255,255,0.15); }
         /* Legacy selectors — keep working */
         .exit-focus { display: none !important; }
         .focus-bg { display: none !important; }
@@ -552,22 +507,106 @@
         .focus-time { display: none !important; }
         .focus-scene-label { display: none !important; }
         @keyframes fmGlowPulse { 0%,100%{opacity:0.6;} 50%{opacity:1;} }
-        /* Mobile portrait: stack vertically */
-        @media (max-width: 600px) {
-            #focus-mode-screen { flex-direction: column; }
-            .fm-divider { width: 100%; height: 1px; align-self: auto; }
-            .fm-split-time { font-size: clamp(3rem, 14vw, 5rem); }
-            .fm-icon-circle { width: clamp(100px, 30vw, 160px); height: clamp(100px, 30vw, 160px); margin-bottom: 16px; }
-            .fm-section-label { margin-bottom: 14px; font-size: 0.9rem; }
-            .fm-controls { bottom: calc(16px + env(safe-area-inset-bottom)); gap: 8px; }
-            .fm-ctrl-btn { padding: 8px 14px; font-size: 0.75rem; }
-            .focus-sounds { bottom: calc(56px + env(safe-area-inset-bottom)); gap: 6px; }
-            .fm-companion { bottom: 130px; font-size: 0.78rem; }
+
+        /* ── SPLIT-SCREEN HALVES (desktop/landscape) ── */
+        .fm-half { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: opacity 0.45s ease, filter 0.45s ease; overflow: hidden; }
+        .fm-half-focus { background: #6b1c2c; }
+        .fm-half-break { background: #f2e6e9; }
+        .fm-half.fm-active { opacity: 1; filter: none; }
+        .fm-half.fm-faded { opacity: 0.38; filter: saturate(0.3); }
+        .fm-section-label { font-family: var(--font-display); font-size: clamp(0.9rem, 2vw, 1.5rem); font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: clamp(18px, 3.5vh, 44px); }
+        .fm-half-focus .fm-section-label { color: rgba(242,224,228,0.9); }
+        .fm-half-break .fm-section-label { color: rgba(150,110,118,0.65); }
+        .fm-icon-circle { width: clamp(110px, 18vw, 220px); height: clamp(110px, 18vw, 220px); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: clamp(18px, 3.5vh, 44px); flex-shrink: 0; }
+        .fm-half-focus .fm-icon-circle { border: 2.5px solid rgba(242,224,228,0.65); }
+        .fm-half-break .fm-icon-circle { border: 2.5px solid rgba(150,110,118,0.35); }
+        .fm-icon-svg { width: 52%; height: 52%; }
+        .fm-split-time { font-family: var(--font-display); font-weight: 800; line-height: 1; letter-spacing: -0.02em; font-size: clamp(3rem, 8vw, 7.5rem); }
+        .fm-half-focus .fm-split-time { color: rgba(242,224,228,0.97); }
+        .fm-half-break .fm-split-time { color: rgba(150,110,118,0.68); }
+        .fm-divider { width: 1px; background: rgba(255,255,255,0.1); flex-shrink: 0; align-self: stretch; }
+
+        /* ── OVERLAY ELEMENTS (shared across layouts) ── */
+        .fm-clock { position: absolute; top: 16px; right: 18px; font-size: 0.78rem; color: rgba(255,255,255,0.45); font-family: var(--font-display); letter-spacing: 0.05em; pointer-events: none; z-index: 8; }
+        .fm-session-strip { position: absolute; top: 16px; left: 18px; display: flex; flex-direction: column; gap: 3px; z-index: 8; pointer-events: none; }
+        .fm-session-label { font-size: 0.7rem; color: rgba(255,255,255,0.45); font-family: var(--font-display); letter-spacing: 0.06em; }
+        .fm-progress-row { display: flex; align-items: center; gap: 6px; }
+        .fm-progress-bar { width: 64px; height: 2.5px; background: rgba(255,255,255,0.12); border-radius: 10px; overflow: hidden; }
+        .fm-progress-fill { height: 100%; background: rgba(255,255,255,0.55); border-radius: 10px; transition: width 1s linear; }
+        .fm-progress-pct { font-size: 0.65rem; color: rgba(255,255,255,0.45); font-family: var(--font-display); }
+        .fm-companion { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); max-width: min(90vw,440px); text-align: center; font-size: 0.82rem; color: rgba(255,255,255,0.65); font-family: var(--font-display); font-style: italic; line-height: 1.5; pointer-events: none; z-index: 8; opacity: 0; transition: opacity 0.5s ease; white-space: nowrap; }
+
+        /* ── CONTROLS BAR ── */
+        .fm-controls { position: absolute; bottom: calc(20px + env(safe-area-inset-bottom,0px)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; z-index: 10; }
+        .fm-ctrl-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); color: #fff; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.78rem; font-family: var(--font-main); display: flex; align-items: center; gap: 5px; transition: background 0.2s; white-space: nowrap; }
+        .fm-ctrl-btn:hover { background: rgba(255,255,255,0.2); }
+        .fm-ctrl-btn.primary { background: rgba(255,255,255,0.88); color: #3a0010; font-weight: 700; min-width: 90px; justify-content: center; }
+        .fm-ctrl-btn.primary:hover { background: #fff; }
+        .fm-ctrl-btn.exit-btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
+
+        /* ── SOUND BUTTONS ── */
+        .focus-sounds { position: absolute; bottom: calc(60px + env(safe-area-inset-bottom,0px)); left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; flex-wrap: wrap; justify-content: center; }
+        .sound-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); padding: 5px 11px; border-radius: 14px; color: rgba(255,255,255,0.65) !important; cursor: pointer; font-size: 0.72rem; transition: background 0.2s; display: flex; align-items: center; gap: 4px; }
+        .sound-btn.active { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.35); color: #fff !important; }
+        .sound-btn:hover { background: rgba(255,255,255,0.14); }
+
+        /* ── MOBILE PORTRAIT: Focus-First Hero Layout ── */
+        @media (max-width: 600px) and (orientation: portrait) {
+            #focus-mode-screen { flex-direction: column; background: #3d0d1a; }
+            /* Hide break panel and divider — show as inline secondary */
+            .fm-half-break { display: none; }
+            .fm-divider { display: none; }
+            /* Focus panel fills screen */
+            .fm-half-focus { flex: 1; width: 100%; background: #3d0d1a; justify-content: flex-start; padding-top: 56px; padding-bottom: 0; }
+            .fm-half-focus .fm-section-label { font-size: 0.75rem; letter-spacing: 0.28em; color: rgba(242,224,228,0.55); margin-bottom: 6px; margin-top: 0; }
+            .fm-half-focus .fm-icon-circle { display: none; }
+            /* Giant hero timer */
+            .fm-half-focus .fm-split-time { font-size: clamp(5.5rem, 22vw, 8rem); color: rgba(242,224,228,1); margin-bottom: 0; }
+            /* Break secondary pill — shown via pseudo content trick; handled by #fm-break-pill */
+            #fm-break-pill { display: flex; align-items: center; gap: 6px; margin-top: 10px; background: rgba(242,224,228,0.1); border: 1px solid rgba(242,224,228,0.18); border-radius: 20px; padding: 5px 14px; font-family: var(--font-display); font-size: 0.78rem; color: rgba(242,224,228,0.6); }
+            #fm-break-pill.break-active { background: rgba(242,224,228,0.18); color: rgba(242,224,228,0.85); border-color: rgba(242,224,228,0.35); }
+            /* Session & progress inline under timer */
+            .fm-session-strip { position: static; display: flex; flex-direction: row; align-items: center; gap: 10px; margin-top: 14px; pointer-events: none; }
+            .fm-session-label { font-size: 0.72rem; color: rgba(242,224,228,0.5); }
+            .fm-progress-bar { width: 56px; }
+            .fm-progress-pct { font-size: 0.68rem; }
+            /* Clock stays top-right but smaller */
+            .fm-clock { top: 14px; right: 14px; font-size: 0.72rem; }
+            /* Companion message */
+            .fm-companion { position: static; transform: none; max-width: 90vw; margin-top: 16px; opacity: 1; font-size: 0.82rem; white-space: normal; color: rgba(242,224,228,0.55); text-align: center; }
+            .fm-companion.fm-msg-visible { opacity: 1; }
+            /* Sounds: just noise button, compact */
+            .focus-sounds { position: static; transform: none; margin-top: 18px; bottom: auto; left: auto; }
+            /* Controls at bottom */
+            .fm-controls { position: static; transform: none; margin-top: 20px; gap: 10px; flex-wrap: wrap; justify-content: center; bottom: auto; left: auto; padding-bottom: calc(16px + env(safe-area-inset-bottom,0px)); }
+            .fm-ctrl-btn { padding: 10px 20px; font-size: 0.82rem; }
+            .fm-ctrl-btn.primary { min-width: 110px; padding: 11px 22px; font-size: 0.88rem; }
+            /* Wrapper flex */
+            #fm-portrait-inner { display: flex; flex-direction: column; align-items: center; flex: 1; width: 100%; overflow-y: auto; padding: 0 20px 0; box-sizing: border-box; }
         }
-        @media (max-width: 600px) and (orientation: landscape) {
+
+        /* ── MOBILE LANDSCAPE: Split-screen like desktop ── */
+        @media (max-width: 900px) and (orientation: landscape) {
             #focus-mode-screen { flex-direction: row; }
-            .fm-divider { width: 2px; height: auto; align-self: stretch; }
-            .fm-split-time { font-size: clamp(2.4rem, 8vw, 4rem); }
+            .fm-half-break { display: flex; }
+            .fm-divider { display: block; width: 1px; height: auto; align-self: stretch; }
+            .fm-split-time { font-size: clamp(2.2rem, 7vw, 4.5rem); }
+            .fm-icon-circle { width: clamp(80px, 14vw, 150px); height: clamp(80px, 14vw, 150px); margin-bottom: 12px; }
+            .fm-section-label { margin-bottom: 10px; font-size: 0.8rem; }
+            #fm-portrait-inner { display: contents; }
+            #fm-break-pill { display: none; }
+            .fm-companion { bottom: 68px; white-space: nowrap; }
+            .fm-controls { bottom: calc(14px + env(safe-area-inset-bottom,0px)); gap: 8px; }
+            .fm-ctrl-btn { padding: 7px 13px; font-size: 0.72rem; }
+            .focus-sounds { bottom: calc(50px + env(safe-area-inset-bottom,0px)); }
+        }
+
+        /* ── DESKTOP / TABLET LANDSCAPE ── */
+        @media (min-width: 601px) and (orientation: portrait), (min-width: 901px) {
+            #fm-portrait-inner { display: contents; }
+            #fm-break-pill { display: none; }
+            .fm-session-strip { position: absolute; top: 16px; left: 18px; flex-direction: column; }
+            .fm-companion { position: absolute; bottom: 80px; }
         }
         .chart-container { background: rgba(0,0,0,0.2); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin-bottom: 30px; }
         body.light-mode .chart-container { background: rgba(255,255,255,0.82); border-color: rgba(0,0,120,0.12); }
@@ -2477,47 +2516,77 @@
     <div class="focus-time" id="fm-time" style="display:none;">25:00</div>
     <i id="fm-play-icon" class="fa-solid fa-play" style="display:none;"></i>
 
-    <!-- Session info (top-left) -->
-    <div class="fm-session-strip" id="fm-session-strip">
-        <div class="fm-session-label" id="fm-session-label-disp">Session — / —</div>
-        <div class="fm-progress-row">
-            <div class="fm-progress-bar"><div class="fm-progress-fill" id="fm-prog-fill" style="width:0%"></div></div>
-            <span class="fm-progress-pct" id="fm-prog-pct">0%</span>
-        </div>
-    </div>
-
-    <!-- Real-time clock (top-right) -->
+    <!-- Real-time clock (top-right, all layouts) -->
     <div class="fm-clock" id="fm-live-clock"></div>
 
-    <!-- FOCUS half (left) -->
+    <!-- FOCUS half (left on desktop/landscape, full on portrait) -->
     <div class="fm-half fm-half-focus fm-active" id="fm-panel-focus">
-        <div class="fm-section-label">Focus</div>
-        <div class="fm-icon-circle">
-            <svg class="fm-icon-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Person sitting at desk -->
-                <circle cx="38" cy="18" r="9" fill="rgba(242,224,228,0.85)"/>
-                <rect x="28" y="28" width="20" height="26" rx="4" fill="rgba(242,224,228,0.85)"/>
-                <rect x="28" y="54" width="8" height="22" rx="4" fill="rgba(242,224,228,0.85)"/>
-                <rect x="40" y="54" width="8" height="22" rx="4" fill="rgba(242,224,228,0.85)"/>
-                <rect x="14" y="29" width="22" height="4" rx="2" fill="rgba(242,224,228,0.7)"/>
-                <rect x="16" y="40" width="40" height="26" rx="5" fill="rgba(242,224,228,0.5)"/>
-                <rect x="20" y="44" width="32" height="18" rx="3" fill="rgba(107,28,44,0.6)"/>
-                <rect x="12" y="66" width="76" height="5" rx="2.5" fill="rgba(242,224,228,0.7)"/>
-            </svg>
+        <!-- Portrait inner wrapper for column flow -->
+        <div id="fm-portrait-inner">
+            <!-- Section label -->
+            <div class="fm-section-label">Focus</div>
+
+            <!-- Icon circle (hidden on mobile portrait via CSS) -->
+            <div class="fm-icon-circle">
+                <svg class="fm-icon-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="38" cy="18" r="9" fill="rgba(242,224,228,0.85)"/>
+                    <rect x="28" y="28" width="20" height="26" rx="4" fill="rgba(242,224,228,0.85)"/>
+                    <rect x="28" y="54" width="8" height="22" rx="4" fill="rgba(242,224,228,0.85)"/>
+                    <rect x="40" y="54" width="8" height="22" rx="4" fill="rgba(242,224,228,0.85)"/>
+                    <rect x="14" y="29" width="22" height="4" rx="2" fill="rgba(242,224,228,0.7)"/>
+                    <rect x="16" y="40" width="40" height="26" rx="5" fill="rgba(242,224,228,0.5)"/>
+                    <rect x="20" y="44" width="32" height="18" rx="3" fill="rgba(107,28,44,0.6)"/>
+                    <rect x="12" y="66" width="76" height="5" rx="2.5" fill="rgba(242,224,228,0.7)"/>
+                </svg>
+            </div>
+
+            <!-- Hero focus timer -->
+            <div class="fm-split-time" id="fm-split-time-focus">25:00</div>
+
+            <!-- Break secondary pill (portrait only) -->
+            <div id="fm-break-pill" style="display:none;">
+                <span>☕</span><span id="fm-break-pill-label">Break: 05:00</span>
+            </div>
+
+            <!-- Session + progress (portrait: inline; desktop: absolute top-left) -->
+            <div class="fm-session-strip" id="fm-session-strip">
+                <div class="fm-session-label" id="fm-session-label-disp">Session — / —</div>
+                <div class="fm-progress-row">
+                    <div class="fm-progress-bar"><div class="fm-progress-fill" id="fm-prog-fill" style="width:0%"></div></div>
+                    <span class="fm-progress-pct" id="fm-prog-pct">0%</span>
+                </div>
+            </div>
+
+            <!-- Companion message (portrait: inline; desktop: absolute) -->
+            <div class="fm-companion" id="fm-companion-msg"></div>
+
+            <!-- Sounds (portrait: inline; desktop: absolute) -->
+            <div class="focus-sounds" id="focus-sounds-bar">
+                <button class="sound-btn" id="snd-rain" onclick="toggleSound('rain')" style="display:none;">🌧 Rain</button>
+                <button class="sound-btn" id="snd-noise" onclick="toggleSound('noise')">🌊 Brown Noise</button>
+                <button class="sound-btn" id="snd-library" onclick="toggleSound('library')" style="display:none;">📚 Library</button>
+                <button class="sound-btn" id="snd-focus" onclick="toggleSound('focus')" style="display:none;">🎵 Focus</button>
+            </div>
+
+            <!-- Controls (portrait: inline; desktop: absolute) -->
+            <div class="fm-controls">
+                <button class="fm-ctrl-btn" onclick="resetTimer()" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
+                <button class="fm-ctrl-btn primary" id="fm-main-btn" onclick="toggleTimer()"><i class="fa-solid fa-play" id="fm-main-icon"></i> <span id="fm-main-label">Start</span></button>
+                <button class="fm-ctrl-btn" onclick="stopTimer()" title="Stop"><i class="fa-solid fa-stop"></i></button>
+                <button class="fm-ctrl-btn exit-btn" onclick="exitFocusMode()"><i class="fa-solid fa-compress"></i> Exit</button>
+            </div>
         </div>
-        <div class="fm-split-time" id="fm-split-time-focus">25:00</div>
     </div>
 
-    <!-- Divider -->
+    <!-- Divider (split-screen layouts only) -->
     <div class="fm-divider"></div>
 
-    <!-- BREAK half (right) -->
+    <!-- BREAK half (right on desktop/landscape; hidden on portrait) -->
     <div class="fm-half fm-half-break fm-faded" id="fm-panel-break">
         <div class="fm-section-label">Break</div>
         <div class="fm-icon-circle">
             <svg class="fm-icon-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Coffee cup with steam -->
-                <path d="M25 48 H68 L63 78 H30 Z" rx="4" fill="rgba(150,110,118,0.7)"/>
+                <path d="M25 48 H68 L63 78 H30 Z" fill="rgba(150,110,118,0.7)"/>
                 <path d="M68 52 Q84 52 84 64 Q84 76 68 74" stroke="rgba(150,110,118,0.7)" stroke-width="5" fill="none" stroke-linecap="round"/>
                 <rect x="20" y="80" width="60" height="6" rx="3" fill="rgba(150,110,118,0.7)"/>
                 <path d="M38 36 Q36 26 42 18" stroke="rgba(150,110,118,0.55)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
@@ -2526,25 +2595,6 @@
             </svg>
         </div>
         <div class="fm-split-time" id="fm-split-time-break">05:00</div>
-    </div>
-
-    <!-- Companion message -->
-    <div class="fm-companion" id="fm-companion-msg"></div>
-
-    <!-- Sounds bar -->
-    <div class="focus-sounds" id="focus-sounds-bar">
-        <button class="sound-btn" id="snd-rain" onclick="toggleSound('rain')">🌧 Rain</button>
-        <button class="sound-btn" id="snd-noise" onclick="toggleSound('noise')">🌊 Noise</button>
-        <button class="sound-btn" id="snd-library" onclick="toggleSound('library')">📚 Library</button>
-        <button class="sound-btn" id="snd-focus" onclick="toggleSound('focus')">🎵 Focus</button>
-    </div>
-
-    <!-- Controls -->
-    <div class="fm-controls">
-        <button class="fm-ctrl-btn" onclick="resetTimer()" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
-        <button class="fm-ctrl-btn primary" id="fm-main-btn" onclick="toggleTimer()"><i class="fa-solid fa-play" id="fm-main-icon"></i> <span id="fm-main-label">Start</span></button>
-        <button class="fm-ctrl-btn" onclick="stopTimer()" title="Stop"><i class="fa-solid fa-stop"></i></button>
-        <button class="fm-ctrl-btn exit-btn" onclick="exitFocusMode()"><i class="fa-solid fa-compress"></i> Exit</button>
     </div>
 </div>
 
@@ -4650,10 +4700,9 @@ function _fmUpdateSplitScreen() {
     if (!isFocusModeActive) return;
     const isFocus = (timerMode === 'focus');
     const isBreak = (timerMode === 'short' || timerMode === 'long');
-    // Format focus and break times
+    const fmt = s => Math.floor(s/60).toString().padStart(2,'0') + ':' + (s%60).toString().padStart(2,'0');
     const focusSecs = isFocus ? timeLeft : modes.focus;
     const breakSecs = isBreak ? timeLeft : (modes.short || 0);
-    const fmt = s => Math.floor(s/60).toString().padStart(2,'0') + ':' + (s%60).toString().padStart(2,'0');
     const ftEl = document.getElementById('fm-split-time-focus');
     const btEl = document.getElementById('fm-split-time-break');
     if (ftEl) ftEl.textContent = fmt(focusSecs);
@@ -4670,22 +4719,30 @@ function _fmUpdateSplitScreen() {
             fPanel.classList.add('fm-faded'); fPanel.classList.remove('fm-active');
         }
     }
-    // Play/pause icon on main button
+    // Portrait break pill
+    const pill = document.getElementById('fm-break-pill');
+    const pillLbl = document.getElementById('fm-break-pill-label');
+    if (pill && pillLbl) {
+        const isPortrait = window.innerWidth <= 600 && window.innerHeight > window.innerWidth;
+        pill.style.display = isPortrait ? 'flex' : 'none';
+        pillLbl.textContent = (isBreak ? 'Break: ' : 'Break: ') + fmt(breakSecs);
+        pill.className = isBreak ? 'break-active' : '';
+    }
+    // Play/pause icon
     const icon = document.getElementById('fm-main-icon');
     const lbl  = document.getElementById('fm-main-label');
     if (icon) icon.className = isRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
     if (lbl)  lbl.textContent = isRunning ? 'Pause' : (timeLeft < modes[timerMode] ? 'Resume' : 'Start');
-    // Progress bar & session label
+    // Progress & session label
     const _sfActive = typeof _sf !== 'undefined' && _sf.active;
     let pct = 0, sessLabel = '';
     if (_sfActive) {
         pct = Math.min(100, Math.round(_sf.completedMins / _sf.totalMins * 100));
-        const curSess = isFocus ? (_sf.sessionsDone + 1) : _sf.sessionsDone;
-        sessLabel = 'Session ' + curSess + ' / ' + _sf.totalSessions;
+        const curSess = _sf.sessionsDone + (isFocus ? 1 : 0);
+        sessLabel = 'Session ' + Math.min(curSess, _sf.totalSessions) + ' / ' + _sf.totalSessions;
     } else {
         const total = modes[timerMode] || 1;
-        const elapsed = total - timeLeft;
-        pct = Math.min(100, Math.round(elapsed / total * 100));
+        pct = Math.min(100, Math.round((total - timeLeft) / total * 100));
         const dailySess = (appData.stats && appData.stats.dailySessions) || 0;
         sessLabel = dailySess > 0 ? 'Session ' + dailySess : '';
     }
@@ -4968,9 +5025,13 @@ function exitFocusMode() {
         const el = document.getElementById('fm-companion-msg');
         if (!el) return;
         el.textContent = text;
+        el.classList.add('fm-msg-visible');
         el.style.opacity = '1';
         clearTimeout(el._hideTimer);
-        el._hideTimer = setTimeout(() => { el.style.opacity = '0'; }, 4500);
+        el._hideTimer = setTimeout(() => {
+            el.style.opacity = '0';
+            el.classList.remove('fm-msg-visible');
+        }, 4500);
     }
 })();
 
