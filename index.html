@@ -546,6 +546,10 @@
         .focus-sounds { position: absolute; bottom: calc(68px + env(safe-area-inset-bottom,0px)); left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; justify-content: center; }
         .sound-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); padding: 7px 12px; color: rgba(255,255,255,0.72) !important; font-size: 0.76rem; }
         .sound-btn.active { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.4); color: #fff !important; }
+        .fm-skip-break-pop { position: absolute; left: 50%; bottom: calc(118px + env(safe-area-inset-bottom,0px)); transform: translateX(-50%); z-index: 12; display: none; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; background: rgba(30,10,18,0.78); backdrop-filter: blur(18px); box-shadow: 0 18px 50px rgba(0,0,0,0.28); }
+        .fm-skip-break-pop.visible { display: flex; }
+        .fm-skip-break-title { font-family: var(--font-display); font-size: 0.78rem; color: rgba(255,255,255,0.72); white-space: nowrap; }
+        .fm-skip-break-btn { min-height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.92); color: #35101a; font-family: var(--font-main); font-weight: 800; font-size: 0.76rem; padding: 7px 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; }
 
         @media (max-width: 600px) and (orientation: portrait) {
             #focus-mode-screen { flex-direction: column; background: #3a0d19; min-height: 100dvh; }
@@ -563,13 +567,16 @@
             .fm-progress-bar { flex: 1; width: auto; max-width: 210px; height: 5px; background: rgba(247,230,235,0.14); }
             .fm-progress-fill { background: rgba(247,230,235,0.72); }
             .fm-progress-pct { font-size: 0.72rem; color: rgba(247,230,235,0.64); }
-            .fm-clock { position: static; align-self: center; padding-top: calc(12px + env(safe-area-inset-top,0px)); font-size: 0.76rem; color: rgba(247,230,235,0.62); }
+            .fm-clock { position: fixed; top: calc(12px + env(safe-area-inset-top,0px)); right: calc(14px + env(safe-area-inset-right,0px)); left: auto !important; transform: none !important; width: auto; text-align: right; font-size: 0.76rem; color: rgba(247,230,235,0.62); z-index: 20; }
             .fm-companion { position: static; transform: none; width: min(100%, 330px); min-height: 44px; margin: 0; opacity: 1; font-size: 0.82rem; white-space: normal; color: rgba(247,230,235,0.62); text-align: center; }
             .focus-sounds { position: static; transform: none; margin: 4px 0 0; bottom: auto; left: auto; padding: 0; }
             .sound-btn { min-height: 36px; padding: 7px 12px; font-size: 0.74rem; border-radius: 10px; }
             .fm-controls { position: static; transform: none; margin-top: 0; gap: 8px; width: 100%; bottom: auto; left: auto; right: auto; padding-bottom: 0; }
             .fm-ctrl-btn { flex: 1; min-height: 42px; padding: 8px 12px; font-size: 0.78rem; border-radius: 10px; }
             .fm-ctrl-btn.primary { min-width: 0; }
+            .fm-skip-break-pop { width: calc(100% - 32px); bottom: calc(70px + env(safe-area-inset-bottom,0px)); justify-content: space-between; padding: 9px 10px; }
+            .fm-skip-break-title { font-size: 0.74rem; }
+            .fm-skip-break-btn { min-height: 34px; font-size: 0.74rem; padding: 7px 10px; }
         }
 
         @media (max-width: 380px) and (orientation: portrait) {
@@ -597,6 +604,9 @@
             .focus-sounds { bottom: calc(14px + env(safe-area-inset-bottom,0px)); left: calc(14px + env(safe-area-inset-left,0px)); transform: none; }
             .fm-controls { bottom: calc(12px + env(safe-area-inset-bottom,0px)); right: calc(14px + env(safe-area-inset-right,0px)); left: auto; transform: none; }
             .fm-ctrl-btn, .sound-btn { min-height: 34px; padding: 6px 10px; font-size: 0.7rem; }
+            .fm-skip-break-pop { bottom: calc(12px + env(safe-area-inset-bottom,0px)); left: 50%; padding: 7px 9px; }
+            .fm-skip-break-title { display: none; }
+            .fm-skip-break-btn { min-height: 34px; font-size: 0.7rem; padding: 6px 10px; }
         }
 
         @media (min-width: 601px) and (orientation: portrait), (min-width: 901px) {
@@ -2513,6 +2523,10 @@
 
     <!-- Real-time clock (top-right, all layouts) -->
     <div class="fm-clock" id="fm-live-clock"></div>
+    <div class="fm-skip-break-pop" id="fm-skip-break-pop">
+        <div class="fm-skip-break-title">Break is running</div>
+        <button class="fm-skip-break-btn" onclick="fmSkipBreak()"><i class="fa-solid fa-forward"></i> Skip Break</button>
+    </div>
 
     <!-- FOCUS half (left on desktop/landscape, full on portrait) -->
     <div class="fm-half fm-half-focus fm-active" id="fm-panel-focus">
@@ -2585,6 +2599,11 @@
             </svg>
         </div>
         <div class="fm-split-time" id="fm-split-time-break">05:00</div>
+    </div>
+
+    <div class="fm-skip-break-pop" id="fm-skip-break-pop" role="dialog" aria-live="polite">
+        <div class="fm-skip-break-title">Break started</div>
+        <button class="fm-skip-break-btn" onclick="fmSkipBreak()"><i class="fa-solid fa-forward"></i> Skip Break</button>
     </div>
 </div>
 
@@ -4718,6 +4737,8 @@ function _fmUpdateSplitScreen() {
         pillLbl.textContent = (isBreak ? 'Break: ' : 'Break: ') + fmt(breakSecs);
         pill.className = isBreak ? 'break-active' : '';
     }
+    const skipPop = document.getElementById('fm-skip-break-pop');
+    if (skipPop) skipPop.classList.toggle('visible', isBreak);
     // Play/pause icon
     const icon = document.getElementById('fm-main-icon');
     const lbl  = document.getElementById('fm-main-label');
@@ -4744,6 +4765,36 @@ function _fmUpdateSplitScreen() {
     if (fill) fill.style.width = pct + '%';
     if (pctEl) pctEl.textContent = pct + '%';
     if (lblEl) lblEl.textContent = sessLabel;
+}
+function fmSkipBreak() {
+    const isBreak = (timerMode === 'short' || timerMode === 'long');
+    if (!isBreak) return;
+    const skipPop = document.getElementById('fm-skip-break-pop');
+    if (skipPop) skipPop.classList.remove('visible');
+    if (_sf.active && _sf.phase === 'break') {
+        sfSkipBreak();
+        return;
+    }
+    if (_msBlock.enabled) {
+        stopTimer();
+        _startNextMsBlock();
+        return;
+    }
+    if (autoCycleEnabled) {
+        stopTimer();
+        handleAutoCycleBreakEnd();
+        return;
+    }
+    stopTimer();
+    timerMode = 'focus';
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    const fbtn = document.getElementById('mode-btn-focus');
+    if (fbtn) fbtn.classList.add('active');
+    timeLeft = modes.focus;
+    updateTimerDisplay();
+    setRing(modes.focus, modes.focus);
+    document.getElementById('timer-status').innerText = 'Break skipped — ready to focus';
+    showToast('Break skipped. Ready to focus ⚡', 'success');
 }
 function toggleWakeLockSetting() {
     const cb = document.getElementById('setting-wakelock');
