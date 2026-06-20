@@ -508,105 +508,100 @@
         .focus-scene-label { display: none !important; }
         @keyframes fmGlowPulse { 0%,100%{opacity:0.6;} 50%{opacity:1;} }
 
-        /* ── SPLIT-SCREEN HALVES (desktop/landscape) ── */
-        .fm-half { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: opacity 0.45s ease, filter 0.45s ease; overflow: hidden; }
-        .fm-half-focus { background: #6b1c2c; }
-        .fm-half-break { background: #f2e6e9; }
-        .fm-half.fm-active { opacity: 1; filter: none; }
-        .fm-half.fm-faded { opacity: 0.38; filter: saturate(0.3); }
-        .fm-section-label { font-family: var(--font-display); font-size: clamp(0.9rem, 2vw, 1.5rem); font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: clamp(18px, 3.5vh, 44px); }
-        .fm-half-focus .fm-section-label { color: rgba(242,224,228,0.9); }
-        .fm-half-break .fm-section-label { color: rgba(150,110,118,0.65); }
-        .fm-icon-circle { width: clamp(110px, 18vw, 220px); height: clamp(110px, 18vw, 220px); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: clamp(18px, 3.5vh, 44px); flex-shrink: 0; }
-        .fm-half-focus .fm-icon-circle { border: 2.5px solid rgba(242,224,228,0.65); }
-        .fm-half-break .fm-icon-circle { border: 2.5px solid rgba(150,110,118,0.35); }
-        .fm-icon-svg { width: 52%; height: 52%; }
-        .fm-split-time { font-family: var(--font-display); font-weight: 800; line-height: 1; letter-spacing: -0.02em; font-size: clamp(3rem, 8vw, 7.5rem); }
-        .fm-half-focus .fm-split-time { color: rgba(242,224,228,0.97); }
-        .fm-half-break .fm-split-time { color: rgba(150,110,118,0.68); }
-        .fm-divider { width: 1px; background: rgba(255,255,255,0.1); flex-shrink: 0; align-self: stretch; }
+        /* Fullscreen Focus Mode */
+        .fm-half { flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: clamp(28px, 4vw, 56px); transition: opacity 0.35s ease, filter 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease; }
+        .fm-half-focus { background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08), transparent 28%), #5b1727; }
+        .fm-half-break { background: radial-gradient(circle at 78% 18%, rgba(91,23,39,0.1), transparent 28%), #efe3e6; }
+        .fm-half.fm-active { opacity: 1; filter: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14), inset 0 -10px 40px rgba(0,0,0,0.14); }
+        .fm-half.fm-faded { opacity: 0.5; filter: saturate(0.55) contrast(0.9); }
+        .fm-section-label { font-family: var(--font-display); font-size: clamp(0.8rem, 1.4vw, 1.1rem); font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: clamp(16px, 3vh, 32px); }
+        .fm-half-focus .fm-section-label { color: rgba(247,230,235,0.84); }
+        .fm-half-break .fm-section-label { color: rgba(96,52,63,0.62); }
+        .fm-icon-circle { width: clamp(92px, 13vw, 168px); height: clamp(92px, 13vw, 168px); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: clamp(16px, 3vh, 30px); flex-shrink: 0; }
+        .fm-half-focus .fm-icon-circle { border: 2px solid rgba(247,230,235,0.5); }
+        .fm-half-break .fm-icon-circle { border: 2px solid rgba(96,52,63,0.24); }
+        .fm-icon-svg { width: 50%; height: 50%; }
+        .fm-split-time { font-family: var(--font-display); font-weight: 800; line-height: 0.95; letter-spacing: 0; font-size: clamp(4rem, 8.8vw, 8.5rem); font-variant-numeric: tabular-nums; }
+        .fm-half-focus .fm-split-time { color: rgba(247,230,235,0.98); text-shadow: 0 18px 48px rgba(0,0,0,0.24); }
+        .fm-half-break .fm-split-time { color: rgba(96,52,63,0.72); }
+        .fm-divider { width: 1px; background: rgba(255,255,255,0.14); flex-shrink: 0; align-self: stretch; }
 
-        /* ── OVERLAY ELEMENTS (shared across layouts) ── */
-        .fm-clock { position: absolute; top: 16px; right: 18px; font-size: 0.78rem; color: rgba(255,255,255,0.45); font-family: var(--font-display); letter-spacing: 0.05em; pointer-events: none; z-index: 8; }
-        .fm-session-strip { position: absolute; top: 16px; left: 18px; display: flex; flex-direction: column; gap: 3px; z-index: 8; pointer-events: none; }
-        .fm-session-label { font-size: 0.7rem; color: rgba(255,255,255,0.45); font-family: var(--font-display); letter-spacing: 0.06em; }
-        .fm-progress-row { display: flex; align-items: center; gap: 6px; }
-        .fm-progress-bar { width: 64px; height: 2.5px; background: rgba(255,255,255,0.12); border-radius: 10px; overflow: hidden; }
-        .fm-progress-fill { height: 100%; background: rgba(255,255,255,0.55); border-radius: 10px; transition: width 1s linear; }
-        .fm-progress-pct { font-size: 0.65rem; color: rgba(255,255,255,0.45); font-family: var(--font-display); }
-        .fm-companion { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); max-width: min(90vw,440px); text-align: center; font-size: 0.82rem; color: rgba(255,255,255,0.65); font-family: var(--font-display); font-style: italic; line-height: 1.5; pointer-events: none; z-index: 8; opacity: 0; transition: opacity 0.5s ease; white-space: nowrap; }
+        .fm-clock { position: absolute; top: max(16px, env(safe-area-inset-top)); right: max(18px, env(safe-area-inset-right)); font-size: 0.82rem; color: rgba(255,255,255,0.58); font-family: var(--font-display); letter-spacing: 0.04em; pointer-events: none; z-index: 8; }
+        .fm-session-strip { position: absolute; top: max(16px, env(safe-area-inset-top)); left: max(18px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 7px; z-index: 8; pointer-events: none; min-width: 154px; }
+        .fm-session-label { font-size: 0.76rem; color: rgba(255,255,255,0.6); font-family: var(--font-display); letter-spacing: 0.04em; }
+        .fm-progress-row { display: flex; align-items: center; gap: 8px; }
+        .fm-progress-bar { width: 106px; height: 4px; background: rgba(255,255,255,0.13); border-radius: 10px; overflow: hidden; }
+        .fm-progress-fill { height: 100%; background: rgba(255,255,255,0.7); border-radius: 10px; transition: width 0.6s linear; }
+        .fm-progress-pct { min-width: 34px; font-size: 0.7rem; color: rgba(255,255,255,0.58); font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+        .fm-companion { position: absolute; bottom: calc(92px + env(safe-area-inset-bottom,0px)); left: 50%; transform: translateX(-50%); width: min(88vw, 560px); text-align: center; font-size: 0.88rem; color: rgba(255,255,255,0.7); font-family: var(--font-display); font-style: italic; line-height: 1.5; pointer-events: none; z-index: 8; opacity: 0; transition: opacity 0.4s ease; }
+        .fm-companion.fm-msg-visible { opacity: 1; }
 
-        /* ── CONTROLS BAR ── */
-        .fm-controls { position: absolute; bottom: calc(20px + env(safe-area-inset-bottom,0px)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; z-index: 10; }
-        .fm-ctrl-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); color: #fff; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.78rem; font-family: var(--font-main); display: flex; align-items: center; gap: 5px; transition: background 0.2s; white-space: nowrap; }
-        .fm-ctrl-btn:hover { background: rgba(255,255,255,0.2); }
-        .fm-ctrl-btn.primary { background: rgba(255,255,255,0.88); color: #3a0010; font-weight: 700; min-width: 90px; justify-content: center; }
+        .fm-controls { position: absolute; bottom: calc(22px + env(safe-area-inset-bottom,0px)); right: max(18px, env(safe-area-inset-right)); display: flex; gap: 10px; align-items: center; justify-content: center; z-index: 10; }
+        .fm-ctrl-btn, .sound-btn { min-height: 38px; border-radius: 10px; cursor: pointer; font-family: var(--font-main); display: inline-flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease; }
+        .fm-ctrl-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); color: #fff; padding: 8px 14px; font-size: 0.8rem; }
+        .fm-ctrl-btn:hover, .sound-btn:hover { background: rgba(255,255,255,0.18); }
+        .fm-ctrl-btn.primary { background: rgba(255,255,255,0.9); color: #35101a; font-weight: 800; min-width: 112px; }
         .fm-ctrl-btn.primary:hover { background: #fff; }
-        .fm-ctrl-btn.exit-btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
+        .fm-ctrl-btn.exit-btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.13); }
+        .focus-sounds { position: absolute; bottom: calc(68px + env(safe-area-inset-bottom,0px)); left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; justify-content: center; }
+        .sound-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); padding: 7px 12px; color: rgba(255,255,255,0.72) !important; font-size: 0.76rem; }
+        .sound-btn.active { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.4); color: #fff !important; }
 
-        /* ── SOUND BUTTONS ── */
-        .focus-sounds { position: absolute; bottom: calc(60px + env(safe-area-inset-bottom,0px)); left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; flex-wrap: wrap; justify-content: center; }
-        .sound-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); padding: 5px 11px; border-radius: 14px; color: rgba(255,255,255,0.65) !important; cursor: pointer; font-size: 0.72rem; transition: background 0.2s; display: flex; align-items: center; gap: 4px; }
-        .sound-btn.active { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.35); color: #fff !important; }
-        .sound-btn:hover { background: rgba(255,255,255,0.14); }
-
-        /* ── MOBILE PORTRAIT: Focus-First Hero Layout ── */
         @media (max-width: 600px) and (orientation: portrait) {
-            #focus-mode-screen { flex-direction: column; background: #3d0d1a; }
-            /* Hide break panel and divider — show as inline secondary */
-            .fm-half-break { display: none; }
-            .fm-divider { display: none; }
-            /* Focus panel fills screen */
-            .fm-half-focus { flex: 1; width: 100%; background: #3d0d1a; justify-content: flex-start; padding-top: 56px; padding-bottom: 0; }
-            .fm-half-focus .fm-section-label { font-size: 0.75rem; letter-spacing: 0.28em; color: rgba(242,224,228,0.55); margin-bottom: 6px; margin-top: 0; }
+            #focus-mode-screen { flex-direction: column; background: #3a0d19; min-height: 100dvh; }
+            .fm-half-break, .fm-divider { display: none; }
+            .fm-half-focus { flex: 1 1 auto; width: 100%; background: #3a0d19; justify-content: center; padding: calc(44px + env(safe-area-inset-top,0px)) 18px calc(14px + env(safe-area-inset-bottom,0px)); }
+            #fm-portrait-inner { display: grid; grid-template-rows: auto minmax(116px, auto) auto auto auto auto; align-content: center; justify-items: center; gap: 12px; width: 100%; max-width: 420px; min-height: 100%; box-sizing: border-box; }
+            .fm-half-focus .fm-section-label { font-size: 0.78rem; letter-spacing: 0.24em; margin: 0; color: rgba(247,230,235,0.64); }
             .fm-half-focus .fm-icon-circle { display: none; }
-            /* Giant hero timer */
-            .fm-half-focus .fm-split-time { font-size: clamp(5.5rem, 22vw, 8rem); color: rgba(242,224,228,1); margin-bottom: 0; }
-            /* Break secondary pill — shown via pseudo content trick; handled by #fm-break-pill */
-            #fm-break-pill { display: flex; align-items: center; gap: 6px; margin-top: 10px; background: rgba(242,224,228,0.1); border: 1px solid rgba(242,224,228,0.18); border-radius: 20px; padding: 5px 14px; font-family: var(--font-display); font-size: 0.78rem; color: rgba(242,224,228,0.6); }
-            #fm-break-pill.break-active { background: rgba(242,224,228,0.18); color: rgba(242,224,228,0.85); border-color: rgba(242,224,228,0.35); }
-            /* Session & progress inline under timer */
-            .fm-session-strip { position: static; display: flex; flex-direction: row; align-items: center; gap: 10px; margin-top: 14px; pointer-events: none; }
-            .fm-session-label { font-size: 0.72rem; color: rgba(242,224,228,0.5); }
-            .fm-progress-bar { width: 56px; }
-            .fm-progress-pct { font-size: 0.68rem; }
-            /* Clock stays top-right but smaller */
-            .fm-clock { top: 14px; right: 14px; font-size: 0.72rem; }
-            /* Companion message */
-            .fm-companion { position: static; transform: none; max-width: 90vw; margin-top: 16px; opacity: 1; font-size: 0.82rem; white-space: normal; color: rgba(242,224,228,0.55); text-align: center; }
-            .fm-companion.fm-msg-visible { opacity: 1; }
-            /* Sounds: just noise button, compact */
-            .focus-sounds { position: static; transform: none; margin-top: 18px; bottom: auto; left: auto; }
-            /* Controls at bottom */
-            .fm-controls { position: static; transform: none; margin-top: 20px; gap: 10px; flex-wrap: wrap; justify-content: center; bottom: auto; left: auto; padding-bottom: calc(16px + env(safe-area-inset-bottom,0px)); }
-            .fm-ctrl-btn { padding: 10px 20px; font-size: 0.82rem; }
-            .fm-ctrl-btn.primary { min-width: 110px; padding: 11px 22px; font-size: 0.88rem; }
-            /* Wrapper flex */
-            #fm-portrait-inner { display: flex; flex-direction: column; align-items: center; flex: 1; width: 100%; overflow-y: auto; padding: 0 20px 0; box-sizing: border-box; }
+            .fm-half-focus .fm-split-time { font-size: clamp(5.2rem, 25vw, 7rem); color: rgba(247,230,235,1); margin: 0; }
+            #fm-break-pill { display: flex; align-items: center; gap: 7px; background: rgba(247,230,235,0.1); border: 1px solid rgba(247,230,235,0.18); border-radius: 999px; padding: 7px 13px; font-family: var(--font-display); font-size: 0.78rem; color: rgba(247,230,235,0.68); }
+            #fm-break-pill.break-active { background: rgba(247,230,235,0.18); color: rgba(247,230,235,0.9); border-color: rgba(247,230,235,0.36); }
+            .fm-session-strip { position: static; display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: min(100%, 280px); min-width: 0; margin: 0; }
+            .fm-session-label { text-align: center; font-size: 0.78rem; color: rgba(247,230,235,0.62); }
+            .fm-progress-row { justify-content: center; }
+            .fm-progress-bar { flex: 1; width: auto; max-width: 210px; height: 5px; background: rgba(247,230,235,0.14); }
+            .fm-progress-fill { background: rgba(247,230,235,0.72); }
+            .fm-progress-pct { font-size: 0.72rem; color: rgba(247,230,235,0.64); }
+            .fm-clock { position: static; align-self: center; padding-top: calc(12px + env(safe-area-inset-top,0px)); font-size: 0.76rem; color: rgba(247,230,235,0.62); }
+            .fm-companion { position: static; transform: none; width: min(100%, 330px); min-height: 44px; margin: 0; opacity: 1; font-size: 0.82rem; white-space: normal; color: rgba(247,230,235,0.62); text-align: center; }
+            .focus-sounds { position: static; transform: none; margin: 4px 0 0; bottom: auto; left: auto; padding: 0; }
+            .sound-btn { min-height: 36px; padding: 7px 12px; font-size: 0.74rem; border-radius: 10px; }
+            .fm-controls { position: static; transform: none; margin-top: 0; gap: 8px; width: 100%; bottom: auto; left: auto; right: auto; padding-bottom: 0; }
+            .fm-ctrl-btn { flex: 1; min-height: 42px; padding: 8px 12px; font-size: 0.78rem; border-radius: 10px; }
+            .fm-ctrl-btn.primary { min-width: 0; }
         }
 
-        /* ── MOBILE LANDSCAPE: Split-screen like desktop ── */
+        @media (max-width: 380px) and (orientation: portrait) {
+            .fm-half-focus { padding-left: 14px; padding-right: 14px; }
+            #fm-portrait-inner { gap: 10px; }
+            .fm-half-focus .fm-split-time { font-size: clamp(4.6rem, 24vw, 6.2rem); }
+            .fm-controls { gap: 7px; }
+            .fm-ctrl-btn.primary { min-width: 106px; }
+            .fm-ctrl-btn, .sound-btn { font-size: 0.72rem; }
+        }
+
         @media (max-width: 900px) and (orientation: landscape) {
             #focus-mode-screen { flex-direction: row; }
             .fm-half-break { display: flex; }
-            .fm-divider { display: block; width: 1px; height: auto; align-self: stretch; }
-            .fm-split-time { font-size: clamp(2.2rem, 7vw, 4.5rem); }
-            .fm-icon-circle { width: clamp(80px, 14vw, 150px); height: clamp(80px, 14vw, 150px); margin-bottom: 12px; }
-            .fm-section-label { margin-bottom: 10px; font-size: 0.8rem; }
+            .fm-divider { display: block; }
             #fm-portrait-inner { display: contents; }
-            #fm-break-pill { display: none; }
-            .fm-companion { bottom: 68px; white-space: nowrap; }
-            .fm-controls { bottom: calc(14px + env(safe-area-inset-bottom,0px)); gap: 8px; }
-            .fm-ctrl-btn { padding: 7px 13px; font-size: 0.72rem; }
-            .focus-sounds { bottom: calc(50px + env(safe-area-inset-bottom,0px)); }
+            #fm-break-pill { display: none !important; }
+            .fm-half { padding: 22px 18px; }
+            .fm-section-label { margin-bottom: 9px; font-size: 0.72rem; }
+            .fm-icon-circle { width: clamp(62px, 12vw, 96px); height: clamp(62px, 12vw, 96px); margin-bottom: 10px; }
+            .fm-split-time { font-size: clamp(2.6rem, 8vw, 4.8rem); }
+            .fm-session-strip { top: 10px; left: 12px; gap: 5px; }
+            .fm-clock { top: 10px; right: 12px; font-size: 0.7rem; }
+            .fm-companion { bottom: 58px; font-size: 0.74rem; white-space: nowrap; }
+            .focus-sounds { bottom: calc(14px + env(safe-area-inset-bottom,0px)); left: calc(14px + env(safe-area-inset-left,0px)); transform: none; }
+            .fm-controls { bottom: calc(12px + env(safe-area-inset-bottom,0px)); right: calc(14px + env(safe-area-inset-right,0px)); left: auto; transform: none; }
+            .fm-ctrl-btn, .sound-btn { min-height: 34px; padding: 6px 10px; font-size: 0.7rem; }
         }
 
-        /* ── DESKTOP / TABLET LANDSCAPE ── */
         @media (min-width: 601px) and (orientation: portrait), (min-width: 901px) {
             #fm-portrait-inner { display: contents; }
-            #fm-break-pill { display: none; }
-            .fm-session-strip { position: absolute; top: 16px; left: 18px; flex-direction: column; }
-            .fm-companion { position: absolute; bottom: 80px; }
+            #fm-break-pill { display: none !important; }
         }
         .chart-container { background: rgba(0,0,0,0.2); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--glass-border); margin-bottom: 30px; }
         body.light-mode .chart-container { background: rgba(255,255,255,0.82); border-color: rgba(0,0,120,0.12); }
@@ -2562,18 +2557,13 @@
 
             <!-- Sounds (portrait: inline; desktop: absolute) -->
             <div class="focus-sounds" id="focus-sounds-bar">
-                <button class="sound-btn" id="snd-rain" onclick="toggleSound('rain')" style="display:none;">🌧 Rain</button>
                 <button class="sound-btn" id="snd-noise" onclick="toggleSound('noise')">🌊 Brown Noise</button>
-                <button class="sound-btn" id="snd-library" onclick="toggleSound('library')" style="display:none;">📚 Library</button>
-                <button class="sound-btn" id="snd-focus" onclick="toggleSound('focus')" style="display:none;">🎵 Focus</button>
             </div>
 
             <!-- Controls (portrait: inline; desktop: absolute) -->
             <div class="fm-controls">
-                <button class="fm-ctrl-btn" onclick="resetTimer()" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
                 <button class="fm-ctrl-btn primary" id="fm-main-btn" onclick="toggleTimer()"><i class="fa-solid fa-play" id="fm-main-icon"></i> <span id="fm-main-label">Start</span></button>
-                <button class="fm-ctrl-btn" onclick="stopTimer()" title="Stop"><i class="fa-solid fa-stop"></i></button>
-                <button class="fm-ctrl-btn exit-btn" onclick="exitFocusMode()"><i class="fa-solid fa-compress"></i> Exit</button>
+                <button class="fm-ctrl-btn exit-btn" onclick="exitFocusMode()"><i class="fa-solid fa-compress"></i> Exit Focus</button>
             </div>
         </div>
     </div>
@@ -4737,14 +4727,16 @@ function _fmUpdateSplitScreen() {
     const _sfActive = typeof _sf !== 'undefined' && _sf.active;
     let pct = 0, sessLabel = '';
     if (_sfActive) {
-        pct = Math.min(100, Math.round(_sf.completedMins / _sf.totalMins * 100));
+        const activeFocusMins = isFocus ? Math.max(0, (modes.focus - timeLeft) / 60) : 0;
+        pct = Math.min(100, Math.round((_sf.completedMins + activeFocusMins) / _sf.totalMins * 100));
         const curSess = _sf.sessionsDone + (isFocus ? 1 : 0);
-        sessLabel = 'Session ' + Math.min(curSess, _sf.totalSessions) + ' / ' + _sf.totalSessions;
+        sessLabel = 'Session ' + Math.max(1, Math.min(curSess, _sf.totalSessions)) + ' / ' + _sf.totalSessions;
     } else {
         const total = modes[timerMode] || 1;
         pct = Math.min(100, Math.round((total - timeLeft) / total * 100));
         const dailySess = (appData.stats && appData.stats.dailySessions) || 0;
-        sessLabel = dailySess > 0 ? 'Session ' + dailySess : '';
+        const activeSess = dailySess + (isFocus ? 1 : 0);
+        sessLabel = 'Session ' + Math.max(1, activeSess);
     }
     const fill = document.getElementById('fm-prog-fill');
     const pctEl = document.getElementById('fm-prog-pct');
